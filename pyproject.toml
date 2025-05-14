@@ -1,0 +1,32 @@
+[project]
+name = "transformer_algebra"
+version = "0.1.0"
+description = ""
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "transformers>=4.49.0",
+    "omegaconf>=2.3.0",
+    "torch>=2.6.0",
+    "wandb>=0.15.11",
+    "accelerate>=0.29.0",
+    "joblib>=1.5.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["transformer_algebra*"]
+
+[dependency-groups]
+dev = [
+    "mypy>=1.15.0",
+    "ruff>=0.9.9",
+    "pydantic>=2.10.6",
+    "pytest>=8.3.5",
+]
+
+[tool.ruff]
+lint.per-file-ignores = {"transformer_algebra/__init__.py" = ["F401"]}
+exclude = [
+    "sage/**",
+]
