@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Tuple, Callable, Union
+from typing import Any, Dict, List, Tuple, Callable, Union, Literal
 from joblib import Parallel, delayed
 from time import time
 import hashlib
@@ -9,29 +9,40 @@ from transformer_algebra.generate.utils.statistics_calculator import (
 
 
 class DatasetGenerator:
-    """Base class for polynomial problem generators"""
+    """Base class for problem generators"""
 
     def __init__(
         self,
-        ring: PolynomialRing,
+        problem_type: Literal["polynomial", "numerical"],
+        ring: PolynomialRing = None,
         n_jobs: int = -1,
         verbose: bool = True,
         root_seed: int = 42,
     ):
         """
-        Initialize polynomial problem generator.
+        Initialize problem generator.
 
         Args:
-            ring: Polynomial ring
+            problem_type: Type of problems to generate ("polynomial" or "numerical")
+            ring: Polynomial ring (required for polynomial problems)
             n_jobs: Number of parallel jobs (-1 for all cores)
             verbose: Whether to display progress information
             root_seed: Root seed for reproducibility
         """
+        if problem_type not in ["polynomial", "numerical"]:
+            raise ValueError("Invalid problem type")
+        if problem_type == "polynomial" and ring is None:
+            raise ValueError("Polynomial problems require a polynomial ring")
+        if problem_type == "numerical" and ring is not None:
+            raise ValueError("Numerical problems do not require a polynomial ring")
+        
+
+        self.problem_type = problem_type
         self.n_jobs = n_jobs
         self.verbose = verbose
         self.root_seed = root_seed
         # Initialize statistics calculator
-        self.stats_calculator = StatisticsCalculator(ring)
+        self.stats_calculator = StatisticsCalculator(problem_type, ring)
 
     def _generate_seed(self, job_id: int, train: bool) -> int:
         """
@@ -58,10 +69,12 @@ class DatasetGenerator:
         start_time = time()
         # Generate a unique seed for this job
         seed = self._generate_seed(job_id, train)
-        F, G = problem_generator(seed)
-        sample_stats = self.stats_calculator.sample_stats(F, G, time() - start_time)
+        problem_input, problem_output = problem_generator(seed)
+        sample_stats = self.stats_calculator.sample_stats(
+            problem_input, problem_output, time() - start_time
+        )
 
-        return F, G, sample_stats
+        return problem_input, problem_output, sample_stats
 
     def run(
         self, num_samples: int, problem_generator: Callable, train: bool
@@ -90,7 +103,7 @@ class DatasetGenerator:
         )
 
         # Unzip the results
-        F_list, G_list, sample_stats = zip(*results)
+        problem_inputs, problem_outputs, sample_stats = zip(*results)
 
         # Calculate overall statistics
         total_time = time() - start_time
@@ -98,4 +111,4 @@ class DatasetGenerator:
             sample_stats, total_time=total_time, num_samples=num_samples
         )
 
-        return list(zip(F_list, G_list)), overall_stats
+        return list(zip(problem_inputs, problem_outputs)), overall_stats
