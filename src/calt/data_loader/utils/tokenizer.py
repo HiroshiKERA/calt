@@ -6,11 +6,17 @@ from tokenizers.pre_tokenizers import CharDelimiterSplit
 
 SPECIAL_TOKENS = ["[PAD]", "<s>", "</s>", "[CLS]"]
 # Create mapping from token names to special token values
-SPECIAL_TOKEN_MAP = dict(zip(["pad_token", "bos_token", "eos_token", "cls_token"], SPECIAL_TOKENS))
+SPECIAL_TOKEN_MAP = dict(
+    zip(["pad_token", "bos_token", "eos_token", "cls_token"], SPECIAL_TOKENS)
+)
 
 
 def set_tokenizer(
-    num_vars: int, field: str = "GF", max_coeff: int = 100, max_degree: int = 10, max_length: int = 512
+    num_vars: int,
+    field: str = "GF",
+    max_coeff: int = 100,
+    max_degree: int = 10,
+    max_length: int = 512,
 ) -> PreTrainedTokenizerFast:
     """Create and configure a tokenizer for polynomial expressions.
 
@@ -27,7 +33,6 @@ def set_tokenizer(
     """
     CONSTS = ["[C]"]
     ECONSTS = ["[E]"]
-    
 
     if field in ("QQ", "ZZ"):
         # For rational/integer fields, use coefficients from -max_coeff to +max_coeff
@@ -59,9 +64,14 @@ def set_tokenizer(
     eos_token = SPECIAL_TOKEN_MAP["eos_token"]
     tok.post_processor = TemplateProcessing(
         single=f"{bos_token} $A {eos_token}",
-        special_tokens=[(bos_token, tok.token_to_id(bos_token)), (eos_token, tok.token_to_id(eos_token))],
+        special_tokens=[
+            (bos_token, tok.token_to_id(bos_token)),
+            (eos_token, tok.token_to_id(eos_token)),
+        ],
     )
 
     # Wrap with HuggingFace's fast tokenizer interface
-    tokenizer = PreTrainedTokenizerFast(tokenizer_object=tok, model_max_length=max_length, **SPECIAL_TOKEN_MAP)
+    tokenizer = PreTrainedTokenizerFast(
+        tokenizer_object=tok, model_max_length=max_length, **SPECIAL_TOKEN_MAP
+    )
     return tokenizer

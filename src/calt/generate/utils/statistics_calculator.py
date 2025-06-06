@@ -9,7 +9,11 @@ class StatisticsCalculator:
     Calculate statistics for generated dataset.
     """
 
-    def __init__(self, problem_type: Literal["polynomial", "numerical"], ring: PolynomialRing = None):
+    def __init__(
+        self,
+        problem_type: Literal["polynomial", "numerical"],
+        ring: PolynomialRing = None,
+    ):
         """
         Initialize statistics calculator.
 
@@ -18,7 +22,9 @@ class StatisticsCalculator:
             ring: Polynomial ring (required for polynomial problems)
         """
         if problem_type not in ["polynomial", "numerical"]:
-            raise ValueError(f"Invalid problem type: {problem_type}. Must be either 'polynomial' or 'numerical'")
+            raise ValueError(
+                f"Invalid problem type: {problem_type}. Must be either 'polynomial' or 'numerical'"
+            )
         if problem_type == "polynomial" and ring is None:
             raise ValueError("Polynomial statistics require a polynomial ring")
         if problem_type == "numerical" and ring is not None:
@@ -50,7 +56,7 @@ class StatisticsCalculator:
         """
         if self.ring is None:
             raise ValueError("Polynomial statistics require a polynomial ring")
-        
+
         # Initialize coefficients field and number of variables
         self.coeff_field = self.ring.base_ring()
         self.num_vars = self.ring.ngens()
@@ -62,7 +68,9 @@ class StatisticsCalculator:
             return {"num_polynomials": 0, "total_degree": 0, "total_terms": 0}
 
         # Calculate degrees
-        degrees = [max(p.total_degree(), 0) for p in polys] # if polynomial p is zero, then p.total_degree() is -1, so we need to set it to 0
+        degrees = [
+            max(p.total_degree(), 0) for p in polys
+        ]  # if polynomial p is zero, then p.total_degree() is -1, so we need to set it to 0
 
         # Calculate number of terms
         num_terms = [len(p.monomials()) for p in polys]
@@ -86,27 +94,24 @@ class StatisticsCalculator:
             "num_polynomials": num_polys,
             "total_degree": sum(degrees),
             "total_terms": sum(num_terms),
-
             # Degree statistics
             "max_degree": max(degrees),
             "min_degree": min(degrees),
             # "avg_degree": float(np.mean(degrees)),
             # "std_degree": float(np.std(degrees)),
-
             # Term count statistics
             "max_terms": max(num_terms),
             "min_terms": min(num_terms),
             # "avg_terms": float(np.mean(num_terms)),
             # "std_terms": float(np.std(num_terms)),
-
             # Coefficient statistics
             "max_coeff": max(coeffs) if coeffs else 0,
             "min_coeff": min(coeffs) if coeffs else 0,
             # "avg_coeff": float(np.mean(coeffs)) if coeffs else 0,
             # "std_coeff": float(np.std(coeffs)) if coeffs else 0,
-
             # Additional system properties
-            "density": float(sum(num_terms)) / (num_polys * (1 + max(degrees)) ** self.num_vars),
+            "density": float(sum(num_terms))
+            / (num_polys * (1 + max(degrees)) ** self.num_vars),
         }
 
         return stats

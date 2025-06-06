@@ -105,7 +105,7 @@ class DatasetWriter:
                     g_str = " | ".join(str(p) for p in G)
                 else:
                     g_str = str(G)
-                    
+
                 f.write(f"{f_str} # {g_str}\n")
 
     def _save_json(

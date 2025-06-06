@@ -35,7 +35,6 @@ class DatasetGenerator:
             raise ValueError("Polynomial problems require a polynomial ring")
         if problem_type == "numerical" and ring is not None:
             raise ValueError("Numerical problems do not require a polynomial ring")
-        
 
         self.problem_type = problem_type
         self.n_jobs = n_jobs

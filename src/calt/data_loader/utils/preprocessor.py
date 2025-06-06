@@ -125,7 +125,9 @@ class SymbolicToInternalProcessor(AbstractPreprocessor):
                 var_name = base.strip()
                 exp_str = exp_str.strip()
                 if not exp_str.isdigit():
-                    raise TermParseException("Invalid exponent " f"'{exp_str}' in term '{term_str}'")
+                    raise TermParseException(
+                        f"Invalid exponent '{exp_str}' in term '{term_str}'"
+                    )
                 exponent = int(exp_str)
 
             if var_name in self.var_name_to_index:
@@ -136,7 +138,9 @@ class SymbolicToInternalProcessor(AbstractPreprocessor):
                 coeff = int(var_name)
                 coeff_part_found = True
             else:
-                raise TermParseException("Unknown var/part " f"'{var_name}' in term '{term_str}'")
+                raise TermParseException(
+                    f"Unknown var/part '{var_name}' in term '{term_str}'"
+                )
 
         final_coeff = sign * coeff
 
@@ -153,7 +157,7 @@ class SymbolicToInternalProcessor(AbstractPreprocessor):
             elif term_str == "1":
                 return (sign * 1, self._create_exponent_vector())
             else:
-                raise TermParseException("Cannot parse term " f"'{term_str}'")
+                raise TermParseException(f"Cannot parse term '{term_str}'")
 
         if variable_parts_exist and not coeff_part_found:
             return (sign * 1, exponents)
@@ -280,7 +284,7 @@ class IntegerToInternalProcessor(AbstractPreprocessor):
 
     def _number_to_tokens(self, number_str: str) -> str:
         """Convert a string of digits to space-separated 'C{digit}' tokens."""
-        number_str = number_str.strip() # Strip whitespace from individual parts
+        number_str = number_str.strip()  # Strip whitespace from individual parts
         if not number_str.isdigit():
             logging.warning(f"Invalid number format encountered: '{number_str}'")
             return "[ERROR_FORMAT]"
