@@ -6,7 +6,7 @@ build:
 
 # Run the Docker container
 run:
-	docker run --gpus all -d --name ta-sage-container -v "$(CURDIR)":/app ta-sage tail -f /dev/null
+	docker run --gpus all -d --name ta-sage-container-3 -v "$(CURDIR)":/app -v /mnt/nfs/sato:/mnt/ ta-sage tail -f /dev/null
 
 # Stop and remove the Docker container
 stop:

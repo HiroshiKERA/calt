@@ -177,4 +177,5 @@ cython_debug/
 wandb/
 
 # dataset & resluts
+dataset/
 results/

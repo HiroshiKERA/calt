@@ -1,4 +1,3 @@
-from .model.custom_bart import PolynomialBartForConditionalGeneration
 from .trainer.trainer import PolynomialTrainer
 from .trainer.utils import count_cuda_devices
 from .data_loader.data_loader import data_loader
