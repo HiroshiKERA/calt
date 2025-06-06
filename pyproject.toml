@@ -8,7 +8,6 @@ version = "0.1.0"
 description = "A library for computational algebra using Transformers"
 readme = "README.md"
 requires-python = ">=3.12"
-license = {file = "LICENSE"}
 authors = [
   {name = "Yuta Sato", email = "sato.yuta@gmail.com"}
 ]
