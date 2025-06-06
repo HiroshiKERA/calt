@@ -1,0 +1,29 @@
+name: Lint and reformat code
+run-name: ${{ github.actor }} 
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    
+jobs:
+  lint-and-type-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository code
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with: 
+          python-version-file: ".python-version"
+
+      - name: Install the project
+        run: uv sync --dev
+
+      - name: Run linters + formatters
+        run: uv run ruff check . --output-format=github
+      

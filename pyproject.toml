@@ -1,9 +1,18 @@
+[build-system]
+requires = ["setuptools>=65", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
-name = "transformer_algebra"
+name = "calt-test"
 version = "0.1.0"
-description = ""
+description = "A library for computational algebra using Transformers"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.12"
+license = {file = "LICENSE"}
+authors = [
+  {name = "Yuta Sato", email = "sato.yuta@gmail.com"}
+]
+
 dependencies = [
     "transformers>=4.49.0",
     "omegaconf>=2.3.0",
@@ -11,22 +20,10 @@ dependencies = [
     "wandb>=0.15.11",
     "accelerate>=0.29.0",
     "joblib>=1.5.0",
+    "sympy>=1.12",
 ]
 
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["transformer_algebra*"]
 
-[dependency-groups]
-dev = [
-    "mypy>=1.15.0",
-    "ruff>=0.9.9",
-    "pydantic>=2.10.6",
-    "pytest>=8.3.5",
-]
-
-[tool.ruff]
-lint.per-file-ignores = {"transformer_algebra/__init__.py" = ["F401"]}
-exclude = [
-    "sage/**",
-]
+[project.urls]
+Source        = "https://github.com/HiroshiKERA/calt"
+Issues        = "https://github.com/HiroshiKERA/calt/issues"
