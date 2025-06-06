@@ -7,9 +7,9 @@ polynomial expressions into the internal token representation expected by the
 Transformer models.
 """
 
-from .data.data_collator import StandardDataset, StandardDataCollator
-from .data.preprocessor import SymbolicToInternalProcessor, IntegerToInternalProcessor
-from .data.tokenizer import set_tokenizer
+from .utils.data_collator import StandardDataset, StandardDataCollator
+from .utils.preprocessor import SymbolicToInternalProcessor, IntegerToInternalProcessor
+from .utils.tokenizer import set_tokenizer
 from transformers import PreTrainedTokenizerFast as StandardTokenizer
 from typing import Tuple
 
