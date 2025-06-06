@@ -3,7 +3,7 @@ requires = ["setuptools>=65", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "calt-test"
+name = "caltx"
 version = "0.1.0"
 description = "A library for computational algebra using Transformers"
 readme = "README.md"
@@ -23,6 +23,19 @@ dependencies = [
     "sympy>=1.12",
 ]
 
+[dependency-groups]
+dev = [
+    "mypy>=1.15.0",
+    "ruff>=0.9.9",
+    "pydantic>=2.10.6",
+    "pytest>=8.3.5",
+]
+
+[tool.ruff]
+lint.per-file-ignores = {"transformer_algebra/__init__.py" = ["F401"]}
+exclude = [
+    "sage/**",
+]
 
 [project.urls]
 Source        = "https://github.com/HiroshiKERA/calt"
