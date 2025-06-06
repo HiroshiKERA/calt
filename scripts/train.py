@@ -1,11 +1,11 @@
 from omegaconf import OmegaConf
 from transformers import BartConfig, TrainingArguments
 from transformers import BartForConditionalGeneration as Transformer
-from transformer_algebra import (
+from calt import (
     PolynomialTrainer,
     count_cuda_devices,
 )
-from transformer_algebra import data_loader
+from calt import data_loader
 import wandb
 
 

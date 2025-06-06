@@ -3,7 +3,7 @@ import sage.misc.randstate as randstate
 from sage.misc.prandom import randint
 from sage.all import ZZ, random_prime
 
-from transformer_algebra import DatasetGenerator, DatasetWriter
+from calt import DatasetGenerator, DatasetWriter
 
 
 class IntFactorProblemGenerator:
