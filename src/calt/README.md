@@ -29,4 +29,23 @@ uv run ruff format .
 
 ```
 
+## PyPIへのアップロード
+下記のサイトに登録後
+APIキーを発行する
+TestPyPI: https://test.pypi.org/
+本番PyPI: https://pypi.org/
+
+```
+# TestPyPIへのアップロード
+uv pip install --upgrade twine
+
+twine check dist/* # アップロード可能か確認
+
+twine upload --repository testpypi dist/* # アップロード
+
+# 本番PyPIへのアップロード
+twine check dist/* 
+
+twine upload dist/*
+```
 
