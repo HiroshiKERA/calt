@@ -82,7 +82,7 @@ class DatasetWriter:
         if tag:
             return self.save_dir / f"dataset_{tag}"
         return self.save_dir
-    
+
     def _convert_poly_str(self, poly_str: str) -> str:
         """
         Convert sympy polynomial string representation to a more readable format.
@@ -90,18 +90,18 @@ class DatasetWriter:
         5 mod 7*x**4*y**3 -> 5*x^4*y^3
         """
         # Remove mod (order) notation
-        poly_str = re.sub(r' mod \d+', '', poly_str)
+        poly_str = re.sub(r" mod \d+", "", poly_str)
         # Replace ** with ^
-        poly_str = re.sub(r'\*\*', '^', poly_str)
+        poly_str = re.sub(r"\*\*", "^", poly_str)
         return poly_str
 
     def _convert_to_str(self, obj: Any) -> str:
         """
         Convert object to string, applying polynomial conversion if necessary.
-        
+
         Args:
             obj: Object to convert
-            
+
         Returns:
             String representation of the object
         """

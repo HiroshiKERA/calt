@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Tuple, Callable, Union, Literal
+from typing import Any, Dict, List, Tuple, Callable, Union
 from joblib import Parallel, delayed
 from time import time
 import hashlib
@@ -52,7 +52,11 @@ class DatasetGenerator:
         return int.from_bytes(hash_obj.digest()[:8], byteorder="big")
 
     def generate_sample(
-        self, job_id: int, train: bool, problem_generator: Callable, statistics_calculator: Callable
+        self,
+        job_id: int,
+        train: bool,
+        problem_generator: Callable,
+        statistics_calculator: Callable,
     ) -> Tuple[Union[List[Any], Any], Union[List[Any], Any], Dict[str, Any], timedelta]:
         # Generate a unique seed for this job
         seed = self._generate_seed(job_id, train)
@@ -66,7 +70,11 @@ class DatasetGenerator:
         return problem_input, problem_output, sample_stats, runtime
 
     def run(
-        self, train: bool, num_samples: int, problem_generator: Callable, statistics_calculator: Callable
+        self,
+        train: bool,
+        num_samples: int,
+        problem_generator: Callable,
+        statistics_calculator: Callable,
     ) -> Tuple[
         List[Tuple[Union[List[Any], Any], Union[List[Any], Any]]], Dict[str, Any]
     ]:
@@ -88,7 +96,9 @@ class DatasetGenerator:
         results = Parallel(
             n_jobs=self.n_jobs, backend=self.backend, verbose=self.verbose
         )(
-            delayed(self.generate_sample)(i, train, problem_generator, statistics_calculator)
+            delayed(self.generate_sample)(
+                i, train, problem_generator, statistics_calculator
+            )
             for i in range(num_samples)
         )
 
