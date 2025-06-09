@@ -1,10 +1,11 @@
-from typing import Mapping, Sequence, Tuple
+from typing import Mapping, Sequence, Tuple, List, Union
 import re
-from sympy import Expr, Poly, Symbol, latex
+from sympy import Expr, Poly, Symbol, latex, symbols, Integer
 from IPython.display import display, Math
+import json
 
 
-__all__ = ["display_with_diff"]
+__all__ = ["display_with_diff", "load_eval_results"]
 
 # ---------------------------------------------------------------------------
 # Helpers -------------------------------------------------------------------
@@ -152,3 +153,113 @@ def display_with_diff(
 
     display(Math(r"\text{Gold:}\; " + gold_tex))
     display(Math(r"\text{Predicted:}\; " + pred_tex))
+
+
+def load_eval_results(file_path: str) -> Tuple[List[str], List[str]]:
+    """Load evaluation results from a JSON file and return lists of generated and reference texts.
+
+    The JSON file should contain a list of objects with "generated" and "reference" keys.
+
+    Args:
+        file_path: Path to the JSON file.
+
+    Returns:
+        A tuple containing two lists:
+        - List of generated texts.
+        - List of reference texts.
+    """
+    generated_texts = []
+    reference_texts = []
+
+    with open(file_path, "r", encoding="utf-8") as f:
+        data = json.load(f)
+
+    for item in data:
+        generated_texts.append(item.get("generated", ""))
+        reference_texts.append(item.get("reference", ""))
+
+    return generated_texts, reference_texts
+
+
+def parse_poly(tokens: str, var_names: Sequence[Union[str, Symbol]] | None = None):
+    """
+    Convert an internal token sequence (e.g. ``"C1 E1 E1 C-3 E0 E7"``)
+    into a SymPy polynomial.
+
+    Parameters
+    ----------
+    tokens : str
+        Whitespace-separated string where a token starting with ``C`` indicates
+        a coefficient and the following ``E`` tokens indicate exponents.
+    var_names : Sequence[str | sympy.Symbol] | None, optional
+        Variable names (either strings or pre-created Symbol objects). If
+        ``None`` (default), variables are auto-generated as x0, x1, …
+
+    Returns
+    -------
+    sympy.Expr
+        A SymPy expression corresponding to the polynomial.
+
+    Raises
+    ------
+    ValueError
+        If the token sequence is malformed or the number of variables does not
+        match ``var_names``.
+    """
+    parts = tokens.strip().split()
+    if not parts or not parts[0].startswith("C"):
+        raise ValueError("Token sequence must start with a 'C' coefficient token.")
+
+    # --- Infer the number of variables from the first term ---------------- #
+    try:
+        # Find the **index** of the first 'C' token after the initial one
+        next_c_idx = next(idx for idx, p in enumerate(parts[1:], start=1) if p.startswith("C"))
+    except StopIteration:
+        # Single-term polynomial → treat end of list as “next C” position
+        next_c_idx = len(parts)
+
+    n_vars = next_c_idx - 1
+    if n_vars <= 0:
+        raise ValueError(
+            "Malformed token sequence: need at least one exponent token " f"before the next 'C'; got n_vars={n_vars}."
+        )
+
+    # --- Prepare SymPy symbols ------------------------------------------- #
+    if var_names is None:
+        vars_ = symbols(" ".join(f"x{i}" for i in range(n_vars)))
+    else:
+        if len(var_names) != n_vars:
+            raise ValueError(f"Expected {n_vars} variable name(s), got {len(var_names)}.")
+        if all(isinstance(v, str) for v in var_names):
+            vars_ = symbols(" ".join(var_names))
+        elif all(isinstance(v, Symbol) for v in var_names):
+            vars_ = tuple(var_names)
+        else:
+            raise TypeError("var_names must be all str or all sympy.Symbol.")
+
+    # --- Parse every term ------------------------------------------------- #
+    expr = Integer(0)
+    i = 0
+    while i < len(parts):
+        # Read coefficient token
+        coeff_str = parts[i]
+        if not coeff_str.startswith("C"):
+            raise ValueError(f"Expected 'C' token at position {i}, got {coeff_str}.")
+        coeff = Integer(coeff_str[1:])
+        i += 1
+
+        # Read exponent tokens
+        exps = []
+        for _ in range(n_vars):
+            if i >= len(parts) or not parts[i].startswith("E"):
+                raise ValueError(f"Missing 'E' token at position {i}.")
+            exps.append(Integer(parts[i][1:]))
+            i += 1
+
+        # Build term: coeff * Π v**e
+        term = coeff
+        for v, e in zip(vars_, exps):
+            term *= v**e
+        expr += term
+
+    return expr
