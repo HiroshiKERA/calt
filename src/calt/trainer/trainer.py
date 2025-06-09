@@ -46,19 +46,14 @@ class PolynomialTrainer(Trainer):
             The same dictionary with all tensors on the target device.
         """
 
-        return {
-            k: (v.to(self.args.device) if isinstance(v, torch.Tensor) else v)
-            for k, v in inputs.items()
-        }
+        return {k: (v.to(self.args.device) if isinstance(v, torch.Tensor) else v) for k, v in inputs.items()}
 
     def log_metrics(self, outputs, inputs, ignore_index: int = -100):
         """Push a single metric dictionary to Weights & Biases."""
         if not self.is_world_process_zero():
             return
 
-        metrics = {
-            "train/loss": (outputs.loss.item() if outputs.loss is not None else 0.0)
-        }
+        metrics = {"train/loss": (outputs.loss.item() if outputs.loss is not None else 0.0)}
 
         # Add to log history
         self.log_history.append(metrics)
@@ -86,6 +81,7 @@ class PolynomialTrainer(Trainer):
         eval_dataloader = self.get_eval_dataloader(self.eval_dataset)
 
         self.model.eval()
+        tokenizer = self.processing_class
 
         for batch in eval_dataloader:
             inputs = self._prepare_inputs(batch)
@@ -106,7 +102,7 @@ class PolynomialTrainer(Trainer):
                 )
 
             # generated_ids shape (batch_size, sequence_length)
-            current_generated_texts = self.tokenizer.batch_decode(
+            current_generated_texts = tokenizer.batch_decode(
                 generated_ids,
                 skip_special_tokens=True,
                 clean_up_tokenization_spaces=True,
@@ -114,8 +110,8 @@ class PolynomialTrainer(Trainer):
             all_generated_texts.extend(current_generated_texts)
 
             if labels is not None:
-                labels[labels == -100] = self.tokenizer.pad_token_id
-                current_reference_texts = self.tokenizer.batch_decode(
+                labels[labels == -100] = tokenizer.pad_token_id
+                current_reference_texts = tokenizer.batch_decode(
                     labels,
                     skip_special_tokens=True,
                     clean_up_tokenization_spaces=True,
