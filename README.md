@@ -18,6 +18,5 @@ Simple demonstrations for data generation and training are available as Jupyter 
 
 To run these notebooks, you need to start SageMath's Jupyter server using the command `sage -n` and then select the SageMath kernel in the notebook interface.
 
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)]
-(https://colab.research.google.com/github/HiroshiKERA/calt/blob/dev/notebooks/demo.ipynb)
+![[Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/HiroshiKERA/calt/blob/dev/notebooks/demo.ipynb)
 
