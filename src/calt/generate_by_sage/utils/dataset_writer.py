@@ -3,8 +3,6 @@ from pathlib import Path
 import yaml
 import json
 from datetime import timedelta
-import re
-from sympy.polys.rings import PolyElement
 
 
 class TimedeltaDumper(yaml.SafeDumper):
@@ -83,32 +81,6 @@ class DatasetWriter:
             return self.save_dir / f"dataset_{tag}"
         return self.save_dir
 
-    def _convert_poly_str(self, poly_str: str) -> str:
-        """
-        Convert sympy polynomial string representation to a more readable format.
-        e.g., 2*x**2*y**2 -> 2*x^2*y^2
-        5 mod 7*x**4*y**3 -> 5*x^4*y^3
-        """
-        # Remove mod (order) notation
-        poly_str = re.sub(r" mod \d+", "", poly_str)
-        # Replace ** with ^
-        poly_str = re.sub(r"\*\*", "^", poly_str)
-        return poly_str
-
-    def _convert_to_str(self, obj: Any) -> str:
-        """
-        Convert object to string, applying polynomial conversion if necessary.
-
-        Args:
-            obj: Object to convert
-
-        Returns:
-            String representation of the object
-        """
-        if isinstance(obj, PolyElement):
-            return self._convert_poly_str(str(obj))
-        return str(obj)
-
     def _save_raw(
         self,
         samples: List[Tuple[Union[List[Any], Any], Union[List[Any], Any]]],
@@ -126,13 +98,13 @@ class DatasetWriter:
             for F, G in samples:
                 # Convert polynomials to strings and join with |
                 if isinstance(F, list):
-                    f_str = " | ".join(self._convert_to_str(p) for p in F)
+                    f_str = " | ".join(str(p) for p in F)
                 else:
-                    f_str = self._convert_to_str(F)
+                    f_str = str(F)
                 if isinstance(G, list):
-                    g_str = " | ".join(self._convert_to_str(p) for p in G)
+                    g_str = " | ".join(str(p) for p in G)
                 else:
-                    g_str = self._convert_to_str(G)
+                    g_str = str(G)
 
                 f.write(f"{f_str} # {g_str}\n")
 
@@ -151,13 +123,13 @@ class DatasetWriter:
         json_data = []
         for F, G in samples:
             if isinstance(F, list):
-                input_data = [self._convert_to_str(p) for p in F]
+                input_data = [str(p) for p in F]
             else:
-                input_data = self._convert_to_str(F)
+                input_data = str(F)
             if isinstance(G, list):
-                output_data = [self._convert_to_str(p) for p in G]
+                output_data = [str(p) for p in G]
             else:
-                output_data = self._convert_to_str(G)
+                output_data = str(G)
             json_data.append({"input": input_data, "output": output_data})
 
         with open(base_path, "w") as f:
