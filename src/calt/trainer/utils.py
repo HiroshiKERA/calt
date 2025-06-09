@@ -7,7 +7,6 @@ CUDA devices or initialising the Weights & Biases tracking dashboard.
 
 import os
 import torch
-import re
 from typing import Sequence, Union
 from sympy import symbols, Symbol, Integer
 
@@ -118,7 +117,9 @@ def parse_poly(tokens: str, var_names: Sequence[Union[str, Symbol]] | None = Non
         vars_ = symbols(" ".join(f"x{i}" for i in range(n_vars)))
     else:
         if len(var_names) != n_vars:
-            raise ValueError(f"Expected {n_vars} variable name(s), got {len(var_names)}.")
+            raise ValueError(
+                f"Expected {n_vars} variable name(s), got {len(var_names)}."
+            )
         # If elements are strings, create Symbols; if they are already Symbols, reuse them.
         if all(isinstance(v, str) for v in var_names):
             vars_ = symbols(" ".join(var_names))  # -> tuple(Symbol, …)

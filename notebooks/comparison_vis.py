@@ -38,6 +38,7 @@ __all__ = ["display_with_diff"]
 # Helpers -------------------------------------------------------------------
 # ---------------------------------------------------------------------------
 
+
 def _poly_to_dict(poly: Poly) -> dict[Tuple[int, ...], int]:
     """Return a mapping {exponent_tuple: coefficient}."""
     return {e: int(c) for e, c in poly.terms()}
@@ -46,6 +47,7 @@ def _poly_to_dict(poly: Poly) -> dict[Tuple[int, ...], int]:
 # ---------------------------------------------------------------------------
 # Monomial → LaTeX -----------------------------------------------------------
 # ---------------------------------------------------------------------------
+
 
 def _term_latex(
     coeff: int,
@@ -76,9 +78,7 @@ def _term_latex(
 
     # Combine: coefficient  gap  variables
     body = (
-        coeff_str
-        + (r"\, " if coeff_str and var_parts else "")
-        + r"\, ".join(var_parts)
+        coeff_str + (r"\, " if coeff_str and var_parts else "") + r"\, ".join(var_parts)
         or "0"
     )
     term_tex = sign + body
@@ -99,6 +99,7 @@ def _term_latex(
 # ---------------------------------------------------------------------------
 # Build full polynomial LaTeX ------------------------------------------------
 # ---------------------------------------------------------------------------
+
 
 def _build_poly_latex(
     poly_dict: Mapping[Tuple[int, ...], int],
@@ -139,6 +140,7 @@ def _build_poly_latex(
 # Public API ----------------------------------------------------------------
 # ---------------------------------------------------------------------------
 
+
 def display_with_diff(
     gold: Expr,
     pred: Expr,
@@ -156,7 +158,9 @@ def display_with_diff(
 
     # --- normalize -------------------------------------------------------- #
     if var_order is None:
-        var_order = sorted(gold.free_symbols.union(pred.free_symbols), key=lambda s: s.name)
+        var_order = sorted(
+            gold.free_symbols.union(pred.free_symbols), key=lambda s: s.name
+        )
     gold_poly = Poly(gold.expand(), *var_order)
     pred_poly = Poly(pred.expand(), *var_order)
 

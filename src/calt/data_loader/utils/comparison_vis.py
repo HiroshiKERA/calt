@@ -1,42 +1,15 @@
-from __future__ import annotations
-
-r"""comparison_vis.py
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-Utility for side‑by‑side visualization of two SymPy expressions —
-a *gold* (ground‑truth) and a *predicted* one — highlighting every
-mistake made by the model directly in the rendered LaTeX.
-
-MathJax requirement
--------------------
-The notebook environment must load the **cancel.js** extension so that
-``\cancel{...}`` renders as a strikethrough.  Google Colab already has
-it; in plain Jupyter you may need:
-
-```javascript
-%%javascript
-MathJax.Hub.Config({TeX: {extensions: ["cancel.js"]}})
-```
-
-Highlight rules (v3)
---------------------
-* **Extra term**        → entire term struck through: ``\cancel{…}``
-* **Wrong coefficient** → only the coefficient struck through
-* **Missing term**      → simply absent from *predicted* (extension TODO)
-
-No color is applied — everything stays black.
-"""
-
 from typing import Mapping, Sequence, Tuple
 import re
-
 from sympy import Expr, Poly, Symbol, latex
 from IPython.display import display, Math
+
 
 __all__ = ["display_with_diff"]
 
 # ---------------------------------------------------------------------------
 # Helpers -------------------------------------------------------------------
 # ---------------------------------------------------------------------------
+
 
 def _poly_to_dict(poly: Poly) -> dict[Tuple[int, ...], int]:
     """Return a mapping {exponent_tuple: coefficient}."""
@@ -46,6 +19,7 @@ def _poly_to_dict(poly: Poly) -> dict[Tuple[int, ...], int]:
 # ---------------------------------------------------------------------------
 # Monomial → LaTeX -----------------------------------------------------------
 # ---------------------------------------------------------------------------
+
 
 def _term_latex(
     coeff: int,
@@ -75,12 +49,7 @@ def _term_latex(
             var_parts.append(f"{latex(v)}^{{{e}}}")
 
     # Combine: coefficient  gap  variables
-    body = (
-        coeff_str
-        + (r"\, " if coeff_str and var_parts else "")
-        + r"\, ".join(var_parts)
-        or "0"
-    )
+    body = coeff_str + (r"\, " if coeff_str and var_parts else "") + r"\, ".join(var_parts) or "0"
     term_tex = sign + body
 
     # --- highlighting ----------------------------------------------------- #
@@ -99,6 +68,7 @@ def _term_latex(
 # ---------------------------------------------------------------------------
 # Build full polynomial LaTeX ------------------------------------------------
 # ---------------------------------------------------------------------------
+
 
 def _build_poly_latex(
     poly_dict: Mapping[Tuple[int, ...], int],
@@ -138,6 +108,7 @@ def _build_poly_latex(
 # ---------------------------------------------------------------------------
 # Public API ----------------------------------------------------------------
 # ---------------------------------------------------------------------------
+
 
 def display_with_diff(
     gold: Expr,

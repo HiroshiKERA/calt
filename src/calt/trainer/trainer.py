@@ -81,6 +81,7 @@ class PolynomialTrainer(Trainer):
         eval_dataloader = self.get_eval_dataloader(self.eval_dataset)
 
         self.model.eval()
+        tokenizer = self.processing_class
 
         for batch in eval_dataloader:
             inputs = self._prepare_inputs(batch)
@@ -101,7 +102,7 @@ class PolynomialTrainer(Trainer):
                 )
 
             # generated_ids shape (batch_size, sequence_length)
-            current_generated_texts = self.processor.batch_decode(
+            current_generated_texts = tokenizer.batch_decode(
                 generated_ids,
                 skip_special_tokens=True,
                 clean_up_tokenization_spaces=True,
@@ -109,8 +110,8 @@ class PolynomialTrainer(Trainer):
             all_generated_texts.extend(current_generated_texts)
 
             if labels is not None:
-                labels[labels == -100] = self.processor.pad_token_id
-                current_reference_texts = self.processor.batch_decode(
+                labels[labels == -100] = tokenizer.pad_token_id
+                current_reference_texts = tokenizer.batch_decode(
                     labels,
                     skip_special_tokens=True,
                     clean_up_tokenization_spaces=True,
