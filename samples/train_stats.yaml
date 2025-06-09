@@ -1,11 +1,11 @@
-total_time: 0.7619602680206299
-samples_per_second: 1312.4043890080175
+total_time: 1.145906686782837
+samples_per_second: 872.6714064367023
 num_samples: 1000
 generation_time:
-  mean: 0.00740838623046875
-  std: 0.007549547676547739
-  min: 0.0005764961242675781
-  max: 0.06916522979736328
+  mean: 0.0024000561237335206
+  std: 0.0024534419280578187
+  min: 0.0005469322204589844
+  max: 0.01784038543701172
 input_overall:
   num_polynomials:
     mean: 2.0
@@ -18,9 +18,9 @@ input_overall:
     min: 40.0
     max: 40.0
   total_terms:
-    mean: 28.332
-    std: 3.146390948372436
-    min: 12.0
+    mean: 25.086
+    std: 5.179440510325415
+    min: 10.0
     max: 32.0
   max_degree:
     mean: 20.0
@@ -33,29 +33,29 @@ input_overall:
     min: 20.0
     max: 20.0
   max_terms:
-    mean: 15.383
-    std: 1.2681920201609849
-    min: 8.0
+    mean: 13.572
+    std: 2.5993876201905706
+    min: 6.0
     max: 16.0
   min_terms:
-    mean: 12.949
-    std: 2.441392840163172
-    min: 4.0
+    mean: 11.514
+    std: 2.9559776724461235
+    min: 3.0
     max: 16.0
   max_coeff:
-    mean: 5.998
-    std: 0.044676615807377355
-    min: 5.0
+    mean: 5.97
+    std: 0.19261360284258222
+    min: 4.0
     max: 6.0
   min_coeff:
-    mean: 1.002
-    std: 0.044676615807377355
+    mean: 1.03
+    std: 0.18734993995195195
     min: 1.0
-    max: 2.0
+    max: 3.0
   density:
-    mean: 0.032122448979591836
-    std: 0.0035673366761592258
-    min: 0.013605442176870748
+    mean: 0.0284421768707483
+    std: 0.005872381530981197
+    min: 0.011337868480725623
     max: 0.036281179138321996
 output_overall:
   num_polynomials:
@@ -69,9 +69,9 @@ output_overall:
     min: 10.0
     max: 10.0
   total_terms:
-    mean: 4.0
-    std: 0.0
-    min: 4.0
+    mean: 3.537
+    std: 0.6104350907344696
+    min: 2.0
     max: 4.0
   max_degree:
     mean: 10.0
@@ -84,27 +84,27 @@ output_overall:
     min: 10.0
     max: 10.0
   max_terms:
-    mean: 4.0
-    std: 0.0
-    min: 4.0
+    mean: 3.537
+    std: 0.6104350907344696
+    min: 2.0
     max: 4.0
   min_terms:
-    mean: 4.0
-    std: 0.0
-    min: 4.0
+    mean: 3.537
+    std: 0.6104350907344696
+    min: 2.0
     max: 4.0
   max_coeff:
-    mean: 5.596
-    std: 0.6235254605868152
-    min: 4.0
+    mean: 4.711
+    std: 1.3399548499856255
+    min: 1.0
     max: 6.0
   min_coeff:
-    mean: 1.41
-    std: 0.617980582219215
-    min: 1.0
-    max: 3.0
-  density:
-    mean: 0.03305785123966942
+    mean: 1.0
     std: 0.0
-    min: 0.03305785123966942
+    min: 1.0
+    max: 1.0
+  density:
+    mean: 0.029231404958677685
+    std: 0.00504491810524355
+    min: 0.01652892561983471
     max: 0.03305785123966942
