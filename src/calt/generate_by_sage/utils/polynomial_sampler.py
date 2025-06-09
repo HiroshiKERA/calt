@@ -1,9 +1,6 @@
-import math
+from typing import Any, Optional, List, Union, Tuple
 import random
-from typing import Optional, List, Union, Tuple
-from sympy import ZZ, QQ, RR
-from sympy.polys.rings import PolyRing, PolyElement
-from .single_polynomial_sampler import SinglePolynomialSampler
+from sage.all import PolynomialRing, QQ, RR, ZZ, matrix, binomial, randint, prod
 
 
 class PolynomialSampler:
@@ -11,7 +8,7 @@ class PolynomialSampler:
 
     def __init__(
         self,
-        ring: PolyRing,
+        ring: PolynomialRing,
         max_num_terms: int = 10,
         max_degree: int = 5,
         min_degree: int = 0,
@@ -26,7 +23,8 @@ class PolynomialSampler:
         Initialize polynomial sampler
 
         Args:
-            ring: SymPy polynomial ring
+            ring: SageMath polynomial ring
+            field: Coefficient field
             max_num_terms: Maximum number of terms in polynomial
             max_degree: Maximum degree of polynomial
             min_degree: Minimum degree of polynomial
@@ -38,7 +36,7 @@ class PolynomialSampler:
             nonzero_instance: Whether to enforce non-zero instance
         """
         self.ring = ring
-        self.field = ring.domain
+        self.field = ring.base_ring()
         self.max_num_terms = max_num_terms
         self.max_degree = max_degree
         self.min_degree = min_degree
@@ -58,15 +56,13 @@ class PolynomialSampler:
         if self.num_bound is None and self.field == QQ:
             self.num_bound = 10
 
-        self.single_poly_sampler = SinglePolynomialSampler()
-
     def sample(
         self,
         num_samples: int = 1,
         size: Optional[Tuple[int, int]] = None,
         density: float = 1.0,
         matrix_type: Optional[str] = None,
-    ) -> Union[List[PolyElement], List[List[List[PolyElement]]]]:
+    ) -> Union[List[Any], List[matrix]]:
         """
         Generate random polynomial samples
 
@@ -87,20 +83,20 @@ class PolynomialSampler:
         else:
             return [self._sample_polynomial() for _ in range(num_samples)]
 
-    def _sample_polynomial(self, max_attempts: int = 100) -> PolyElement:
+    def _sample_polynomial(self, max_attempts: int = 100) -> Any:
         """Generate a single random polynomial"""
         # Determine degree
         if self.degree_sampling == "uniform":
-            degree = random.randint(self.min_degree, self.max_degree)
+            degree = randint(self.min_degree, self.max_degree)
         else:  # fixed
             degree = self.max_degree
 
         # Determine number of terms
-        max_possible_terms = math.comb(degree + self.ring.ngens, degree)
+        max_possible_terms = binomial(degree + self.ring.ngens(), degree)
         max_terms = min(self.max_num_terms, max_possible_terms)
 
         if self.term_sampling == "uniform":
-            num_terms = random.randint(1, max_terms)
+            num_terms = randint(1, max_terms)
         else:  # fixed
             num_terms = max_terms
 
@@ -112,13 +108,13 @@ class PolynomialSampler:
             if p == 0 and self.nonzero_instance:
                 continue
 
-            if self.total_degree(p) < self.min_degree:
+            if p.total_degree() < self.min_degree:
                 continue
 
             if not self.strictly_conditioned:
                 break
 
-            if self.total_degree(p) == degree and len(p.terms()) == num_terms:
+            if p.total_degree() == degree and len(p.monomials()) == num_terms:
                 break
 
             if attempt == max_attempts - 1:
@@ -128,37 +124,36 @@ class PolynomialSampler:
 
         return p
 
-    def _generate_random_polynomial(self, degree: int, num_terms: int) -> PolyElement:
+    def _generate_random_polynomial(self, degree: int, num_terms: int) -> Any:
         """Generate a random polynomial with given degree and number of terms"""
         choose_degree = self.degree_sampling == "uniform"
-        non_zero_coeff = self.nonzero_instance
 
         if self.field == QQ:
-            return self.single_poly_sampler.random_element(
-                self.ring,
+            return self.ring.random_element(
                 degree=degree,
                 terms=num_terms,
-                choose_degree=choose_degree,
-                non_zero_coeff=non_zero_coeff,
                 num_bound=self.num_bound,
+                choose_degree=choose_degree,
             )
-        elif self.field in (RR, ZZ):
-            return self.single_poly_sampler.random_element(
-                self.ring,
+        elif self.field == RR:
+            return self.ring.random_element(
                 degree=degree,
                 terms=num_terms,
-                choose_degree=choose_degree,
-                non_zero_coeff=non_zero_coeff,
                 min=-self.max_coeff,
                 max=self.max_coeff,
+                choose_degree=choose_degree,
             )
-        else:  # Finite field
-            return self.single_poly_sampler.random_element(
-                self.ring,
+        elif self.field == ZZ:
+            return self.ring.random_element(
                 degree=degree,
                 terms=num_terms,
+                x=-self.max_coeff,
+                y=self.max_coeff + 1,
                 choose_degree=choose_degree,
-                non_zero_coeff=non_zero_coeff,
+            )
+        else:  # Finite field
+            return self.ring.random_element(
+                degree=degree, terms=num_terms, choose_degree=choose_degree
             )
 
     def _sample_matrix(
@@ -167,55 +162,49 @@ class PolynomialSampler:
         density: float = 1.0,
         matrix_type: Optional[str] = None,
         max_attempts: int = 100,
-    ) -> List[List[PolyElement]]:
+    ) -> matrix:
         """Generate a matrix of random polynomials"""
         rows, cols = size
-        matrix = [[None for _ in range(cols)] for _ in range(rows)]
+        num_entries = prod(size)
 
         # Generate polynomial entries
-        for i in range(rows):
-            for j in range(cols):
-                if random.random() < density:
-                    p = self._sample_polynomial(max_attempts)
-                    matrix[i][j] = p
-                else:
-                    matrix[i][j] = self.ring.zero
+        entries = []
+        for _ in range(num_entries):
+            p = self._sample_polynomial(max_attempts)
+            # Apply density
+            if random.random() >= density:
+                p *= 0
+            entries.append(p)
+
+        # Create matrix
+        M = matrix(self.ring, rows, cols, entries)
 
         # Apply special matrix type constraints
         if matrix_type == "unimodular_upper_triangular":
             for i in range(rows):
                 for j in range(cols):
                     if i == j:
-                        matrix[i][j] = self.ring.one
+                        M[i, j] = 1
                     elif i > j:
-                        matrix[i][j] = self.ring.zero
+                        M[i, j] = 0
 
-        return matrix
-
-    def total_degree(self, poly: PolyElement) -> int:
-        """Compute total degree of a polynomial"""
-        if poly.is_zero:
-            return 0
-        else:
-            return max(list(sum(monom) for monom in poly.monoms()))
+        return M
 
 
-def compute_max_coefficient(poly: PolyElement) -> float:
+def compute_max_coefficient(poly: Any) -> int:
     """Compute maximum absolute coefficient value in a polynomial"""
-    coeffs = poly.coeffs()
-    field = poly.ring.domain
+    coeffs = poly.coefficients()
+    field = poly.base_ring()
 
     if not coeffs:
         return 0
 
     if field == RR:
-        return max(abs(float(c)) for c in coeffs)
+        return max(abs(c) for c in coeffs)
     else:  # QQ case
-        return max(
-            max(abs(float(c.numerator)), abs(float(c.denominator))) for c in coeffs
-        )
+        return max(max(abs(c.numerator()), abs(c.denominator())) for c in coeffs)
 
 
-def compute_matrix_max_coefficient(M: List[List[PolyElement]]) -> float:
+def compute_matrix_max_coefficient(M: matrix) -> int:
     """Compute maximum absolute coefficient value in a polynomial matrix"""
-    return max(compute_max_coefficient(p) for row in M for p in row)
+    return max(compute_max_coefficient(p) for p in M.list())
