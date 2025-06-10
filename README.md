@@ -1,5 +1,38 @@
 # CALT: Computer ALgebra with Transformer
-This project is currently in its initial development phase. The file structure and content are subject to significant changes. Please ensure you are referring to the latest version when using it.
+(*Note: This project is currently in its initial development phase. The file structure and content are subject to significant changes. Please ensure you are referring to the latest version when using it.*)
+
+`calt` is a simple Python library for learning arithmetic and symbolic computation with a Transformer model (a deep neural model to realize sequece-to-sequence functions). 
+
+It offers a basic Transformer model and training, and non-experts of deep learning (e.g., mathematicians) can focus on constructing datasets to train and evaluate the model. Particularly, users only need to implement an instance generator for their own task.
+
+For example, for polynomial addition task, the following will work.
+```
+class SumProblemGenerator:
+    ''' 
+    Task - input: F=[f_1, ..., f_s], target: G=[g:= f_1+...+f_s]
+    '''
+    def __init__(
+        self, sampler: PolynomialSampler, max_polynomials: int, min_polynomials: int
+    ):
+        self.sampler = sampler
+        self.max_polynomials = max_polynomials  
+        self.min_polynomials = min_polynomials
+
+    def __call__(self, seed: int) -> Tuple[List[PolyElement], List[PolyElement]]:
+        random.seed(seed) # Set random seed
+        num_polys = random.randint(self.min_polynomials, self.max_polynomials) 
+
+        F = self.sampler.sample(num_samples=num_polys)
+        G = [sum(F)]
+
+        return F, G
+```
+
+Then, `calt` calls this in parallel to efficiently construct a large dataset and then train a Transformer model to learn this computation. For hard problems, the sample generation itself can suggest unexplored problems, and one can study theoretical and algorithmic solutions of them. The following is a small list of such studies from our group. 
+
+- [Learning to Compute Gröbner Bases, Kera et al., 2024](https://arxiv.org/abs/2311.12904)
+- [Computational Algebra with Attention: Transformer Oracles for Border Basis Algorithms, Kera and Pelleriti et al., 2025](https://arxiv.org/abs/2505.23696)
+- [Geometric Generality of Transformer-Based Gröbner Basis Computation, Kambe et al., 2025](https://arxiv.org/abs/2504.12465)
 
 
 ### Weights & Biases (wandb) Setup
@@ -14,3 +47,18 @@ Simple demonstrations for data generation and training are available as Jupyter 
 
 [![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/HiroshiKERA/calt/blob/dev/notebooks/demo.ipynb)
 
+
+
+## Citation
+
+If you use this code in your research, please cite our paper:
+
+```bibtex
+@misc{kera2025calt,
+  title={CALT: A Library for Computer Algebra with Transformer},
+  author={Hiroshi Kera and Shun Arawaka and Yuta Sato},
+  year={2025},
+  archivePrefix={arXiv},
+  eprint={2506.xxxxx}
+}
+```
