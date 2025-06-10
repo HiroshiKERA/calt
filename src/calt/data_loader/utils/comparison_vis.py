@@ -50,7 +50,10 @@ def _term_latex(
             var_parts.append(f"{latex(v)}^{{{e}}}")
 
     # Combine: coefficient  gap  variables
-    body = coeff_str + (r"\, " if coeff_str and var_parts else "") + r"\, ".join(var_parts) or "0"
+    body = (
+        coeff_str + (r"\, " if coeff_str and var_parts else "") + r"\, ".join(var_parts)
+        or "0"
+    )
     term_tex = sign + body
 
     # --- highlighting ----------------------------------------------------- #
@@ -128,7 +131,9 @@ def display_with_diff(
 
     # --- normalize -------------------------------------------------------- #
     if var_order is None:
-        var_order = sorted(gold.free_symbols.union(pred.free_symbols), key=lambda s: s.name)
+        var_order = sorted(
+            gold.free_symbols.union(pred.free_symbols), key=lambda s: s.name
+        )
     gold_poly = Poly(gold.expand(), *var_order)
     pred_poly = Poly(pred.expand(), *var_order)
 
@@ -213,7 +218,9 @@ def parse_poly(tokens: str, var_names: Sequence[Union[str, Symbol]] | None = Non
     # --- Infer the number of variables from the first term ---------------- #
     try:
         # Find the **index** of the first 'C' token after the initial one
-        next_c_idx = next(idx for idx, p in enumerate(parts[1:], start=1) if p.startswith("C"))
+        next_c_idx = next(
+            idx for idx, p in enumerate(parts[1:], start=1) if p.startswith("C")
+        )
     except StopIteration:
         # Single-term polynomial → treat end of list as “next C” position
         next_c_idx = len(parts)
@@ -221,7 +228,8 @@ def parse_poly(tokens: str, var_names: Sequence[Union[str, Symbol]] | None = Non
     n_vars = next_c_idx - 1
     if n_vars <= 0:
         raise ValueError(
-            "Malformed token sequence: need at least one exponent token " f"before the next 'C'; got n_vars={n_vars}."
+            "Malformed token sequence: need at least one exponent token "
+            f"before the next 'C'; got n_vars={n_vars}."
         )
 
     # --- Prepare SymPy symbols ------------------------------------------- #
@@ -229,7 +237,9 @@ def parse_poly(tokens: str, var_names: Sequence[Union[str, Symbol]] | None = Non
         vars_ = symbols(" ".join(f"x{i}" for i in range(n_vars)))
     else:
         if len(var_names) != n_vars:
-            raise ValueError(f"Expected {n_vars} variable name(s), got {len(var_names)}.")
+            raise ValueError(
+                f"Expected {n_vars} variable name(s), got {len(var_names)}."
+            )
         if all(isinstance(v, str) for v in var_names):
             vars_ = symbols(" ".join(var_names))
         elif all(isinstance(v, Symbol) for v in var_names):
