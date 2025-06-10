@@ -1,6 +1,7 @@
 # CALT: Computer ALgebra with Transformer
 (*Note: This project is currently in its initial development phase. The file structure and content are subject to significant changes. Please ensure you are referring to the latest version when using it.*)
 
+# Overview
 `calt` is a simple Python library for learning arithmetic and symbolic computation with a Transformer model (a deep neural model to realize sequece-to-sequence functions). 
 
 It offers a basic Transformer model and training, and non-experts of deep learning (e.g., mathematicians) can focus on constructing datasets to train and evaluate the model. Particularly, users only need to implement an instance generator for their own task.
@@ -30,9 +31,11 @@ class SumProblemGenerator:
 
 Then, `calt` calls this in parallel to efficiently construct a large dataset and then train a Transformer model to learn this computation. For hard problems, the sample generation itself can suggest unexplored problems, and one can study theoretical and algorithmic solutions of them. The following is a small list of such studies from our group. 
 
-- [Learning to Compute Gröbner Bases, Kera et al., 2024](https://arxiv.org/abs/2311.12904)
-- [Computational Algebra with Attention: Transformer Oracles for Border Basis Algorithms, Kera and Pelleriti et al., 2025](https://arxiv.org/abs/2505.23696)
-- [Geometric Generality of Transformer-Based Gröbner Basis Computation, Kambe et al., 2025](https://arxiv.org/abs/2504.12465)
+- ["Learning to Compute Gröbner Bases," Kera et al., 2024](https://arxiv.org/abs/2311.12904)
+- ["Computational Algebra with Attention: Transformer Oracles for Border Basis Algorithms," Kera and Pelleriti et al., 2025](https://arxiv.org/abs/2505.23696)
+- ["Geometric Generality of Transformer-Based Gröbner Basis Computation," Kambe et al., 2025](https://arxiv.org/abs/2504.12465)
+
+Refer to our paper ("CALT: A Library for Computer Algebra with Transformer", Kera et al., 2025)[https://arxiv.org/abs/2506.xxxxx] for a comprehensive overview.
 
 
 ### Weights & Biases (wandb) Setup
@@ -41,7 +44,7 @@ If you are using Weights & Biases (wandb) for the first time to log training pro
 
 https://wandb.ai/site/
 
-## Demonstrations
+## Demos and Tutorials
 
 Simple demonstrations for data generation and training are available as Jupyter Notebook files. You can find them in the `notebooks` directory
 
