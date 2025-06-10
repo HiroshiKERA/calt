@@ -33,7 +33,7 @@ class DatasetWriter:
     def save_dataset(
         self,
         samples: List[Tuple[Union[List[Any], Any], Union[List[Any], Any]]],
-        statistics: Dict[str, Any],
+        statistics: Optional[Dict[str, Any]] = None,
         tag: str = "train",
         data_tag: Optional[str] = None,
     ) -> None:
@@ -42,7 +42,7 @@ class DatasetWriter:
 
         Args:
             samples: List of (F, G) pairs where F and G are either lists of polynomials or single polynomials
-            statistics: Dictionary containing dataset statistics
+            statistics: Dictionary containing dataset statistics (optional)
             tag: Dataset tag (e.g., "train", "test", "valid")
             data_tag: Optional tag for the dataset directory
         """
@@ -50,16 +50,17 @@ class DatasetWriter:
         dataset_dir = self._get_dataset_dir(data_tag)
         dataset_dir.mkdir(parents=True, exist_ok=True)
 
-        # Save statistics in YAML format
-        stats_path = dataset_dir / f"{tag}_stats.yaml"
-        with open(stats_path, "w") as f:
-            yaml.dump(
-                statistics,
-                f,
-                Dumper=TimedeltaDumper,
-                default_flow_style=False,
-                sort_keys=False,
-            )
+        # Save statistics in YAML format if available
+        if statistics is not None:
+            stats_path = dataset_dir / f"{tag}_stats.yaml"
+            with open(stats_path, "w") as f:
+                yaml.dump(
+                    statistics,
+                    f,
+                    Dumper=TimedeltaDumper,
+                    default_flow_style=False,
+                    sort_keys=False,
+                )
 
         # Save raw data in text format
         raw_path = dataset_dir / f"{tag}_raw.txt"
