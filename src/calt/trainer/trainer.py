@@ -46,14 +46,19 @@ class PolynomialTrainer(Trainer):
             The same dictionary with all tensors on the target device.
         """
 
-        return {k: (v.to(self.args.device) if isinstance(v, torch.Tensor) else v) for k, v in inputs.items()}
+        return {
+            k: (v.to(self.args.device) if isinstance(v, torch.Tensor) else v)
+            for k, v in inputs.items()
+        }
 
     def log_metrics(self, outputs, inputs, ignore_index: int = -100):
         """Push a single metric dictionary to Weights & Biases."""
         if not self.is_world_process_zero():
             return
 
-        metrics = {"train/loss": (outputs.loss.item() if outputs.loss is not None else 0.0)}
+        metrics = {
+            "train/loss": (outputs.loss.item() if outputs.loss is not None else 0.0)
+        }
 
         # Add to log history
         self.log_history.append(metrics)

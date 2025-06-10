@@ -1,9 +1,9 @@
-from typing import Any, Dict, List, Tuple, Callable, Union
+from typing import Any, Dict, List, Tuple, Callable, Union, Optional
 from joblib import Parallel, delayed
 from time import time
 import hashlib
 from datetime import timedelta
-from sympy.polys.rings import PolyRing
+import numpy as np
 
 
 class DatasetGenerator:
@@ -11,7 +11,6 @@ class DatasetGenerator:
 
     def __init__(
         self,
-        ring: PolyRing = None,
         backend: str = "multiprocessing",
         n_jobs: int = -1,
         verbose: bool = True,
@@ -21,7 +20,6 @@ class DatasetGenerator:
         Initialize problem generator.
 
         Args:
-            ring: Polynomial ring (required for polynomial problems)
             n_jobs: Number of parallel jobs (-1 for all cores)
             verbose: Whether to display progress information
             root_seed: Root seed for reproducibility
@@ -56,7 +54,7 @@ class DatasetGenerator:
         job_id: int,
         train: bool,
         problem_generator: Callable,
-        statistics_calculator: Callable,
+        statistics_calculator: Optional[Callable] = None,
     ) -> Tuple[Union[List[Any], Any], Union[List[Any], Any], Dict[str, Any], timedelta]:
         # Generate a unique seed for this job
         seed = self._generate_seed(job_id, train)
@@ -65,7 +63,10 @@ class DatasetGenerator:
         problem_input, problem_output = problem_generator(seed)
         runtime = time() - start_time
 
-        sample_stats = statistics_calculator(problem_input, problem_output)
+        if statistics_calculator is not None:
+            sample_stats = statistics_calculator(problem_input, problem_output)
+        else:
+            sample_stats = None
 
         return problem_input, problem_output, sample_stats, runtime
 
@@ -74,7 +75,7 @@ class DatasetGenerator:
         train: bool,
         num_samples: int,
         problem_generator: Callable,
-        statistics_calculator: Callable,
+        statistics_calculator: Optional[Callable] = None,
     ) -> Tuple[
         List[Tuple[Union[List[Any], Any], Union[List[Any], Any]]], Dict[str, Any]
     ]:
@@ -85,7 +86,7 @@ class DatasetGenerator:
             num_samples: Number of samples to generate
             train: Whether this is for training data
             problem_generator: Function to generate individual problems
-            statistics_calculator: Function to calculate dataset statistics
+            statistics_calculator: Optional function to calculate dataset statistics
 
         Returns:
             Tuple containing (list of samples, overall statistics)
@@ -107,8 +108,24 @@ class DatasetGenerator:
 
         # Calculate overall statistics
         total_time = time() - start_time
-        overall_stats = statistics_calculator.overall_stats(
-            sample_stats, runtimes, total_time=total_time, num_samples=num_samples
-        )
+        if statistics_calculator is not None:
+            overall_stats = statistics_calculator.overall_stats(
+                sample_stats=sample_stats,
+                runtimes=runtimes,
+                total_time=total_time,
+                num_samples=num_samples,
+            )
+        else:
+            overall_stats = {
+                "total_time": total_time,
+                "num_samples": num_samples,
+                "samples_per_second": num_samples / total_time,
+                "generation_time": {
+                    "mean": float(sum(runtimes) / len(runtimes)),
+                    "std": float(np.std(runtimes)),
+                    "min": float(np.min(runtimes)),
+                    "max": float(np.max(runtimes)),
+                },
+            }
 
         return list(zip(problem_inputs, problem_outputs)), overall_stats
