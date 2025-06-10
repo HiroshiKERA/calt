@@ -156,8 +156,18 @@ def display_with_diff(
     gold_tex = latex(gold.expand())
     pred_tex = _build_poly_latex(pdict, var_order, diff)
 
-    display(Math(r"\text{Gold:}\; " + gold_tex))
-    display(Math(r"\text{Predicted:}\; " + pred_tex))
+    display(
+        Math(
+            r"""\begin{aligned}
+        \text{Ground truth\,:}\; & {}"""
+            + gold_tex
+            + r"""\\
+        \text{Prediction\,:}\;   & {}"""
+            + pred_tex
+            + r"""
+        \end{aligned}"""
+        )
+    )
 
 
 def load_eval_results(file_path: str) -> Tuple[List[str], List[str]]:
