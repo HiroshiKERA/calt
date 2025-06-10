@@ -3,7 +3,6 @@ from joblib import Parallel, delayed
 from time import time
 import hashlib
 from datetime import timedelta
-from sympy.polys.rings import PolyRing
 import numpy as np
 
 
@@ -12,7 +11,6 @@ class DatasetGenerator:
 
     def __init__(
         self,
-        ring: PolyRing = None,
         backend: str = "multiprocessing",
         n_jobs: int = -1,
         verbose: bool = True,
@@ -22,7 +20,6 @@ class DatasetGenerator:
         Initialize problem generator.
 
         Args:
-            ring: Polynomial ring (required for polynomial problems)
             n_jobs: Number of parallel jobs (-1 for all cores)
             verbose: Whether to display progress information
             root_seed: Root seed for reproducibility
