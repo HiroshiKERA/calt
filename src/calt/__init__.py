@@ -7,7 +7,7 @@ from .data_loader.utils.preprocessor import (
     SymbolicToInternalProcessor,
     IntegerToInternalProcessor,
 )
-from .generator.sympy_backend.dataset_generator import DatasetGenerator
-from .generator.sympy_backend.utils.polynomial_sampler import PolynomialSampler
-from .generator.sympy_backend.utils.dataset_writer import DatasetWriter
-from .generator.sympy_backend.utils.statistics_calculator import BaseStatisticsCalculator
+from .generator.sympy.dataset_generator import DatasetGenerator
+from .generator.sympy.utils.polynomial_sampler import PolynomialSampler
+from .generator.sympy.utils.dataset_writer import DatasetWriter
+from .generator.sympy.utils.statistics_calculator import BaseStatisticsCalculator
