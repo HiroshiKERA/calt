@@ -35,7 +35,7 @@ Then, `calt` calls this in parallel to efficiently construct a large dataset and
 - ["Computational Algebra with Attention: Transformer Oracles for Border Basis Algorithms," Kera and Pelleriti et al., 2025](https://arxiv.org/abs/2505.23696)
 - ["Geometric Generality of Transformer-Based Gröbner Basis Computation," Kambe et al., 2025](https://arxiv.org/abs/2504.12465)
 
-Refer to our paper ("CALT: A Library for Computer Algebra with Transformer", Kera et al., 2025)[https://arxiv.org/abs/2506.08600] for a comprehensive overview.
+Refer to our paper ["CALT: A Library for Computer Algebra with Transformer," Kera et al., 2025](https://arxiv.org/abs/2506.08600) for a comprehensive overview.
 
 
 ### Weights & Biases (wandb) Setup
