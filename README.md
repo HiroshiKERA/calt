@@ -10,7 +10,7 @@ For example, for the polynomial addition task, the following will work.
 ```
 class SumProblemGenerator:
     ''' 
-    Task - input: F=[f_1, ..., f_s], target: G=[g:= f_1+...+f_s]
+    Task - input: F=[f_1, ..., f_s], target: g= f_1+...+f_s
     '''
     def __init__(
         self, sampler: PolynomialSampler, max_polynomials: int, min_polynomials: int
@@ -19,14 +19,14 @@ class SumProblemGenerator:
         self.max_polynomials = max_polynomials  
         self.min_polynomials = min_polynomials
 
-    def __call__(self, seed: int) -> Tuple[List[PolyElement], List[PolyElement]]:
+    def __call__(self, seed: int) -> Tuple[List[PolyElement], PolyElement]:
         random.seed(seed) # Set random seed
         num_polys = random.randint(self.min_polynomials, self.max_polynomials) 
 
         F = self.sampler.sample(num_samples=num_polys)
-        G = [sum(F)]
+        g = sum(F)
 
-        return F, G
+        return F, g
 ```
 
 Then, `calt` calls this in parallel to efficiently construct a large dataset and then train a Transformer model to learn this computation. For hard problems, the sample generation itself can suggest unexplored problems, and one can study theoretical and algorithmic solutions of them. The following is a small list of such studies from our group. 
