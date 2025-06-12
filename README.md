@@ -37,6 +37,18 @@ Then, `calt` calls this in parallel to efficiently construct a large dataset and
 
 Refer to our paper ["CALT: A Library for Computer Algebra with Transformer," Kera et al., 2025](https://arxiv.org/abs/2506.08600) for a comprehensive overview.
 
+## Installation
+
+`calt-x` is available on PyPI. You can install it with:
+
+~~~bash
+pip install calt-x
+~~~
+
+### Requirements
+
+- Python ≥ 3.10
+
 
 ### Weights & Biases (wandb) Setup
 
