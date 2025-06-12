@@ -3,7 +3,7 @@ from joblib import Parallel, delayed
 from time import time
 import hashlib
 from sage.all import PolynomialRing
-from calt.generate.utils.statistics_calculator import (
+from .utils.statistics_calculator import (
     StatisticsCalculator,
 )
 
