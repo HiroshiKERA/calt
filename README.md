@@ -39,15 +39,27 @@ Refer to our paper ["CALT: A Library for Computer Algebra with Transformer," Ker
 
 ## Installation
 
-`calt-x` is available on PyPI. You can install it with:
+### Standard Python environment
+
+`calt-x` is available on PyPI. Install with:
 
 ~~~bash
 pip install calt-x
 ~~~
 
+### SageMath environment
+
+If you plan to leverage **SageMath** as a backend, install from within a Sage shell:
+
+~~~bash
+sage -pip install calt-x
+~~~
+
 ### Requirements
 
-- Python ≥ 3.10
+- Python ≥ 3.10  
+- SageMath ≥ 9.5 (only required when using the Sage backend)
+
 
 
 ### Weights & Biases (wandb) Setup
