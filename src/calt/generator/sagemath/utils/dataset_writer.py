@@ -48,16 +48,17 @@ class DatasetWriter:
         dataset_dir = self._get_dataset_dir(data_tag)
         dataset_dir.mkdir(parents=True, exist_ok=True)
 
-        # Save statistics in YAML format
-        stats_path = dataset_dir / f"{tag}_stats.yaml"
-        with open(stats_path, "w") as f:
-            yaml.dump(
-                statistics,
-                f,
-                Dumper=TimedeltaDumper,
-                default_flow_style=False,
-                sort_keys=False,
-            )
+        # Save statistics in YAML format if available
+        if statistics is not None:
+            stats_path = dataset_dir / f"{tag}_stats.yaml"
+            with open(stats_path, "w") as f:
+                yaml.dump(
+                    statistics,
+                    f,
+                    Dumper=TimedeltaDumper,
+                    default_flow_style=False,
+                    sort_keys=False,
+                )
 
         # Save raw data in text format
         raw_path = dataset_dir / f"{tag}_raw.txt"
