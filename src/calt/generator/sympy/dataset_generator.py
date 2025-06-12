@@ -20,6 +20,7 @@ class DatasetGenerator:
         Initialize problem generator.
 
         Args:
+            backend: Backend for parallel processing
             n_jobs: Number of parallel jobs (-1 for all cores)
             verbose: Whether to display progress information
             root_seed: Root seed for reproducibility
