@@ -1,11 +1,9 @@
-from typing import Any, Dict, List, Tuple, Callable, Union, Literal
+from typing import Any, Dict, List, Tuple, Callable, Union, Optional
 from joblib import Parallel, delayed
 from time import time
 import hashlib
-from sage.all import PolynomialRing
-from .utils.statistics_calculator import (
-    StatisticsCalculator,
-)
+from datetime import timedelta
+import numpy as np
 
 
 class DatasetGenerator:
@@ -13,8 +11,7 @@ class DatasetGenerator:
 
     def __init__(
         self,
-        problem_type: Literal["polynomial", "numerical"],
-        ring: PolynomialRing = None,
+        backend: str = "multiprocessing",
         n_jobs: int = -1,
         verbose: bool = True,
         root_seed: int = 42,
@@ -23,25 +20,16 @@ class DatasetGenerator:
         Initialize problem generator.
 
         Args:
-            problem_type: Type of problems to generate ("polynomial" or "numerical")
-            ring: Polynomial ring (required for polynomial problems)
+            backend: Backend for parallel processing
             n_jobs: Number of parallel jobs (-1 for all cores)
             verbose: Whether to display progress information
             root_seed: Root seed for reproducibility
         """
-        if problem_type not in ["polynomial", "numerical"]:
-            raise ValueError("Invalid problem type")
-        if problem_type == "polynomial" and ring is None:
-            raise ValueError("Polynomial problems require a polynomial ring")
-        if problem_type == "numerical" and ring is not None:
-            raise ValueError("Numerical problems do not require a polynomial ring")
 
-        self.problem_type = problem_type
+        self.backend = backend
         self.n_jobs = n_jobs
         self.verbose = verbose
         self.root_seed = root_seed
-        # Initialize statistics calculator
-        self.stats_calculator = StatisticsCalculator(problem_type, ring)
 
     def _generate_seed(self, job_id: int, train: bool) -> int:
         """
@@ -63,20 +51,32 @@ class DatasetGenerator:
         return int.from_bytes(hash_obj.digest()[:8], byteorder="big")
 
     def generate_sample(
-        self, problem_generator: Callable, job_id: int, train: bool
-    ) -> Tuple[Union[List[Any], Any], Union[List[Any], Any], Dict[str, Any]]:
-        start_time = time()
+        self,
+        job_id: int,
+        train: bool,
+        problem_generator: Callable,
+        statistics_calculator: Optional[Callable] = None,
+    ) -> Tuple[Union[List[Any], Any], Union[List[Any], Any], Dict[str, Any], timedelta]:
         # Generate a unique seed for this job
         seed = self._generate_seed(job_id, train)
-        problem_input, problem_output = problem_generator(seed)
-        sample_stats = self.stats_calculator.sample_stats(
-            problem_input, problem_output, time() - start_time
-        )
 
-        return problem_input, problem_output, sample_stats
+        start_time = time()
+        problem_input, problem_output = problem_generator(seed)
+        runtime = time() - start_time
+
+        if statistics_calculator is not None:
+            sample_stats = statistics_calculator(problem_input, problem_output)
+        else:
+            sample_stats = None
+
+        return problem_input, problem_output, sample_stats, runtime
 
     def run(
-        self, num_samples: int, problem_generator: Callable, train: bool
+        self,
+        train: bool,
+        num_samples: int,
+        problem_generator: Callable,
+        statistics_calculator: Optional[Callable] = None,
     ) -> Tuple[
         List[Tuple[Union[List[Any], Any], Union[List[Any], Any]]], Dict[str, Any]
     ]:
@@ -85,8 +85,9 @@ class DatasetGenerator:
 
         Args:
             num_samples: Number of samples to generate
-            problem_generator: Function to generate individual problems
             train: Whether this is for training data
+            problem_generator: Function to generate individual problems
+            statistics_calculator: Optional function to calculate dataset statistics
 
         Returns:
             Tuple containing (list of samples, overall statistics)
@@ -95,19 +96,37 @@ class DatasetGenerator:
 
         # Generate samples in parallel using joblib
         results = Parallel(
-            n_jobs=self.n_jobs, backend="multiprocessing", verbose=self.verbose
+            n_jobs=self.n_jobs, backend=self.backend, verbose=self.verbose
         )(
-            delayed(self.generate_sample)(problem_generator, i, train)
+            delayed(self.generate_sample)(
+                i, train, problem_generator, statistics_calculator
+            )
             for i in range(num_samples)
         )
 
         # Unzip the results
-        problem_inputs, problem_outputs, sample_stats = zip(*results)
+        problem_inputs, problem_outputs, sample_stats, runtimes = zip(*results)
 
         # Calculate overall statistics
         total_time = time() - start_time
-        overall_stats = self.stats_calculator.overall_stats(
-            sample_stats, total_time=total_time, num_samples=num_samples
-        )
+        if statistics_calculator is not None:
+            overall_stats = statistics_calculator.overall_stats(
+                sample_stats=sample_stats,
+                runtimes=runtimes,
+                total_time=total_time,
+                num_samples=num_samples,
+            )
+        else:
+            overall_stats = {
+                "total_time": total_time,
+                "num_samples": num_samples,
+                "samples_per_second": num_samples / total_time,
+                "generation_time": {
+                    "mean": float(sum(runtimes) / len(runtimes)),
+                    "std": float(np.std(runtimes)),
+                    "min": float(np.min(runtimes)),
+                    "max": float(np.max(runtimes)),
+                },
+            }
 
         return list(zip(problem_inputs, problem_outputs)), overall_stats
