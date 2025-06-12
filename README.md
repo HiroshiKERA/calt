@@ -9,9 +9,7 @@ It offers a basic Transformer model and training, and non-experts of deep learni
 For example, for the polynomial addition task, the following will work.
 ```
 class SumProblemGenerator:
-    ''' 
-    Task - input: F=[f_1, ..., f_s], target: g= f_1+...+f_s
-    '''
+    # Task - input: F=[f_1, ..., f_s], target: G=[g:= f_1+...+f_s]
     def __init__(
         self, sampler: PolynomialSampler, max_polynomials: int, min_polynomials: int
     ):
