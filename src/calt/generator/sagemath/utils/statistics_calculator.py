@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Union, Sequence, Protocol
+from typing import Any, Dict, List, Sequence, Protocol
 import numpy as np
 from datetime import timedelta
 
