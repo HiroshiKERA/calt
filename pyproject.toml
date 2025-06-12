@@ -1,9 +1,17 @@
+[build-system]
+requires = ["setuptools>=65", "wheel"]
+build-backend = "setuptools.build_meta"
+
 [project]
-name = "transformer_algebra"
-version = "0.1.0"
-description = ""
+name = "calt-x"
+version = "0.1.0.post6"
+description = "A library for computational algebra using Transformers"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.10,<3.13"
+authors = [
+  {name = "Yuta Sato", email = "sato.yuta@gmail.com"}
+]
+
 dependencies = [
     "transformers>=4.49.0",
     "omegaconf>=2.3.0",
@@ -11,11 +19,8 @@ dependencies = [
     "wandb>=0.15.11",
     "accelerate>=0.29.0",
     "joblib>=1.5.0",
+    "sympy>=1.12",
 ]
-
-[tool.setuptools.packages.find]
-where = ["."]
-include = ["transformer_algebra*"]
 
 [dependency-groups]
 dev = [
@@ -26,7 +31,17 @@ dev = [
 ]
 
 [tool.ruff]
-lint.per-file-ignores = {"transformer_algebra/__init__.py" = ["F401"]}
+lint.per-file-ignores = {"src/calt/__init__.py" = ["F401"], "src/calt/data_loader/__init__.py" = ["F401"],"src/calt/generate/__init__.py" = ["F401"],"src/calt/generate_by_sage/__init__.py" = ["F401"],"src/calt/trainer/__init__.py" = ["F401"],"src/calt/data_loader/utils/__init__.py" = ["F401"],"src/calt/generator/__init__.py" = ["F401"],"src/calt/generator/sagemath/__init__.py" = ["F401"],"src/calt/generator/sympy/__init__.py" = ["F401"]}
 exclude = [
-    "sage/**",
+    "notebooks/**",
 ]
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"] 
+
+[project.urls]
+Source        = "https://github.com/HiroshiKERA/calt"
+Issues        = "https://github.com/HiroshiKERA/calt/issues"
