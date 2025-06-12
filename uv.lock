@@ -45,7 +45,7 @@ sdist = { url = "https://files.pythonhosted.org/packages/3e/38/7859ff46355f76f8d
 
 [[package]]
 name = "calt-x"
-version = "0.1.0.post3"
+version = "0.1.0.post6"
 source = { editable = "." }
 dependencies = [
     { name = "accelerate" },
