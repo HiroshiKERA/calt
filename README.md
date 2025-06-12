@@ -72,7 +72,7 @@ https://wandb.ai/site/
 
 Simple demonstrations for data generation and training are available as Jupyter Notebook files. You can find them in the `notebooks` directory
 
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/HiroshiKERA/calt/blob/dev/notebooks/demo.ipynb)
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/HiroshiKERA/calt/blob/main/notebooks/demo.ipynb)
 
 
 
