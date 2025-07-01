@@ -1,51 +1,55 @@
-# 開発者用
-ライブラリ開発の際に読んでください
+# For Developers
+Please read this section when developing the library.
 
-## 開発環境構築
-以下のコマンドで仮想環境内にライブラリの環境を構築できる
-```
-uv venv # 仮想環境
+## Setting Up the Development Environment
+Run the commands below to build the library environment inside a virtual environment:
 
+```bash
+# Create a virtual environment
+uv venv            
+
+# Activate it
 source .venv/bin/activate
 
+# Upgrade the build backend
 uv pip install --upgrade build 
 
+# Build the wheel
 python -m build
 
-# ライブラリ本体
-uv pip install dist/calt_x-0.1.0-py3-none-any.whl # versionなど適宜変更
+# Install the library itself (adjust version as needed)
+uv pip install dist/calt_x-0.1.0-py3-none-any.whl  
 
-# dev用の依存関係
+# Install development dependencies
 uv pip install -e ".[dev]"
 ```
 
-## linter + formatter
-```
-# linter
+## Linter + Formatter
+```bash
+# Lint the codebase
 uv run ruff check .
 
-# reformat
+# Reformat the code
 uv run ruff format .
-
 ```
 
-## PyPIへのアップロード
-下記のサイトに登録後
-APIキーを発行する
-TestPyPI: https://test.pypi.org/
-本番PyPI: https://pypi.org/
+## Uploading to PyPI
+First register on the following sites and generate an API key:  
+TestPyPI: <https://test.pypi.org/>  
+Production PyPI: <https://pypi.org/>
 
-```
-# TestPyPIへのアップロード
+```bash
+# Upload to TestPyPI
 uv pip install --upgrade twine
 
-twine check dist/* # アップロード可能か確認
+# Verify that the distribution is uploadable
+twine check dist/*       
 
-twine upload --repository testpypi dist/* # アップロード
+# Upload to TestPyPI
+twine upload --repository testpypi dist/* 
 
-# 本番PyPIへのアップロード
-twine check dist/* 
+# Upload to the production PyPI
+twine check dist/*       
 
 twine upload dist/*
 ```
-
