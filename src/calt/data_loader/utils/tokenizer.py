@@ -40,7 +40,9 @@ def set_tokenizer(
     else:
         # Create tokenizer from scratch
         special_tokens = ["[PAD]", "<s>", "</s>", "[CLS]"]
-        special_token_map = dict(zip(["pad_token", "bos_token", "eos_token", "cls_token"], special_tokens))
+        special_token_map = dict(
+            zip(["pad_token", "bos_token", "eos_token", "cls_token"], special_tokens)
+        )
 
         CONSTS = ["[C]"]
         if field in "ZZ":
@@ -77,5 +79,7 @@ def set_tokenizer(
         ],
     )
 
-    tokenizer = PreTrainedTokenizerFast(tokenizer_object=tok, model_max_length=max_length, **special_token_map)
+    tokenizer = PreTrainedTokenizerFast(
+        tokenizer_object=tok, model_max_length=max_length, **special_token_map
+    )
     return tokenizer
