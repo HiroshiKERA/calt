@@ -13,7 +13,6 @@ def set_tokenizer(
     max_degree: int = 10,
     max_length: int = 512,
     vocab_path: Optional[str] = None,
-    num_vars: Optional[int] = None,
 ) -> PreTrainedTokenizerFast:
     """Create or load a tokenizer for polynomial expressions.
 
@@ -21,13 +20,12 @@ def set_tokenizer(
     Otherwise, it creates a new tokenizer based on the provided parameters.
 
     Args:
-        vocab_path: Optional path to a vocab file (e.g., "vocab.yaml").
-        num_vars: Number of variables (x0, x1, ...) in the polynomial. (currently unused)
         field: Field specification ("QQ"/"ZZ" for rational/integer, or
                "GF<p>" for finite field). Used if vocab_path is not provided.
         max_coeff: Maximum absolute value for coefficients in the vocabulary. Used if vocab_path is not provided.
         max_degree: Maximum degree allowed for any variable. Used if vocab_path is not provided.
         max_length: Maximum sequence length the tokenizer will process.
+        vocab_path: Optional path to a vocab file (e.g., "vocab.yaml").
 
     Returns:
         A pre-configured HuggingFace tokenizer for polynomial expressions.
@@ -42,9 +40,7 @@ def set_tokenizer(
     else:
         # Create tokenizer from scratch
         special_tokens = ["[PAD]", "<s>", "</s>", "[CLS]"]
-        special_token_map = dict(
-            zip(["pad_token", "bos_token", "eos_token", "cls_token"], special_tokens)
-        )
+        special_token_map = dict(zip(["pad_token", "bos_token", "eos_token", "cls_token"], special_tokens))
 
         CONSTS = ["[C]"]
         if field in "ZZ":
@@ -81,7 +77,5 @@ def set_tokenizer(
         ],
     )
 
-    tokenizer = PreTrainedTokenizerFast(
-        tokenizer_object=tok, model_max_length=max_length, **special_token_map
-    )
+    tokenizer = PreTrainedTokenizerFast(tokenizer_object=tok, model_max_length=max_length, **special_token_map)
     return tokenizer

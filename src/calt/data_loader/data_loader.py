@@ -11,7 +11,7 @@ from .utils.data_collator import StandardDataset, StandardDataCollator
 from .utils.preprocessor import SymbolicToInternalProcessor, IntegerToInternalProcessor
 from .utils.tokenizer import set_tokenizer
 from transformers import PreTrainedTokenizerFast as StandardTokenizer
-from typing import Tuple
+from typing import Tuple, Optional
 
 
 def data_loader(
@@ -23,6 +23,7 @@ def data_loader(
     max_coeff: int,
     max_length: int = 512,
     processor_name: str = "polynomial",
+    vocab_path: Optional[str] = None,
 ) -> Tuple[StandardDataset, StandardTokenizer, StandardDataCollator]:
     """Create dataset, tokenizer and data-collator objects.
 
@@ -75,11 +76,11 @@ def data_loader(
     train_dataset = StandardDataset(train_dataset_path, preprocessor)
     test_dataset = StandardDataset(test_dataset_path, preprocessor)
     tokenizer = set_tokenizer(
-        num_vars=num_variables,
         field=field,
         max_degree=max_degree,
         max_coeff=max_coeff,
         max_length=max_length,
+        vocab_path=vocab_path,
     )
     data_collator = StandardDataCollator(tokenizer)
     dataset = {"train": train_dataset, "test": test_dataset}
