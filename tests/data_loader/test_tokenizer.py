@@ -1,9 +1,6 @@
-import os
-import tempfile
 import pytest
 from transformers import PreTrainedTokenizerFast
 from calt.data_loader.utils.tokenizer import set_tokenizer
-import yaml
 
 
 def test_set_tokenizer_dynamic_creation_gf():

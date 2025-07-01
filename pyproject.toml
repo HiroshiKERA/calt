@@ -33,7 +33,7 @@ dev = [
 [tool.ruff]
 lint.per-file-ignores = {"src/calt/__init__.py" = ["F401"]}
 exclude = [
-    "sage/**",
+    "docs/**",
 ]
 
 [tool.setuptools]
