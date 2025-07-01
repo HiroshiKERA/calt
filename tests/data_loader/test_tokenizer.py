@@ -3,6 +3,7 @@ import tempfile
 import pytest
 from transformers import PreTrainedTokenizerFast
 from calt.data_loader.utils.tokenizer import set_tokenizer
+import yaml
 
 
 def test_set_tokenizer_dynamic_creation_gf():
@@ -50,31 +51,39 @@ def test_set_tokenizer_dynamic_creation_zz():
     assert "E5" in tokenizer.get_vocab()
 
 
-def test_set_tokenizer_from_file():
+def test_set_tokenizer_from_yaml():
     """Test loading a tokenizer from a file."""
-    with tempfile.TemporaryDirectory() as tmpdir:
-        # 1. Create a tokenizer and save it to a file
-        original_tokenizer = set_tokenizer(
-            field="GF17",
-            max_degree=8,
-        )
-        tokenizer_path = os.path.join(tmpdir, "tokenizer.json")
-        original_tokenizer.save_pretrained(tokenizer_path)
+    vocab_path = "config/vocab.yaml"
+    tokenizer = set_tokenizer(vocab_path=vocab_path)
 
-        # 2. Load the tokenizer from the file
-        # breakpoint()
-        loaded_tokenizer = set_tokenizer(tokenizer_path=tokenizer_path)
+    assert isinstance(tokenizer, PreTrainedTokenizerFast)
+    assert tokenizer.model_max_length == 512
 
-        # 3. Verify the loaded tokenizer
-        assert isinstance(loaded_tokenizer, PreTrainedTokenizerFast)
-        assert loaded_tokenizer.vocab_size == original_tokenizer.vocab_size
-        assert loaded_tokenizer.get_vocab() == original_tokenizer.get_vocab()
+    # Check special tokens
+    assert tokenizer.pad_token == "[PAD]"
+    assert tokenizer.bos_token == "<s>"
+    assert tokenizer.eos_token == "</s>"
+    assert tokenizer.cls_token == "[CLS]"
 
-        # Test encoding
-        text = "C1 E2 C-3 E1"
-        original_encoding = original_tokenizer.encode(text)
-        loaded_encoding = loaded_tokenizer.encode(text)
-        assert original_encoding == loaded_encoding
+    # Check vocabulary loaded from yaml
+    # vocab: C-50~C50 (101) + [C] (1) = 102
+    # E0~E5 (6)
+    # [SEP] (1)
+    # Total in vocab list: 102 + 6 + 1 = 109
+    # Special tokens added: 4
+    # Total vocab size: 109 + 4 = 113
+    assert len(tokenizer.vocab) == 113
+    assert "C50" in tokenizer.get_vocab()
+    assert "C-50" in tokenizer.get_vocab()
+    assert "E5" in tokenizer.get_vocab()
+    assert "E6" not in tokenizer.get_vocab()
+
+    # Test encoding
+    text = "C1 E2 C-3 E1"
+    encoding = tokenizer.encode(text)
+    expected_tokens = ["<s>", "C1", "E2", "C-3", "E1", "</s>"]
+    encoded_tokens = tokenizer.convert_ids_to_tokens(encoding)
+    assert encoded_tokens == expected_tokens
 
 
 def test_invalid_field():
