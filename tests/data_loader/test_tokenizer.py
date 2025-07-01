@@ -62,7 +62,7 @@ def test_set_tokenizer_from_file():
         original_tokenizer.save_pretrained(tokenizer_path)
 
         # 2. Load the tokenizer from the file
-        breakpoint()
+        # breakpoint()
         loaded_tokenizer = set_tokenizer(tokenizer_path=tokenizer_path)
 
         # 3. Verify the loaded tokenizer

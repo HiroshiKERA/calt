@@ -1,4 +1,4 @@
-from transformers import PreTrainedTokenizerFast
+from transformers import PreTrainedTokenizerFast, AutoTokenizer
 from tokenizers import Tokenizer
 from tokenizers.models import WordLevel
 from tokenizers.processors import TemplateProcessing
@@ -36,7 +36,8 @@ def set_tokenizer(
         A pre-configured HuggingFace tokenizer for polynomial expressions.
     """
     if tokenizer_path:
-        tok = Tokenizer.from_file(tokenizer_path)
+        # tok = Tokenizer.from_file(tokenizer_path)
+        tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
     else:
         # Create tokenizer from scratch
         CONSTS = ["[C]"]
@@ -73,6 +74,6 @@ def set_tokenizer(
             ],
         )
 
-    # Wrap with HuggingFace's fast tokenizer interface
-    tokenizer = PreTrainedTokenizerFast(tokenizer_object=tok, model_max_length=max_length, **SPECIAL_TOKEN_MAP)
+        # Wrap with HuggingFace's fast tokenizer interface
+        tokenizer = PreTrainedTokenizerFast(tokenizer_object=tok, model_max_length=max_length, **SPECIAL_TOKEN_MAP)
     return tokenizer
