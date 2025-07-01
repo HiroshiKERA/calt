@@ -36,7 +36,6 @@ def set_tokenizer(
         A pre-configured HuggingFace tokenizer for polynomial expressions.
     """
     if tokenizer_path:
-        # tok = Tokenizer.from_file(tokenizer_path)
         tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
     else:
         # Create tokenizer from scratch
@@ -74,6 +73,5 @@ def set_tokenizer(
             ],
         )
 
-        # Wrap with HuggingFace's fast tokenizer interface
         tokenizer = PreTrainedTokenizerFast(tokenizer_object=tok, model_max_length=max_length, **SPECIAL_TOKEN_MAP)
     return tokenizer
