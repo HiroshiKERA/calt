@@ -1,9 +1,9 @@
-site_name: Strands Agents SDK
-site_description: Documentation for Strands Agents, a simple-to-use, code-first, lightweight library for building AI agents
+site_name: CALT library
+site_description: Documentation for CALT library, a library for computational algebra using Transformers
 site_dir: site
-site_url: https://strandsagents.com
+site_url: https://calt.github.io/
 
-repo_url: https://github.com/strands-agents/sdk-python
+repo_url: https://github.com/calt-x/calt-x
 
 theme:
   name: material
