@@ -1,0 +1,14 @@
+# Strands Agents SDK
+
+> Documentation for Strands Agents, a simple-to-use, code-first, lightweight library for building AI agents
+
+## User Guide
+
+- [Welcome](https://strandsagents.com/index.md)
+
+## Examples
+
+
+## API Reference
+
+
