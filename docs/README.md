@@ -1,92 +1,64 @@
-<div align="center">
-  <div>
-    <a href="https://strandsagents.com">
-      <img src="https://strandsagents.com/latest/assets/logo-auto.svg" alt="Strands Agents" width="55px" height="105px">
-    </a>
-  </div>
+# Strands Agents SDK
 
-  <h1>
-    Strands Agents Documentation
-  </h1>
+[Strands Agents]({{ sdk_repo_home }}) is a simple-to-use, code-first framework for building agents.
 
-  <h2>
-    A model-driven approach to building AI agents in just a few lines of code.
-  </h2>
-
-  <div align="center">
-    <a href="https://github.com/strands-agents/docs/graphs/commit-activity"><img alt="GitHub commit activity" src="https://img.shields.io/github/commit-activity/m/strands-agents/docs"/></a>
-    <a href="https://github.com/strands-agents/docs/issues"><img alt="GitHub open issues" src="https://img.shields.io/github/issues/strands-agents/docs"/></a>
-    <a href="https://github.com/strands-agents/docs/pulls"><img alt="GitHub open pull requests" src="https://img.shields.io/github/issues-pr/strands-agents/docs"/></a>
-    <a href="https://github.com/strands-agents/docs/blob/main/LICENSE"><img alt="License" src="https://img.shields.io/github/license/strands-agents/docs"/></a>
-  </div>
-  
-  <p>
-    <a href="https://strandsagents.com/">Documentation</a>
-    ◆ <a href="https://github.com/strands-agents/samples">Samples</a>
-    ◆ <a href="https://github.com/strands-agents/sdk-python">Python SDK</a>
-    ◆ <a href="https://github.com/strands-agents/tools">Tools</a>
-    ◆ <a href="https://github.com/strands-agents/agent-builder">Agent Builder</a>
-    ◆ <a href="https://github.com/strands-agents/mcp-server">MCP Server</a>
-  </p>
-</div>
-
-This repository contains the documentation for the Strands Agents SDK, a simple yet powerful framework for building and running AI agents. The documentation is built using [MkDocs](https://www.mkdocs.org/) and provides guides, examples, and API references.
-
-The official documentation is available online at: https://strandsagents.com.
-
-## Local Development
-
-### Prerequisites
-
-- Python 3.10+
-
-### Setup and Installation
+First, install the Strands Agents SDK:
 
 ```bash
-# Create and activate virtual environment
-python -m venv .venv
-source .venv/bin/activate  # On Windows use: .venv\Scripts\activate
-
-pip install -r requirements.txt
+pip install strands-agents
 ```
 
-### Building and Previewing
+Then create your first agent as a Python file, for this example we'll use `agent.py`.
 
-To generate the static site:
+```python
+from strands import Agent
+
+# Create an agent with default settings
+agent = Agent()
+
+# Ask the agent a question
+agent("Tell me about agentic AI")
+```
+
+Now run the agent with:
 
 ```bash
-mkdocs build
+python -u agent.py
 ```
 
-This will create the site in the `site` directory.
+That's it!
 
-To run a local development server:
+> **Note**: To run this example hello world agent you will need to set up credentials for our model provider and enable model access. The default model provider is [Amazon Bedrock](user-guide/concepts/model-providers/amazon-bedrock.md) and the default model is Claude 3.7 Sonnet in the US Oregon (us-west-2) region.
 
-```bash
-mkdocs serve
-```
+> For the default Amazon Bedrock model provider, see the [Boto3 documentation](https://boto3.amazonaws.com/v1/documentation/api/latest/guide/credentials.html) for setting up AWS credentials. Typically for development, AWS credentials are defined in `AWS_` prefixed environment variables or configured with `aws configure`. You will also need to enable Claude 3.7 model access in Amazon Bedrock, following the [AWS documentation](https://docs.aws.amazon.com/bedrock/latest/userguide/model-access-modify.html) to enable access.
 
-This will start a server at http://127.0.0.1:8000/ for previewing the documentation.
+> Different model providers can be configured for agents by following the [quickstart guide](user-guide/quickstart.md#model-providers).
 
-## Contributing ❤️
+## Features
 
-We welcome contributions! See our [Contributing Guide](CONTRIBUTING.md) for details on:
-- Reporting bugs & features
-- Development setup
-- Contributing via Pull Requests
-- Code of Conduct
-- Reporting of security issues
+Strands Agents is lightweight and production-ready, supporting many model providers and deployment targets. 
 
-## License
+Key features include:
 
-This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+* **Lightweight and gets out of your way**: A simple agent loop that just works and is fully customizable.
+* **Production ready**: Full observability, tracing, and deployment options for running agents at scale.
+* **Model, provider, and deployment agnostic**: Strands supports many different models from many different providers.
+* **Powerful built-in tools**: Get started quickly with tools for a broad set of capabilities.
+* **Multi-agent and autonomous agents**: Apply advanced techniques to your AI systems like agent teams and agents that improve themselves over time.
+* **Conversational, non-conversational, streaming, and non-streaming**: Supports all types of agents for various workloads.
+* **Safety and security as a priority**: Run agents responsibly while protecting data.
 
-## Security
+## Next Steps
 
-See [CONTRIBUTING](CONTRIBUTING.md#security-issue-notifications) for more information.
+Ready to learn more? Check out these resources:
 
-## ⚠️ Preview Status
+- [Quickstart](user-guide/quickstart.md) - A more detailed introduction to Strands Agents
+- [Examples](examples/README.md) - Examples for many use cases, types of agents, multi-agent systems, autonomous agents, and more
+- [Example Built-in Tools](user-guide/concepts/tools/example-tools-package.md) - The {{ link_strands_tools }} package provides many powerful example tools for your agents to use during development
+- [Strands Agent Builder]({{ agent_builder_repo_home }}) - Use the accompanying {{ link_strands_builder }} agent builder to harness the power of LLMs to generate your own tools and agents
 
-Strands Agents is currently in public preview. During this period:
-- APIs may change as we refine the SDK
-- We welcome feedback and contributions
+!!! warning "Preview"
+
+    Strands Agents is currently available in public preview. During this preview period, we welcome your feedback and contributions to help improve the SDK. APIs may change as we refine the SDK based on user experiences.
+
+    [Learn how to contribute]({{ sdk_repo }}/CONTRIBUTING.md) or join our community discussions to shape the future of Strands Agents ❤️.
