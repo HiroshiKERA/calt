@@ -1,9 +1,37 @@
-from typing import Any, Dict, List, Tuple, Callable, Union, Optional
+from typing import Any, Callable
 from joblib import Parallel, delayed
 from time import time
 import hashlib
-from datetime import timedelta
-import numpy as np
+import logging
+from .utils.dataset_writer import DatasetWriter
+from .utils.statistics_calculator import MemoryEfficientStatisticsCalculator
+
+
+def setup_logging():
+    """Setup logging configuration for the application."""
+    root = logging.getLogger()
+    root.setLevel(logging.INFO)
+
+    # Only configure if no handlers exist
+    if not root.handlers:
+        handler = logging.StreamHandler()
+        formatter = logging.Formatter("%(message)s")
+        handler.setFormatter(formatter)
+        root.addHandler(handler)
+    else:
+        # Update existing handlers to use our format
+        for handler in root.handlers:
+            if isinstance(handler, logging.StreamHandler):
+                handler.setFormatter(logging.Formatter("%(message)s"))
+
+
+def _worker_init():
+    setup_logging()
+
+
+# Setup logging for this module
+setup_logging()
+logger = logging.getLogger(__name__)
 
 
 class DatasetGenerator:
@@ -31,102 +59,268 @@ class DatasetGenerator:
         self.verbose = verbose
         self.root_seed = root_seed
 
-    def _generate_seed(self, job_id: int, train: bool) -> int:
+        # Configure logging only once at initialization
+        self.logger = logger
+
+        # Configure joblib logging to show progress but not overwhelm
+        # Only set if not already configured
+        joblib_logger = logging.getLogger("joblib")
+        if joblib_logger.level == logging.NOTSET:
+            joblib_logger.setLevel(logging.INFO)
+
+        parallel_logger = logging.getLogger("joblib.Parallel")
+        if parallel_logger.level == logging.NOTSET:
+            parallel_logger.setLevel(logging.INFO)
+
+    def _generate_seed(self, job_id: int, tag: str, batch_idx: int = 0) -> int:
         """
         Generate a unique seed value for each job using SHA-256 hash.
-        Uses 8 bytes (64 bits) of the hash to ensure extremely low collision probability.
+        Uses 16 bytes (128 bits) of the hash to ensure extremely low collision probability.
 
         Args:
             job_id: Job identifier
-            train: Whether this is for training data
+            tag: Dataset tag ("train" or "test")
+            batch_idx: Batch index for additional uniqueness
 
         Returns:
-            Integer seed value (64 bits)
+            Integer seed value (128 bits)
         """
-        # Create a unique string for this job
-        seed_str = f"{self.root_seed}_{'train' if train else 'test'}_{job_id}"
+        # Create a unique string for this job including batch index
+        seed_str = f"{self.root_seed}_{tag}_{batch_idx}_{job_id}"
         # Generate SHA-256 hash
         hash_obj = hashlib.sha256(seed_str.encode())
-        # Convert first 8 bytes to integer (64-bit)
-        return int.from_bytes(hash_obj.digest()[:8], byteorder="big")
+        # Convert first 16 bytes to integer (128 bits) for better collision resistance
+        return int.from_bytes(hash_obj.digest()[:16], byteorder="big")
 
     def generate_sample(
         self,
         job_id: int,
-        train: bool,
+        tag: str,
         problem_generator: Callable,
-        statistics_calculator: Optional[Callable] = None,
-    ) -> Tuple[Union[List[Any], Any], Union[List[Any], Any], Dict[str, Any], timedelta]:
+        statistics_calculator: Callable | None = None,
+        batch_idx: int = 0,
+    ) -> tuple[list[Any] | Any, list[Any] | Any, dict[str, Any] | None, float]:
         # Generate a unique seed for this job
-        seed = self._generate_seed(job_id, train)
+        seed = self._generate_seed(job_id, tag, batch_idx)
 
         start_time = time()
-        problem_input, problem_output = problem_generator(seed)
+        problem, solution = problem_generator(seed)
         runtime = time() - start_time
 
         if statistics_calculator is not None:
-            sample_stats = statistics_calculator(problem_input, problem_output)
+            sample_stats = statistics_calculator(problem, solution)
         else:
             sample_stats = None
 
-        return problem_input, problem_output, sample_stats, runtime
+        problem = (
+            [str(p) for p in problem] if isinstance(problem, list) else str(problem)
+        )
+        solution = (
+            [str(s) for s in solution]
+            if isinstance(solution, list)
+            else self._convert_to_str(solution)
+        )
 
-    def run(
+        return problem, solution, sample_stats, runtime
+
+    def _run(
         self,
-        train: bool,
+        tag: str,
         num_samples: int,
         problem_generator: Callable,
-        statistics_calculator: Optional[Callable] = None,
-    ) -> Tuple[
-        List[Tuple[Union[List[Any], Any], Union[List[Any], Any]]], Dict[str, Any]
-    ]:
+        statistics_calculator: Callable | None = None,
+        dataset_writer: DatasetWriter | None = None,
+        batch_size: int = 100000,
+    ):
         """
-        Generate multiple samples using parallel processing.
+        Generate a dataset with specified number of samples using parallel processing with batch writing.
 
         Args:
+            tag: Dataset tag ("train" or "test")
             num_samples: Number of samples to generate
-            train: Whether this is for training data
             problem_generator: Function to generate individual problems
             statistics_calculator: Optional function to calculate dataset statistics
-
-        Returns:
-            Tuple containing (list of samples, overall statistics)
+            dataset_writer: DatasetWriter object for batch writing
+            batch_size: Number of samples to process in each batch
         """
         start_time = time()
 
-        # Generate samples in parallel using joblib
-        results = Parallel(
-            n_jobs=self.n_jobs, backend=self.backend, verbose=self.verbose
-        )(
-            delayed(self.generate_sample)(
-                i, train, problem_generator, statistics_calculator
-            )
-            for i in range(num_samples)
+        # Initialize memory-efficient statistics calculator
+        incremental_stats = MemoryEfficientStatisticsCalculator()
+
+        # Validate batch size
+        if batch_size <= 0:
+            raise ValueError(f"Batch size must be positive, got {batch_size}")
+
+        # Calculate number of batches
+        num_batches = (num_samples + batch_size - 1) // batch_size
+
+        self.logger.info(
+            f"---------------------------------- {tag} ----------------------------------"
+        )
+        self.logger.info(
+            f"Dataset size: {num_samples} samples  (Batch size: {batch_size})\n"
         )
 
-        # Unzip the results
-        problem_inputs, problem_outputs, sample_stats, runtimes = zip(*results)
+        for batch_idx in range(num_batches):
+            batch_start = batch_idx * batch_size
+            batch_end = min((batch_idx + 1) * batch_size, num_samples)
+            current_batch_size = batch_end - batch_start
 
-        # Calculate overall statistics
-        total_time = time() - start_time
-        if statistics_calculator is not None:
-            overall_stats = statistics_calculator.overall_stats(
-                sample_stats=sample_stats,
-                runtimes=runtimes,
-                total_time=total_time,
-                num_samples=num_samples,
+            if self.verbose:
+                self.logger.info(f"--- Batch {batch_idx + 1}/{num_batches} ---")
+                self.logger.info(
+                    f"Processing samples {batch_start + 1}-{batch_end} (size: {current_batch_size})"
+                )
+                self.logger.info("Starting parallel processing...")
+
+            # Generate samples for current batch in parallel using joblib
+            try:
+                results = Parallel(
+                    n_jobs=self.n_jobs,
+                    backend=self.backend,
+                    verbose=self.verbose,
+                    initializer=_worker_init,
+                )(
+                    delayed(self.generate_sample)(
+                        batch_start + i,
+                        tag,
+                        problem_generator,
+                        statistics_calculator,
+                        batch_idx,
+                    )
+                    for i in range(current_batch_size)
+                )
+            except Exception as e:
+                self.logger.error(f"Error in batch {batch_idx + 1}: {e}")
+                raise
+
+            # Unzip the results for current batch
+            problems, solutions, sample_stats, runtimes = zip(*results)
+
+            if self.verbose:
+                self.logger.info("Parallel processing completed")
+
+            # Store batch results for statistics only
+            batch_samples = list(zip(problems, solutions))
+
+            # Update statistics incrementally
+            incremental_stats.update_batch(
+                runtimes, sample_stats if sample_stats[0] is not None else []
             )
-        else:
-            overall_stats = {
-                "total_time": total_time,
-                "num_samples": num_samples,
-                "samples_per_second": num_samples / total_time,
-                "generation_time": {
-                    "mean": float(sum(runtimes) / len(runtimes)),
-                    "std": float(np.std(runtimes)),
-                    "min": float(np.min(runtimes)),
-                    "max": float(np.max(runtimes)),
-                },
-            }
 
-        return list(zip(problem_inputs, problem_outputs)), overall_stats
+            # Write batch to file if dataset_writer is provided
+            if dataset_writer is not None:
+                dataset_writer.save_batch(
+                    samples=batch_samples, tag=tag, batch_idx=batch_idx
+                )
+
+                if self.verbose:
+                    self.logger.info(f"Batch {batch_idx + 1} saved to file")
+
+            # Clear batch data from memory to prevent memory buildup
+            del batch_samples, problems, solutions, sample_stats, runtimes
+
+            if self.verbose:
+                self.logger.info(f"Batch {batch_idx + 1}/{num_batches} completed")
+                self.logger.info("")
+
+        # Calculate overall statistics from incremental data
+        total_time = time() - start_time
+
+        # Always use memory-efficient statistics calculator for overall statistics
+        overall_stats = incremental_stats.get_overall_statistics(
+            total_time, num_samples
+        )
+
+        # Save final overall statistics if dataset_writer is provided
+        if dataset_writer is not None:
+            dataset_writer.save_final_statistics(statistics=overall_stats, tag=tag)
+            self.logger.info(f"Overall statistics saved for {tag} dataset")
+
+        self.logger.info(f"Total time: {overall_stats['total_time']:.2f} seconds\n\n")
+
+    def run(
+        self,
+        dataset_sizes: dict[str, int],
+        problem_generator: Callable,
+        statistics_calculator: Callable | None = None,
+        dataset_writer: DatasetWriter | None = None,
+        batch_size: int = 100000,
+    ):
+        """
+        Generate datasets using parallel processing with batch writing.
+
+        This method generates datasets based on the sizes dictionary.
+
+        Examples:
+            >>> # Single dataset
+            >>> dataset_generator.run(
+            ...     dataset_sizes={"train": 100000},
+            ...     problem_generator=problem_generator,
+            ...     statistics_calculator=statistics_calculator,
+            ...     dataset_writer=dataset_writer,
+            ...     batch_size=10000
+            ... )
+            >>> # Multiple datasets
+            >>> dataset_generator.run(
+            ...     dataset_sizes={"train": 100000, "test": 1000},
+            ...     problem_generator=problem_generator,
+            ...     statistics_calculator=statistics_calculator,
+            ...     dataset_writer=dataset_writer,
+            ...     batch_size=10000
+            ... )
+
+        Args:
+            dataset_sizes: Dictionary mapping dataset names to number of samples.
+                           Example: {"train": 100000, "test": 1000} or {"train": 100000}
+            problem_generator: Function to generate individual problems
+            statistics_calculator: Optional function to calculate dataset statistics
+            dataset_writer: DatasetWriter object for batch writing
+            batch_size: Number of samples to process in each batch
+        """
+        # Prepare common arguments
+        common_args = {
+            "problem_generator": problem_generator,
+            "statistics_calculator": statistics_calculator,
+            "dataset_writer": dataset_writer,
+            "batch_size": batch_size,
+        }
+
+        # Validate dataset_sizes
+        if not isinstance(dataset_sizes, dict):
+            raise ValueError("dataset_sizes must be a dictionary")
+
+        if not dataset_sizes:
+            raise ValueError("dataset_sizes cannot be empty")
+
+        if problem_generator is None:
+            raise ValueError("problem_generator must be provided")
+
+        for dataset_name, num_samples in dataset_sizes.items():
+            if dataset_name not in ["train", "test"]:
+                raise ValueError(
+                    f"Dataset name must be 'train' or 'test', got '{dataset_name}'"
+                )
+            if not isinstance(num_samples, int) or num_samples <= 0:
+                raise ValueError(
+                    f"Number of samples must be a positive integer, got {num_samples} for {dataset_name}"
+                )
+
+        # Log overall generation start
+        self.logger.info(
+            "=========================== Dataset generation ===========================\n"
+        )
+        self.logger.info(
+            f"Starting dataset generation for {len(dataset_sizes)} dataset(s)"
+        )
+        self.logger.info(f"Dataset sizes: {dataset_sizes}\n")
+
+        # Generate each dataset
+        for dataset_name, num_samples in dataset_sizes.items():
+            self._run(tag=dataset_name, num_samples=num_samples, **common_args)
+
+        self.logger.info("All datasets generated successfully!")
+        self.logger.info(
+            "==========================================================================\n"
+        )
