@@ -139,7 +139,10 @@ class PolynomialSampler:
 
         # Determine number of terms
         max_possible_terms = binomial(degree + R.ngens(), degree)
-        max_terms = min(self.max_num_terms, max_possible_terms)
+        if self.max_num_terms is None:
+            max_terms = max_possible_terms
+        else:
+            max_terms = min(self.max_num_terms, max_possible_terms)
 
         if self.term_sampling == "uniform":
             num_terms = randint(1, max_terms)
