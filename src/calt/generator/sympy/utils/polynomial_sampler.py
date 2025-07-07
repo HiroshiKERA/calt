@@ -35,7 +35,7 @@ class PolynomialSampler:
             symbols: Symbols of polynomial ring
             field_str: Field of polynomial ring
             order: Order of polynomial ring
-            max_num_terms: Maximum number of terms in polynomial
+            max_num_terms: Maximum number of terms in polynomial. If None, all possible terms are allowed.
             max_degree: Maximum degree of polynomial
             min_degree: Minimum degree of polynomial
             max_coeff: Maximum coefficient value
@@ -137,7 +137,10 @@ class PolynomialSampler:
 
         # Determine number of terms
         max_possible_terms = math.comb(degree + R.ngens, degree)
-        max_terms = min(self.max_num_terms, max_possible_terms)
+        if self.max_num_terms is None:
+            max_terms = max_possible_terms
+        else:
+            max_terms = min(self.max_num_terms, max_possible_terms)
 
         if self.term_sampling == "uniform":
             num_terms = random.randint(1, max_terms)
