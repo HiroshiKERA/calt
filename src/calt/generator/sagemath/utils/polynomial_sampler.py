@@ -1,6 +1,17 @@
-from typing import Any, Optional, List, Union, Tuple
+from typing import Any
 import random
-from sage.all import PolynomialRing, QQ, RR, ZZ, matrix, binomial, randint, prod
+from sage.all import (
+    PolynomialRing,
+    QQ,
+    RR,
+    ZZ,
+    GF,
+    matrix,
+    binomial,
+    randint,
+    prod,
+    TermOrder,
+)
 
 
 class PolynomialSampler:
@@ -8,23 +19,27 @@ class PolynomialSampler:
 
     def __init__(
         self,
-        ring: PolynomialRing,
-        max_num_terms: int = 10,
+        symbols: str,
+        field_str: str,
+        order: str | TermOrder,
+        max_num_terms: int | None = 10,
         max_degree: int = 5,
         min_degree: int = 0,
         degree_sampling: str = "uniform",  # 'uniform' or 'fixed'
         term_sampling: str = "uniform",  # 'uniform' or 'fixed'
-        max_coeff: Optional[int] = None,  # Used for RR and ZZ
-        num_bound: Optional[int] = None,  # Used for QQ
+        max_coeff: int | None = None,  # Used for RR and ZZ
+        num_bound: int | None = None,  # Used for QQ
         strictly_conditioned: bool = True,
-        nonzero_instance: bool = False,
+        nonzero_instance: bool = True,
+        max_attempts: int = 1000,
     ):
         """
         Initialize polynomial sampler
 
         Args:
-            ring: SageMath polynomial ring
-            field: Coefficient field
+            symbols: Symbols of polynomial ring
+            field_str: Field of polynomial ring
+            order: Order of polynomial ring
             max_num_terms: Maximum number of terms in polynomial
             max_degree: Maximum degree of polynomial
             min_degree: Minimum degree of polynomial
@@ -34,35 +49,64 @@ class PolynomialSampler:
             term_sampling: How to sample number of terms ('uniform' or 'fixed')
             strictly_conditioned: Whether to strictly enforce conditions
             nonzero_instance: Whether to enforce non-zero instance
+            max_attempts: Maximum number of attempts to generate a polynomial satisfying conditions
         """
-        self.ring = ring
-        self.field = ring.base_ring()
+        self.symbols = symbols
+        self.field_str = field_str
+        self.order = order
         self.max_num_terms = max_num_terms
         self.max_degree = max_degree
         self.min_degree = min_degree
+        self.max_coeff = max_coeff
+        self.num_bound = num_bound
         self.degree_sampling = degree_sampling
         self.term_sampling = term_sampling
         self.strictly_conditioned = strictly_conditioned
         self.nonzero_instance = nonzero_instance
+        self.max_attempts = max_attempts
 
-        # Set coefficients based on field type
-        self.max_coeff = max_coeff if self.field in (RR, ZZ) else None
-        self.num_bound = num_bound if self.field == QQ else None
+    def get_field(self):
+        """Convert field_str to actual sympy domain object"""
+        # Standard field mapping
+        standard_fields = {"QQ": QQ, "RR": RR, "ZZ": ZZ}
+        if self.field_str in standard_fields:
+            return standard_fields[self.field_str]
 
-        # Set default values if not provided
-        if self.max_coeff is None and self.field in (RR, ZZ):
-            self.max_coeff = 10
+        # Finite field handling
+        if not self.field_str.startswith("GF"):
+            raise ValueError(f"Unsupported field: {self.field_str}")
 
-        if self.num_bound is None and self.field == QQ:
-            self.num_bound = 10
+        try:
+            # Extract field size based on format
+            p = int(
+                self.field_str[3:-1]
+                if self.field_str.startswith("GF(")
+                else self.field_str[2:]
+            )
+
+            if p <= 1:
+                raise ValueError(f"Field size must be greater than 1: {p}")
+            return GF(p)
+        except ValueError as e:
+            raise ValueError(f"Unsupported field: {self.field_str}") from e
+
+    def get_ring(self) -> PolynomialRing:
+        """
+        Generate polynomial ring
+
+        Returns:
+            PolynomialRing: Generated polynomial ring
+        """
+        R = PolynomialRing(self.get_field(), self.symbols, order=self.order)
+        return R
 
     def sample(
         self,
         num_samples: int = 1,
-        size: Optional[Tuple[int, int]] = None,
+        size: tuple[int, int] | None = None,
         density: float = 1.0,
-        matrix_type: Optional[str] = None,
-    ) -> Union[List[Any], List[matrix]]:
+        matrix_type: str | None = None,
+    ) -> list[Any] | list[matrix]:
         """
         Generate random polynomial samples
 
@@ -83,7 +127,7 @@ class PolynomialSampler:
         else:
             return [self._sample_polynomial() for _ in range(num_samples)]
 
-    def _sample_polynomial(self, max_attempts: int = 100) -> Any:
+    def _sample_polynomial(self) -> Any:
         """Generate a single random polynomial"""
         # Determine degree
         if self.degree_sampling == "uniform":
@@ -91,8 +135,10 @@ class PolynomialSampler:
         else:  # fixed
             degree = self.max_degree
 
+        R = self.get_ring()
+
         # Determine number of terms
-        max_possible_terms = binomial(degree + self.ring.ngens(), degree)
+        max_possible_terms = binomial(degree + R.ngens(), degree)
         max_terms = min(self.max_num_terms, max_possible_terms)
 
         if self.term_sampling == "uniform":
@@ -101,7 +147,7 @@ class PolynomialSampler:
             num_terms = max_terms
 
         # Generate polynomial with retry logic
-        for attempt in range(max_attempts):
+        for attempt in range(self.max_attempts):
             p = self._generate_random_polynomial(degree, num_terms)
 
             # Check conditions
@@ -117,9 +163,9 @@ class PolynomialSampler:
             if p.total_degree() == degree and len(p.monomials()) == num_terms:
                 break
 
-            if attempt == max_attempts - 1:
+            if attempt == self.max_attempts - 1:
                 raise RuntimeError(
-                    f"Failed to generate polynomial satisfying conditions after {max_attempts} attempts"
+                    f"Failed to generate polynomial satisfying conditions after {self.max_attempts} attempts"
                 )
 
         return p
@@ -128,44 +174,51 @@ class PolynomialSampler:
         """Generate a random polynomial with given degree and number of terms"""
         choose_degree = self.degree_sampling == "uniform"
 
-        if self.field == QQ:
-            return self.ring.random_element(
+        R = self.get_ring()
+        field = R.base_ring()
+
+        if field == QQ:
+            bound = self.num_bound if self.num_bound is not None else 10
+            return R.random_element(
                 degree=degree,
                 terms=num_terms,
-                num_bound=self.num_bound,
+                num_bound=bound,
                 choose_degree=choose_degree,
             )
-        elif self.field == RR:
-            return self.ring.random_element(
+        elif field == RR:
+            coeff = self.max_coeff if self.max_coeff is not None else 10
+            return R.random_element(
                 degree=degree,
                 terms=num_terms,
-                min=-self.max_coeff,
-                max=self.max_coeff,
+                min=-coeff,
+                max=coeff,
                 choose_degree=choose_degree,
             )
-        elif self.field == ZZ:
-            return self.ring.random_element(
+        elif field == ZZ:
+            coeff = self.max_coeff if self.max_coeff is not None else 10
+            return R.random_element(
                 degree=degree,
                 terms=num_terms,
-                x=-self.max_coeff,
-                y=self.max_coeff + 1,
+                x=-coeff,
+                y=coeff + 1,
                 choose_degree=choose_degree,
             )
         else:  # Finite field
-            return self.ring.random_element(
+            return R.random_element(
                 degree=degree, terms=num_terms, choose_degree=choose_degree
             )
 
     def _sample_matrix(
         self,
-        size: Tuple[int, int],
+        size: tuple[int, int],
         density: float = 1.0,
-        matrix_type: Optional[str] = None,
+        matrix_type: str | None = None,
         max_attempts: int = 100,
     ) -> matrix:
         """Generate a matrix of random polynomials"""
         rows, cols = size
         num_entries = prod(size)
+        R = self.get_ring()
 
         # Generate polynomial entries
         entries = []
@@ -177,7 +230,7 @@ class PolynomialSampler:
             entries.append(p)
 
         # Create matrix
-        M = matrix(self.ring, rows, cols, entries)
+        M = matrix(R, rows, cols, entries)
 
         # Apply special matrix type constraints
         if matrix_type == "unimodular_upper_triangular":
