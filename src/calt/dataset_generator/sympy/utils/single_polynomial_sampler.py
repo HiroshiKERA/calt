@@ -334,14 +334,14 @@ class SinglePolynomialSampler:
         **kwargs,
     ) -> PolyElement:
         """
-        Return a random polynomial of at most degree d and at most t terms.
+        Return a random polynomial of at most the specified degree and at most the specified number of terms.
 
         First monomials are chosen uniformly random from the set of all
-        possible monomials of degree up to d (inclusive). This means
-        that it is more likely that a monomial of degree d appears than
-        a monomial of degree d-1 because the former class is bigger.
+        possible monomials of degree up to the specified degree (inclusive). This means
+        that it is more likely that a monomial of the specified degree appears than
+        a monomial of degree (specified degree - 1) because the former class is bigger.
 
-        Exactly t distinct monomials are chosen this way and each one gets
+        Exactly the specified number of distinct monomials are chosen this way and each one gets
         a random coefficient (possibly zero) from the base ring assigned.
 
         The returned polynomial is the sum of this list of terms.
