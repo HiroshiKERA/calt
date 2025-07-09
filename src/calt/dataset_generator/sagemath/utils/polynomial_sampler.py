@@ -40,11 +40,11 @@ class PolynomialSampler:
             symbols: Symbols of polynomial ring
             field_str: Field of polynomial ring
             order: Order of polynomial ring
-            max_num_terms: Maximum number of terms in polynomial
+            max_num_terms: Maximum number of terms in polynomial. If None, all possible terms are allowed.
             max_degree: Maximum degree of polynomial
             min_degree: Minimum degree of polynomial
-            max_coeff: Maximum coefficient value
-            num_bound: Maximum absolute value of coefficients
+            max_coeff: Maximum coefficient value (used for RR and ZZ)
+            num_bound: Maximum absolute value of coefficients (used for QQ)
             degree_sampling: How to sample degree ('uniform' or 'fixed')
             term_sampling: How to sample number of terms ('uniform' or 'fixed')
             strictly_conditioned: Whether to strictly enforce conditions
