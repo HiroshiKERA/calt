@@ -24,8 +24,8 @@ class BaseStatisticsCalculator(ABC):
         Returns:
             Dictionary with keys "problem" and "solution", each mapping to a sub-dictionary
             containing descriptive statistics. The structure should be:
-            {"category1": {"metric1": value1, "metric2": value2, ...},
-             "category2": {"metric1": value1, "metric2": value2, ...}}
+            {"problem": {"metric1": value1, "metric2": value2, ...},
+             "solution": {"metric1": value1, "metric2": value2, ...}}
 
             Example:
             {"problem": {"total_degree": 2, "num_polynomials": 3},
@@ -201,8 +201,8 @@ class MemoryEfficientStatisticsCalculator:
                 "num_samples": int,
                 "samples_per_second": float,
                 "generation_time": {"mean": float, "std": float, "min": float, "max": float},
-                "category1_overall": {"metric1": {"mean": float, "std": float, "min": float, "max": float}, ...},
-                "category2_overall": {"metric1": {"mean": float, "std": float, "min": float, "max": float}, ...}
+                "problem_stats": {"metric1": {"mean": float, "std": float, "min": float, "max": float}, ...},
+                "solution_stats": {"metric1": {"mean": float, "std": float, "min": float, "max": float}, ...}
             }
         """
         runtime_stats = self.runtime_stats.get_statistics()
