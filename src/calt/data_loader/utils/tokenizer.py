@@ -1,10 +1,14 @@
-import yaml
 from transformers import PreTrainedTokenizerFast
 from tokenizers import Tokenizer
 from tokenizers.models import WordLevel
 from tokenizers.processors import TemplateProcessing
 from tokenizers.pre_tokenizers import CharDelimiterSplit
-from typing import Optional
+from typing import Optional, Dict, List, TypedDict
+
+
+class VocabConfig(TypedDict):
+    vocab: List[str]
+    special_vocab: Dict[str, str]
 
 
 def set_tokenizer(
@@ -12,36 +16,39 @@ def set_tokenizer(
     max_coeff: int = 100,
     max_degree: int = 10,
     max_length: int = 512,
-    vocab_path: Optional[str] = None,
+    vocab_config: Optional[VocabConfig] = None,
 ) -> PreTrainedTokenizerFast:
     """Create or load a tokenizer for polynomial expressions.
 
-    If a vocab_path (YAML file) is provided, it loads a tokenizer from the file.
+    If a vocab_config is provided, it builds a tokenizer from the config.
     Otherwise, it creates a new tokenizer based on the provided parameters.
 
     Args:
-        field: Field specification ("QQ"/"ZZ" for rational/integer, or
-               "GF<p>" for finite field). Used if vocab_path is not provided.
-        max_coeff: Maximum absolute value for coefficients in the vocabulary. Used if vocab_path is not provided.
-        max_degree: Maximum degree allowed for any variable. Used if vocab_path is not provided.
+        field: Field specification ("QQ"/"ZZ" for rational/integer, or "GF<p>"
+               for finite field). Used if vocab_config is not provided.
+        max_coeff: Maximum absolute value for coefficients. Used if
+                   vocab_config is not provided.
+        max_degree: Maximum degree for any variable. Used if vocab_config is
+                    not provided.
         max_length: Maximum sequence length the tokenizer will process.
-        vocab_path: Optional path to a vocab file (e.g., "vocab.yaml").
+        vocab_config: Optional dictionary with "vocab" and "special_vocab".
 
     Returns:
         A pre-configured HuggingFace tokenizer for polynomial expressions.
     """
-    if vocab_path:
-        with open(vocab_path, "r") as f:
-            config = yaml.safe_load(f)
-        vocab_list = config["vocab"]
-        special_token_map = config["special_vocab"]
+    if vocab_config:
+        vocab_list = vocab_config["vocab"]
+        special_token_map = vocab_config["special_vocab"]
         special_tokens = list(special_token_map.values())
 
     else:
         # Create tokenizer from scratch
         special_tokens = ["[PAD]", "<s>", "</s>", "[CLS]"]
         special_token_map = dict(
-            zip(["pad_token", "bos_token", "eos_token", "cls_token"], special_tokens)
+            zip(
+                ["pad_token", "bos_token", "eos_token", "cls_token"],
+                special_tokens,
+            )
         )
 
         CONSTS = ["[C]"]
@@ -53,7 +60,8 @@ def set_tokenizer(
                 if p <= 0:
                     raise ValueError()
             except (ValueError, IndexError):
-                raise ValueError(f"Invalid field specification for GF(p): {field}")
+                msg = f"Invalid field specification for GF(p): {field}"
+                raise ValueError(msg)
             CONSTS += [f"C{i}" for i in range(-p + 1, p)]
         else:
             raise ValueError(f"unknown field: {field}")
@@ -80,6 +88,8 @@ def set_tokenizer(
     )
 
     tokenizer = PreTrainedTokenizerFast(
-        tokenizer_object=tok, model_max_length=max_length, **special_token_map
+        tokenizer_object=tok,
+        model_max_length=max_length,
+        **special_token_map,
     )
     return tokenizer

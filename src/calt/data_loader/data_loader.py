@@ -7,9 +7,13 @@ polynomial expressions into the internal token representation expected by the
 Transformer models.
 """
 
+import yaml
 from .utils.data_collator import StandardDataset, StandardDataCollator
-from .utils.preprocessor import SymbolicToInternalProcessor, IntegerToInternalProcessor
-from .utils.tokenizer import set_tokenizer
+from .utils.preprocessor import (
+    IntegerToInternalProcessor,
+    SymbolicToInternalProcessor,
+)
+from .utils.tokenizer import VocabConfig, set_tokenizer
 from transformers import PreTrainedTokenizerFast as StandardTokenizer
 from typing import Tuple, Optional
 
@@ -37,7 +41,7 @@ def data_loader(
         Finite-field identifier (e.g. ``"Q"`` for the rationals or ``"Zp"``
         for a prime field) used to generate the vocabulary.
     num_variables : int
-        Maximum number of symbolic variables (\(x_1, \dots, x_n\)) that can
+        Maximum number of symbolic variables (\\(x_1, \\dots, x_n\\)) that can
         appear in a polynomial.
     max_degree : int
         Maximum total degree allowed for any monomial term.
@@ -75,12 +79,18 @@ def data_loader(
 
     train_dataset = StandardDataset(train_dataset_path, preprocessor)
     test_dataset = StandardDataset(test_dataset_path, preprocessor)
+
+    vocab_config: Optional[VocabConfig] = None
+    if vocab_path:
+        with open(vocab_path, "r") as f:
+            vocab_config = yaml.safe_load(f)
+
     tokenizer = set_tokenizer(
         field=field,
         max_degree=max_degree,
         max_coeff=max_coeff,
         max_length=max_length,
-        vocab_path=vocab_path,
+        vocab_config=vocab_config,
     )
     data_collator = StandardDataCollator(tokenizer)
     dataset = {"train": train_dataset, "test": test_dataset}
