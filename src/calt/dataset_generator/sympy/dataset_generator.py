@@ -8,6 +8,46 @@ from sympy.polys.rings import PolyElement
 from .utils.dataset_writer import DatasetWriter
 from .utils.statistics_calculator import MemoryEfficientStatisticsCalculator
 
+# Type aliases for better readability
+ProblemOrSolution = Any | list[Any] | list[list[Any]] | list[Any | list[Any]]
+"""Type alias for problems and solutions in their original format.
+Supports single values, simple lists, nested lists, and mixed structures.
+
+Polynomial examples:
+    - Single: sympy.Poly("x^2 + 2*x + 1")
+    - Simple list: [sympy.Poly("x + y"), sympy.Poly("x - y")]
+    - Nested list: [[sympy.Poly("x^2"), sympy.Poly("y^2")], [sympy.Poly("z^2"), sympy.Poly("w^2")]]
+    - Mixed: [[sympy.Poly("x"), sympy.Poly("y")], sympy.Poly("z")]
+
+Arithmetic examples:
+    - Single: 2
+    - Simple list: [2, 3, 5, 7]
+    - Nested list: [[2, 3], [5, 7]]
+    - Mixed: [2, [3, 5]]
+"""
+
+StatisticsDict = dict[str, dict[str, int | float]]
+"""Type alias for statistics dictionary containing nested metrics.
+Example: {"runtime": {"mean": 0.5, "std": 0.1}, "complexity": {"max": 10, "min": 1}}"""
+
+StringProblemOrSolution = str | list[str] | list[list[str]] | list[str | list[str]]
+"""Type alias for string-formatted problems and solutions.
+Supports single strings, simple lists, nested lists, and mixed structures.
+Maximum nesting depth is 2 levels.
+
+Polynomial examples:
+    - Single: "x^2 + 2*x + 1"
+    - Simple list: ["x + y", "x - y"]
+    - Nested list: [["x^2", "y^2"], ["z^2", "w^2"]]
+    - Mixed: [["x", "y"], "z"] 
+
+Arithmetic examples:
+    - Single: "2"
+    - Simple list: ["2", "3", "5", "7"]
+    - Nested list: [["2", "3"], ["5", "7"]]
+    - Mixed: ["2", ["3", "5"]]
+"""
+
 
 def setup_logging():
     """Setup logging configuration for the application."""
@@ -74,36 +114,35 @@ class DatasetGenerator:
         if parallel_logger.level == logging.NOTSET:
             parallel_logger.setLevel(logging.INFO)
 
-    def _generate_seed(self, job_id: int, tag: str, batch_idx: int = 0) -> int:
+    def _generate_seed(self, job_id: int, tag: str) -> int:
         """
         Generate a unique seed value for each job using SHA-256 hash.
         Uses 16 bytes (128 bits) of the hash to ensure extremely low collision probability.
 
         Args:
-            job_id: Job identifier
+            job_id: Job identifier (global sample index, independent of batch size)
             tag: Dataset tag ("train" or "test")
-            batch_idx: Batch index for additional uniqueness
 
         Returns:
             Integer seed value (128 bits)
         """
-        # Create a unique string for this job including batch index
-        seed_str = f"{self.root_seed}_{tag}_{batch_idx}_{job_id}"
+        # Create a unique string for this job (batch-independent)
+        seed_str = f"{self.root_seed}_{tag}_{job_id}"
         # Generate SHA-256 hash
         hash_obj = hashlib.sha256(seed_str.encode())
         # Convert first 16 bytes to integer (128 bits) for better collision resistance
         return int.from_bytes(hash_obj.digest()[:16], byteorder="big")
 
-    def generate_sample(
+    def _generate_sample(
         self,
         job_id: int,
         tag: str,
         problem_generator: Callable,
         statistics_calculator: Callable | None = None,
-        batch_idx: int = 0,
-    ) -> tuple[list[Any] | Any, list[Any] | Any, dict[str, Any] | None, float]:
+    ) -> tuple[StringProblemOrSolution, StringProblemOrSolution, StatisticsDict | None, float]:
+        """Generate a single sample using the provided problem generator."""
         # Generate a unique seed for this job
-        seed = self._generate_seed(job_id, tag, batch_idx)
+        seed = self._generate_seed(job_id, tag)
 
         start_time = time()
         problem, solution = problem_generator(seed)
@@ -114,18 +153,11 @@ class DatasetGenerator:
         else:
             sample_stats = None
 
-        problem = (
-            [self._convert_obj_to_str(p) for p in problem]
-            if isinstance(problem, list)
-            else self._convert_obj_to_str(problem)
-        )
-        solution = (
-            [self._convert_obj_to_str(s) for s in solution]
-            if isinstance(solution, list)
-            else self._convert_obj_to_str(solution)
-        )
+        # Convert problem and solution to string format, handling nested structures
+        problem_str = self._convert_nested_structure(problem)
+        solution_str = self._convert_nested_structure(solution)
 
-        return problem, solution, sample_stats, runtime
+        return problem_str, solution_str, sample_stats, runtime
 
     def _convert_poly_to_str(self, poly_str: str) -> str:
         """
@@ -153,7 +185,40 @@ class DatasetGenerator:
             return self._convert_poly_to_str(str(obj))
         return str(obj)
 
-    def _run(
+    def _convert_nested_structure(self, obj: ProblemOrSolution) -> StringProblemOrSolution:
+        """
+        Convert nested structure (problem or solution) to string format.
+        Handles both simple values, lists, and mixed nested lists.
+
+        Args:
+            obj: Object to convert (can be single value, list, or mixed nested list)
+
+        Returns:
+            Converted object with strings
+        """
+        if isinstance(obj, list):
+            # Check if this list contains any nested lists
+            has_nested_lists = any(isinstance(item, list) for item in obj)
+            
+            if has_nested_lists:
+                # Mixed structure: handle each item appropriately
+                result = []
+                for item in obj:
+                    if isinstance(item, list):
+                        # Inner list: convert each item to string
+                        result.append([self._convert_obj_to_str(subitem) for subitem in item])
+                    else:
+                        # Single item: convert to string
+                        result.append(self._convert_obj_to_str(item))
+                return result
+            else:
+                # Simple list: convert each item to string
+                return [self._convert_obj_to_str(item) for item in obj]
+        else:
+            # Single value: convert to string
+            return self._convert_obj_to_str(obj)
+
+    def _generate_dataset(
         self,
         tag: str,
         num_samples: int,
@@ -162,17 +227,7 @@ class DatasetGenerator:
         dataset_writer: DatasetWriter | None = None,
         batch_size: int = 100000,
     ):
-        """
-        Generate a dataset with specified number of samples using parallel processing with batch writing.
-
-        Args:
-            tag: Dataset tag ("train" or "test")
-            num_samples: Number of samples to generate
-            problem_generator: Function to generate individual problems
-            statistics_calculator: Optional function to calculate dataset statistics
-            dataset_writer: DatasetWriter object for batch writing
-            batch_size: Number of samples to process in each batch
-        """
+        """Generate a single dataset with parallel processing and batch writing."""
         start_time = time()
 
         # Initialize memory-efficient statistics calculator
@@ -212,27 +267,30 @@ class DatasetGenerator:
                     verbose=self.verbose,
                     initializer=_worker_init,
                 )(
-                    delayed(self.generate_sample)(
+                    delayed(self._generate_sample)(
                         batch_start + i,
                         tag,
                         problem_generator,
                         statistics_calculator,
-                        batch_idx,
                     )
                     for i in range(current_batch_size)
                 )
+            except (MemoryError, OSError) as e:
+                self.logger.error(f"System error in batch {batch_idx + 1}: {e}")
+                raise
             except Exception as e:
-                self.logger.error(f"Error in batch {batch_idx + 1}: {e}")
+                self.logger.error(f"Unexpected error in batch {batch_idx + 1}: {e}")
+                self.logger.error(f"Error type: {type(e).__name__}")
                 raise
 
             # Unzip the results for current batch
-            problems, solutions, sample_stats, runtimes = zip(*results)
+            problem_strs, solution_strs, sample_stats, runtimes = zip(*results)
 
             if self.verbose:
                 self.logger.info("Parallel processing completed")
 
             # Store batch results for statistics only
-            batch_samples = list(zip(problems, solutions))
+            batch_samples = list(zip(problem_strs, solution_strs))
 
             # Update statistics incrementally
             incremental_stats.update_batch(
@@ -249,7 +307,7 @@ class DatasetGenerator:
                     self.logger.info(f"Batch {batch_idx + 1} saved to file")
 
             # Clear batch data from memory to prevent memory buildup
-            del batch_samples, problems, solutions, sample_stats, runtimes
+            del batch_samples, problem_strs, solution_strs, sample_stats, runtimes
 
             if self.verbose:
                 self.logger.info(f"Batch {batch_idx + 1}/{num_batches} completed")
@@ -279,35 +337,80 @@ class DatasetGenerator:
         batch_size: int = 100000,
     ):
         """
-        Generate datasets using parallel processing with batch writing.
-
-        This method generates datasets based on the sizes dictionary.
-
-        Examples:
-            >>> # Single dataset
-            >>> dataset_generator.run(
-            ...     dataset_sizes={"train": 100000},
-            ...     problem_generator=problem_generator,
-            ...     statistics_calculator=statistics_calculator,
-            ...     dataset_writer=dataset_writer,
-            ...     batch_size=10000
-            ... )
-            >>> # Multiple datasets
-            >>> dataset_generator.run(
-            ...     dataset_sizes={"train": 100000, "test": 1000},
-            ...     problem_generator=problem_generator,
-            ...     statistics_calculator=statistics_calculator,
-            ...     dataset_writer=dataset_writer,
-            ...     batch_size=10000
-            ... )
-
+        Generate multiple datasets using parallel processing with batch writing.
+        
+        This is the main entry point for dataset generation. It supports generating
+        multiple datasets (train/test) simultaneously or separately, with efficient
+        memory management through batch processing and parallel execution.
+        
+        Key features:
+        - Parallel processing using joblib for high performance
+        - Batch-based memory management to handle large datasets
+        - Incremental statistics calculation to avoid memory issues
+        - Reproducible generation with unique seeds for each sample
+        - Support for nested data structures (up to 2 levels)
+        - Multiple output formats (pickle, text, JSON) via DatasetWriter
+        
         Args:
             dataset_sizes: Dictionary mapping dataset names to number of samples.
-                           Example: {"train": 100000, "test": 1000} or {"train": 100000}
-            problem_generator: Function to generate individual problems
-            statistics_calculator: Optional function to calculate dataset statistics
-            dataset_writer: DatasetWriter object for batch writing
-            batch_size: Number of samples to process in each batch
+                          Valid keys are "train" and "test".
+                          Example: {"train": 100000, "test": 1000} or {"train": 100000}
+            problem_generator: Function that generates (problem, solution) pair given a seed.
+                             Must accept a single integer seed parameter.
+            statistics_calculator: Optional function to calculate sample-specific statistics.
+                                 Must accept (problem, solution) and return dict or None.
+            dataset_writer: DatasetWriter object for saving datasets to files.
+                          If None, no files are saved (useful for testing).
+            batch_size: Number of samples to process in each batch. Larger batches
+                       use more memory but may be more efficient for I/O operations.
+                       
+        Raises:
+            ValueError: If dataset_sizes is invalid or problem_generator is None
+            Exception: If parallel processing fails
+            
+        Note:
+            - Each sample gets a unique seed for reproducibility
+            - Progress is logged if verbose=True (set in __init__)
+            - Memory usage scales with batch_size, not total dataset size
+            - Statistics are calculated incrementally to handle large datasets
+            
+        Examples:
+            >>> # Define problem generator function
+            >>> def polynomial_generator(seed):
+            ...     import random
+            ...     random.seed(seed)
+            ...     # Generate random polynomial problem
+            ...     problem = [random.randint(1, 1000) for _ in range(random.randint(1, 10))]
+            ...     solution = sum(problem)
+            ...     return problem, solution
+            >>> 
+            >>> # Initialize dataset generator
+            >>> generator = DatasetGenerator(n_jobs=-1, verbose=True)
+            >>> 
+            >>> # Create dataset writer
+            >>> writer = DatasetWriter(save_dir="./datasets", save_text=True, save_json=True)
+            >>> 
+            >>> # Method 1: Generate train and test datasets at once (recommended)
+            >>> generator.run(
+            ...     dataset_sizes={"train": 10000, "test": 1000},
+            ...     problem_generator=polynomial_generator,
+            ...     dataset_writer=writer,
+            ...     batch_size=100
+            ... )
+            >>> 
+            >>> # Method 2: Generate datasets separately (if needed)
+            >>> generator.run(
+            ...     dataset_sizes={"train": 10000},
+            ...     problem_generator=polynomial_generator,
+            ...     dataset_writer=writer,
+            ...     batch_size=100
+            ... )
+            >>> generator.run(
+            ...     dataset_sizes={"test": 1000},
+            ...     problem_generator=polynomial_generator,
+            ...     dataset_writer=writer,
+            ...     batch_size=100
+            ... )
         """
         # Prepare common arguments
         common_args = {
@@ -348,7 +451,7 @@ class DatasetGenerator:
 
         # Generate each dataset
         for dataset_name, num_samples in dataset_sizes.items():
-            self._run(tag=dataset_name, num_samples=num_samples, **common_args)
+            self._generate_dataset(tag=dataset_name, num_samples=num_samples, **common_args)
 
         self.logger.info("All datasets generated successfully!")
         self.logger.info(
