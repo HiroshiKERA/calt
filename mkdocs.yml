@@ -103,19 +103,6 @@ extra:
     - icon: fontawesome/brands/github
   version:
     provider: mike
-  # Variables
-  docs_repo: https://github.com/strands-agents/docs/tree/main
-  sdk_pypi: https://pypi.org/project/strands-agents/
-  sdk_repo: https://github.com/strands-agents/sdk-python/blob/main
-  sdk_repo_home: https://github.com/strands-agents/sdk-python
-  tools_pypi: https://pypi.org/project/strands-agents-tools/
-  tools_repo: https://github.com/strands-agents/tools/blob/main
-  tools_repo_home: https://github.com/strands-agents/tools
-  agent_builder_pypi: https://pypi.org/project/strands-agents-builder/
-  agent_builder_repo_home: https://github.com/strands-agents/agent-builder
-
-  link_strands_tools: "[`strands-agents-tools`](https://github.com/strands-agents/tools)"
-  link_strands_builder: "[`strands-agents-builder`](https://github.com/strands-agents/agent-builder)"
 
 validation:
   nav:
