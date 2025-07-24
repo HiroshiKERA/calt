@@ -34,8 +34,6 @@ class PolynomialTrainer(Trainer):
         
         if self.compute_metrics is None:
             self.compute_metrics = self._compute_metrics
-        if self.preprocess_logits_for_metrics is None:
-            self.preprocess_logits_for_metrics = self._preprocess_logits_for_metrics
 
     def _prepare_inputs(self, inputs):
         """Move every tensor in *inputs* onto ``self.args.device``.
@@ -55,21 +53,6 @@ class PolynomialTrainer(Trainer):
             k: (v.to(self.args.device) if isinstance(v, torch.Tensor) else v)
             for k, v in inputs.items()
         }
-    
-    def _preprocess_logits_for_metrics(self, logits, labels):
-        """This method is called before `compute_metrics` to preprocess the logits.
-            
-        Parameters
-        ----------
-        logits: Tensor of shape (batch_size, seq_len, vocab_size)
-        labels: Tensor of shape (batch_size, seq_len) — ignored here
-
-        Returns
-        -------
-        predictions: Tensor of shape (batch_size, seq_len)
-        """
-        # Extract predicted tokens
-        return torch.argmax(logits, dim=-1)
 
     def _compute_metrics(self, eval_preds, ignore_index=-100):
         """This method is called at each prediction step to compute the metrics.
