@@ -1,6 +1,6 @@
 import math
 import random
-from typing import List, Tuple, Optional, Any
+from typing import Any
 from sympy import ZZ, QQ, RR
 from sympy.polys.rings import PolyRing, PolyElement
 from sympy.polys.domains.domain import Domain
@@ -9,7 +9,7 @@ from sympy.polys.domains.domain import Domain
 class SinglePolynomialSampler:
     """Sampler for single polynomial with specific constraints"""
 
-    def _precomp_counts(self, n: int, d: int) -> Tuple[List[int], int]:
+    def _precomp_counts(self, n: int, d: int) -> tuple[list[int], int]:
         """
         Given a number of variables n and a degree d return a tuple (C,t)
         such that C is a list of the cardinalities of the sets of
@@ -30,7 +30,7 @@ class SinglePolynomialSampler:
             C.append(math.comb(n + dbar - 1, dbar))
         return C, sum(C)
 
-    def _combination_from_rank(self, r: int, n: int, k: int) -> Tuple[int, ...]:
+    def _combination_from_rank(self, r: int, n: int, k: int) -> tuple[int, ...]:
         """
         Generate the k-combination of rank r in the lexicographic ordering of
         all k-combinations of the integers 0..n-1.
@@ -82,7 +82,7 @@ class SinglePolynomialSampler:
             x += 1
         return tuple(result)
 
-    def _to_monomial(self, i: int, n: int, d: int) -> Tuple[int, ...]:
+    def _to_monomial(self, i: int, n: int, d: int) -> tuple[int, ...]:
         """
         Given an index i, a number of variables n and a degree d return
         the i-th monomial of degree d in n variables.
@@ -120,7 +120,7 @@ class SinglePolynomialSampler:
 
     def _random_monomial_upto_degree_class(
         self, n: int, degree: int
-    ) -> Tuple[int, ...]:
+    ) -> tuple[int, ...]:
         """
         Choose a random exponent tuple for n variables with a random
         degree d, i.e. choose the degree uniformly at random first
@@ -146,9 +146,9 @@ class SinglePolynomialSampler:
         self,
         n: int,
         degree: int,
-        counts: Optional[List[int]] = None,
-        total: Optional[int] = None,
-    ) -> Tuple[int, ...]:
+        counts: list[int] | None = None,
+        total: int | None = None,
+    ) -> tuple[int, ...]:
         """
         Choose a random exponent tuple for n variables with a random
         degree up to d, i.e. choose a random monomial uniformly random
@@ -180,7 +180,7 @@ class SinglePolynomialSampler:
         # Generate the corresponding monomial
         return self._to_monomial(random_index, n, d)
 
-    def _integer_vectors(self, d: int, n: int) -> List[List[int]]:
+    def _integer_vectors(self, d: int, n: int) -> list[list[int]]:
         """
         Generate all possible combinations of n non-negative integers that sum to d.
         For example, if d=2 and n=3, this function returns:
@@ -221,9 +221,9 @@ class SinglePolynomialSampler:
 
         return result
 
-    def _pick_random_until_nonzero(self, generator, non_zero: bool):
+    def _pick_random_until_nonzero(self, generator, non_zero: bool) -> Any:
         """
-        generator(): a function that returns a single random value in the desired domain
+        generator(): a function that returns a single random value in the desired coefficient field
         non_zero: if True, repeat calling generator() until a non-zero value is returned
         """
         if not non_zero:
@@ -235,12 +235,12 @@ class SinglePolynomialSampler:
             if value != 0:
                 return value
 
-    def random_coeff(self, k: Domain, non_zero: bool = False, **kwargs) -> Any:
+    def random_coeff(self, field: Domain, non_zero: bool = False, **kwargs) -> Any:
         """
-        Generate a random coefficient in the given domain.
+        Generate a random coefficient in the given field.
 
         Args:
-            k: The coefficient domain (e.g., ZZ, QQ, RR, GF)
+            field: The coefficient field (e.g., ZZ, QQ, RR, GF)
             non_zero: If True, ensure the coefficient is non-zero
             **kwargs: Additional parameters for coefficient generation
                 - min: minimum value (default: -10)
@@ -248,15 +248,15 @@ class SinglePolynomialSampler:
                 - num_bound: bound for numerator and denominator in QQ (default: 10)
 
         Returns:
-            Random coefficient in the specified domain
+            Random coefficient in the specified field
 
         Raises:
             ValueError: If parameter ranges are invalid or non_zero cannot be satisfied
-            NotImplementedError: If the domain is not supported
+            NotImplementedError: If the field is not supported
         """
 
         # Integer coefficient
-        if k == ZZ:
+        if field == ZZ:
             a = kwargs.get("min", -10)
             b = kwargs.get("max", 10)
 
@@ -273,7 +273,7 @@ class SinglePolynomialSampler:
             return self._pick_random_until_nonzero(gen_int, non_zero)
 
         # Real number coefficient
-        elif k == RR:
+        elif field == RR:
             a = kwargs.get("min", -10.0)
             b = kwargs.get("max", 10.0)
 
@@ -290,7 +290,7 @@ class SinglePolynomialSampler:
             return self._pick_random_until_nonzero(gen_real, non_zero)
 
         # Rational number coefficient
-        elif k == QQ:
+        elif field == QQ:
             num_bound = kwargs.get("num_bound", 10)
 
             if num_bound <= 0:
@@ -305,8 +305,8 @@ class SinglePolynomialSampler:
             return self._pick_random_until_nonzero(gen_rat, non_zero)
 
         # Finite field
-        elif k.is_FiniteField:
-            p = k.characteristic()
+        elif field.is_FiniteField:
+            p = field.characteristic()
 
             if non_zero and p == 1:
                 raise ValueError(
@@ -315,39 +315,39 @@ class SinglePolynomialSampler:
 
             # Define a generator function that returns a random field element in GF(p)
             def gen_gf():
-                return k(random.randint(0, p - 1))
+                return field(random.randint(0, p - 1))
 
             return self._pick_random_until_nonzero(gen_gf, non_zero)
 
         else:
             raise NotImplementedError(
-                f"Random coefficient generation not implemented for domain {k}"
+                f"Random coefficient generation not implemented for field {field}"
             )
 
     def random_element(
         self,
-        ring: PolyRing,
+        R: PolyRing,
         degree: int = 2,
-        terms: Optional[int] = None,
+        terms: int | None = None,
         choose_degree: bool = False,
         non_zero_coeff: bool = False,
         **kwargs,
     ) -> PolyElement:
         """
-        Return a random polynomial of at most degree d and at most t terms.
+        Return a random polynomial of at most the specified degree and at most the specified number of terms.
 
         First monomials are chosen uniformly random from the set of all
-        possible monomials of degree up to d (inclusive). This means
-        that it is more likely that a monomial of degree d appears than
-        a monomial of degree d-1 because the former class is bigger.
+        possible monomials of degree up to the specified degree (inclusive). This means
+        that it is more likely that a monomial of the specified degree appears than
+        a monomial of degree (specified degree - 1) because the former class is bigger.
 
-        Exactly t distinct monomials are chosen this way and each one gets
+        Exactly the specified number of distinct monomials are chosen this way and each one gets
         a random coefficient (possibly zero) from the base ring assigned.
 
         The returned polynomial is the sum of this list of terms.
 
         Args:
-            ring: Polynomial ring
+            R: Polynomial ring
             degree: Maximum degree of the polynomial
             terms: Number of terms in the polynomial
             choose_degree: Whether to choose degree randomly first
@@ -361,8 +361,8 @@ class SinglePolynomialSampler:
         Returns:
             Random polynomial in the given ring
         """
-        k = ring.domain
-        n = ring.ngens
+        field = R.domain
+        n = R.ngens
 
         counts, total = self._precomp_counts(n, degree)
 
@@ -373,9 +373,9 @@ class SinglePolynomialSampler:
 
         # special cases
         if terms == 0:
-            return ring.zero
+            return R.zero
         if degree == 0:
-            return ring(self.random_coeff(k, non_zero=non_zero_coeff, **kwargs))
+            return R(self.random_coeff(field=field, non_zero=non_zero_coeff, **kwargs))
 
         # adjust terms
         if terms is None:
@@ -385,14 +385,14 @@ class SinglePolynomialSampler:
 
         # total is 0. Just return
         if total == 0:
-            return ring.zero
+            return R.zero
         elif terms < total / 2:
             # we choose random monomials if t < total/2 because then we
             # expect the algorithm to be faster than generating all
             # monomials and picking a random index from the list. if t ==
             # total/2 we expect every second random monomial to be a
             # double such that our runtime is doubled in the worst case.
-            M = set()
+            M: set[tuple[int, ...]] = set()
             if not choose_degree:
                 while terms:
                     m = self._random_monomial_upto_degree_uniform(
@@ -431,9 +431,9 @@ class SinglePolynomialSampler:
 
         # Generate random coefficients
         C = [
-            self.random_coeff(k, non_zero=non_zero_coeff, **kwargs)
+            self.random_coeff(field=field, non_zero=non_zero_coeff, **kwargs)
             for _ in range(len(M))
         ]
 
         # Create the polynomial using from_dict
-        return ring.from_dict(dict(zip(M, C)))
+        return R.from_dict(dict(zip(M, C)))
