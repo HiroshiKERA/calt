@@ -1,8 +1,9 @@
 from typing import Any, Callable
 from joblib import Parallel, delayed
-from time import time
+from time import perf_counter
 import hashlib
 import logging
+import math
 from .utils.dataset_writer import DatasetWriter
 from .utils.statistics_calculator import MemoryEfficientStatisticsCalculator
 
@@ -12,10 +13,16 @@ ProblemOrSolution = Any | list[Any] | list[list[Any]] | list[Any | list[Any]]
 Supports single values, simple lists, nested lists, and mixed structures.
 
 Polynomial examples:
-    - Single: sage.Polynomial("x^2 + 2*x + 1")
-    - Simple list: [sage.Polynomial("x + y"), sage.Polynomial("x - y")]
-    - Nested list: [[sage.Polynomial("x^2"), sage.Polynomial("y^2")], [sage.Polynomial("z^2"), sage.Polynomial("w^2")]]
-    - Mixed: [[sage.Polynomial("x"), sage.Polynomial("y")], sage.Polynomial("z")]
+    - Single: R("x^2 + 2*x + 1")  # where R is a polynomial ring like R = PolynomialRing(QQ, 'x,y')
+    - Simple list: [R("x + y"), R("x - y")]
+    - Nested list: [[R("x^2"), R("y^2")], [R("z^2"), R("w^2")]]
+    - Mixed: [[R("x"), R("y")], R("z")]
+    
+    # Common SageMath polynomial creation methods:
+    # R = PolynomialRing(QQ, 'x,y,z')  # Create polynomial ring
+    # p = R("x^2 + y^2")               # From string
+    # p = x^2 + y^2                    # Direct construction (if variables are defined)
+    # p = R([1, 0, 1])                 # From coefficient list
 
 Arithmetic examples:
     - Single: 2
@@ -112,21 +119,20 @@ class DatasetGenerator:
         if parallel_logger.level == logging.NOTSET:
             parallel_logger.setLevel(logging.INFO)
 
-    def _generate_seed(self, job_id: int, tag: str, batch_idx: int = 0) -> int:
+    def _generate_seed(self, sample_index: int, tag: str) -> int:
         """
         Generate a unique seed value for each job using SHA-256 hash.
         Uses 16 bytes (128 bits) of the hash to ensure extremely low collision probability.
 
         Args:
-            job_id: Job identifier
+            sample_index: Sample identifier (global sample index, independent of batch size)
             tag: Dataset tag ("train" or "test")
-            batch_idx: Batch index for additional uniqueness
 
         Returns:
             Integer seed value (128 bits)
         """
-        # Create a unique string for this job including batch index
-        seed_str = f"{self.root_seed}_{tag}_{batch_idx}_{job_id}"
+        # Create a unique string for this job (batch-independent)
+        seed_str = f"{self.root_seed}_{tag}_{sample_index}"
         # Generate SHA-256 hash
         hash_obj = hashlib.sha256(seed_str.encode())
         # Convert first 16 bytes to integer (128 bits) for better collision resistance
@@ -167,19 +173,18 @@ class DatasetGenerator:
 
     def _generate_sample(
         self,
-        job_id: int,
+        sample_index: int,
         tag: str,
         problem_generator: Callable,
         statistics_calculator: Callable | None = None,
-        batch_idx: int = 0,
     ) -> tuple[StringProblemOrSolution, StringProblemOrSolution, StatisticsDict | None, float]:
         """Generate a single sample using the provided problem generator."""
         # Generate a unique seed for this job
-        seed = self._generate_seed(job_id, tag, batch_idx)
+        seed = self._generate_seed(sample_index, tag)
 
-        start_time = time()
+        start_time = perf_counter()
         problem, solution = problem_generator(seed)
-        runtime = time() - start_time
+        run_time = perf_counter() - start_time
 
         if statistics_calculator is not None:
             sample_stats = statistics_calculator(problem, solution)
@@ -190,7 +195,7 @@ class DatasetGenerator:
         problem_str = self._convert_nested_structure(problem)
         solution_str = self._convert_nested_structure(solution)
 
-        return problem_str, solution_str, sample_stats, runtime
+        return problem_str, solution_str, sample_stats, run_time
 
     def _generate_dataset(
         self,
@@ -202,7 +207,7 @@ class DatasetGenerator:
         batch_size: int = 100000,
     ):
         """Generate a single dataset with parallel processing and batch writing."""
-        start_time = time()
+        start_time = perf_counter()
 
         # Initialize memory-efficient statistics calculator
         incremental_stats = MemoryEfficientStatisticsCalculator()
@@ -212,7 +217,7 @@ class DatasetGenerator:
             raise ValueError(f"Batch size must be positive, got {batch_size}")
 
         # Calculate number of batches
-        num_batches = (num_samples + batch_size - 1) // batch_size
+        num_batches = math.ceil(num_samples / batch_size)
 
         self.logger.info(
             f"---------------------------------- {tag} ----------------------------------"
@@ -223,7 +228,7 @@ class DatasetGenerator:
 
         for batch_idx in range(num_batches):
             batch_start = batch_idx * batch_size
-            batch_end = min((batch_idx + 1) * batch_size, num_samples)
+            batch_end = min(batch_start + batch_size, num_samples)
             current_batch_size = batch_end - batch_start
 
             if self.verbose:
@@ -246,7 +251,6 @@ class DatasetGenerator:
                         tag,
                         problem_generator,
                         statistics_calculator,
-                        batch_idx,
                     )
                     for i in range(current_batch_size)
                 )
@@ -259,7 +263,7 @@ class DatasetGenerator:
                 raise
 
             # Unzip the results for current batch
-            problem_strs, solution_strs, sample_stats, runtimes = zip(*results)
+            problem_strs, solution_strs, sample_stats, run_times = zip(*results)
 
             if self.verbose:
                 self.logger.info("Parallel processing completed")
@@ -269,7 +273,7 @@ class DatasetGenerator:
 
             # Update statistics incrementally
             incremental_stats.update_batch(
-                runtimes, sample_stats if sample_stats[0] is not None else []
+                run_times, sample_stats if sample_stats[0] is not None else []
             )
 
             # Write batch to file if dataset_writer is provided
@@ -282,14 +286,14 @@ class DatasetGenerator:
                     self.logger.info(f"Batch {batch_idx + 1} saved to file")
 
             # Clear batch data from memory to prevent memory buildup
-            del batch_samples, problem_strs, solution_strs, sample_stats, runtimes
+            del batch_samples, problem_strs, solution_strs, sample_stats, run_times
 
             if self.verbose:
                 self.logger.info(f"Batch {batch_idx + 1}/{num_batches} completed")
                 self.logger.info("")
 
         # Calculate overall statistics from incremental data
-        total_time = time() - start_time
+        total_time = perf_counter() - start_time
 
         # Always use memory-efficient statistics calculator for overall statistics
         overall_stats = incremental_stats.get_overall_statistics(
@@ -328,8 +332,9 @@ class DatasetGenerator:
         
         Args:
             dataset_sizes: Dictionary mapping dataset names to number of samples.
-                          Valid keys are "train" and "test".
-                          Example: {"train": 100000, "test": 1000} or {"train": 100000}
+                          Any string can be used as dataset name (e.g., "train", "test", "validation").
+                          Duplicate names are not allowed.
+                          Example: {"train": 100000, "test": 1000} or {"train": 100000, "validation": 5000}
             problem_generator: Function that generates (problem, solution) pair given a seed.
                              Must accept a single integer seed parameter.
             statistics_calculator: Optional function to calculate sample-specific statistics.
@@ -365,9 +370,9 @@ class DatasetGenerator:
             >>> # Create dataset writer
             >>> writer = DatasetWriter(save_dir="./datasets", save_text=True, save_json=True)
             >>> 
-            >>> # Method 1: Generate train and test datasets at once (recommended)
+            >>> # Method 1: Generate multiple datasets at once (recommended)
             >>> generator.run(
-            ...     dataset_sizes={"train": 10000, "test": 1000},
+            ...     dataset_sizes={"train": 10000, "test": 1000, "validation": 500},
             ...     problem_generator=polynomial_generator,
             ...     dataset_writer=writer,
             ...     batch_size=100
@@ -381,7 +386,7 @@ class DatasetGenerator:
             ...     batch_size=100
             ... )
             >>> generator.run(
-            ...     dataset_sizes={"test": 1000},
+            ...     dataset_sizes={"test": 1000, "validation": 500},
             ...     problem_generator=polynomial_generator,
             ...     dataset_writer=writer,
             ...     batch_size=100
@@ -405,11 +410,11 @@ class DatasetGenerator:
         if problem_generator is None:
             raise ValueError("problem_generator must be provided")
 
+        # Check for duplicate dataset names
+        if len(dataset_sizes) != len(set(dataset_sizes.keys())):
+            raise ValueError("Duplicate dataset names are not allowed")
+
         for dataset_name, num_samples in dataset_sizes.items():
-            if dataset_name not in ["train", "test"]:
-                raise ValueError(
-                    f"Dataset name must be 'train' or 'test', got '{dataset_name}'"
-                )
             if not isinstance(num_samples, int) or num_samples <= 0:
                 raise ValueError(
                     f"Number of samples must be a positive integer, got {num_samples} for {dataset_name}"
