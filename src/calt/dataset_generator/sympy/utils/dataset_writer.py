@@ -88,7 +88,7 @@ class DatasetWriter:
         Note:
             Pickle files are always saved as they are the primary format for data loading.
             Text and JSON Lines files are optional and controlled by save_text and save_json flags.
-            
+
         Usage:
             # Efficient batch processing with file handle management
             writer = DatasetWriter(save_dir="./datasets")
@@ -98,14 +98,14 @@ class DatasetWriter:
                     writer.save_batch(samples, tag="train", batch_idx=batch_idx)
             finally:
                 writer.close("train")  # Close file handles
-                
+
             # Or use context manager
             with DatasetWriter(save_dir="./datasets") as writer:
                 writer.open("train")
                 for batch_idx, samples in enumerate(batches):
                     writer.save_batch(samples, tag="train", batch_idx=batch_idx)
                 writer.close("train")
-                
+
             # Support for various dataset splits
             writer.open("validation")  # Validation set
             writer.open("dev")         # Development set
@@ -115,7 +115,9 @@ class DatasetWriter:
         self.save_text = save_text
         self.save_json = save_json
         self.logger = logging.getLogger(__name__)
-        self._file_handles: dict[str, dict[str, any]] = {}  # {tag: {file_type: file_handle}}
+        self._file_handles: dict[
+            str, dict[str, any]
+        ] = {}  # {tag: {file_type: file_handle}}
         TimedeltaDumper.add_representer(timedelta, timedelta_representer)
 
     def _validate_tag(self, tag: str) -> None:
@@ -291,77 +293,79 @@ class DatasetWriter:
     def open(self, tag: str) -> None:
         """
         Open file handles for the specified tag.
-        
+
         This method should be called before starting batch processing to avoid
         repeated file open/close operations.
-        
+
         Args:
             tag: Dataset tag (e.g., "train", "test", "validation", "dev", "eval")
-            
+
         Raises:
             ValueError: If tag is invalid
         """
         self._validate_tag(tag)
-        
+
         if tag in self._file_handles:
             self.logger.warning(f"File handles for tag '{tag}' are already open")
             return
-            
+
         dataset_dir = self._create_dataset_dir()
         self._file_handles[tag] = {}
-        
+
         # Create batch directory for pickle files
         batch_dir = dataset_dir / f"{tag}_batches"
         batch_dir.mkdir(exist_ok=True)
-        self._file_handles[tag]['batch_dir'] = batch_dir
-        self._file_handles[tag]['batch_count'] = 0
-        
+        self._file_handles[tag]["batch_dir"] = batch_dir
+        self._file_handles[tag]["batch_count"] = 0
+
         # Open text file if enabled
         if self.save_text:
             raw_path = dataset_dir / f"{tag}_raw.txt"
-            self._file_handles[tag]['text'] = open(raw_path, "w")
-            
+            self._file_handles[tag]["text"] = open(raw_path, "w")
+
         # Open JSON Lines file if enabled
         if self.save_json:
             json_path = dataset_dir / f"{tag}_data.jsonl"
-            self._file_handles[tag]['json'] = open(json_path, "w")
+            self._file_handles[tag]["json"] = open(json_path, "w")
 
     def close(self, tag: str) -> None:
         """
         Close file handles for the specified tag.
-        
+
         This method should be called after finishing batch processing.
-        
+
         Args:
             tag: Dataset tag (e.g., "train", "test", "validation", "dev", "eval")
-            
+
         Raises:
             ValueError: If tag is invalid
         """
         self._validate_tag(tag)
-        
+
         if tag not in self._file_handles:
             self.logger.warning(f"No open file handles found for tag '{tag}'")
             return
-            
+
         # Combine batch files into final pickle file
-        if 'batch_dir' in self._file_handles[tag]:
+        if "batch_dir" in self._file_handles[tag]:
             self._combine_batch_files(tag)
-        
+
         # Close all open file handles
         for file_type, file_handle in self._file_handles[tag].items():
-            if hasattr(file_handle, 'close'):  # Only close actual file handles
+            if hasattr(file_handle, "close"):  # Only close actual file handles
                 try:
                     file_handle.close()
                 except Exception as e:
-                    self.logger.error(f"Error closing {file_type} file for tag '{tag}': {e}")
-                
+                    self.logger.error(
+                        f"Error closing {file_type} file for tag '{tag}': {e}"
+                    )
+
         del self._file_handles[tag]
 
     def close_all(self) -> None:
         """
         Close all open file handles.
-        
+
         This method should be called when the writer is no longer needed.
         """
         for tag in list(self._file_handles.keys()):
@@ -370,15 +374,15 @@ class DatasetWriter:
     def _combine_batch_files(self, tag: str) -> None:
         """
         Combine individual batch files into a single pickle file.
-        
+
         Args:
             tag: Dataset tag
         """
-        batch_dir = self._file_handles[tag]['batch_dir']
+        batch_dir = self._file_handles[tag]["batch_dir"]
         final_pickle_path = self.save_dir / f"{tag}_data.pkl"
-        
+
         all_samples: StringSampleList = []
-        
+
         # Load all batch files in order
         batch_files = sorted(batch_dir.glob("batch_*.pkl"))
         for batch_file in batch_files:
@@ -389,18 +393,18 @@ class DatasetWriter:
             except Exception as e:
                 self.logger.error(f"Error loading batch file {batch_file}: {e}")
                 continue
-        
+
         # Save combined data to final pickle file
         with open(final_pickle_path, "wb") as f:
             pickle.dump(all_samples, f)
-        
+
         # Clean up batch files
         for batch_file in batch_files:
             try:
                 batch_file.unlink()
             except Exception as e:
                 self.logger.warning(f"Could not delete batch file {batch_file}: {e}")
-        
+
         # Remove batch directory
         try:
             batch_dir.rmdir()
@@ -488,27 +492,28 @@ class DatasetWriter:
             return
 
         # Save binary data (pickle format) - save batch individually
-        batch_file = self._file_handles[tag]['batch_dir'] / f"batch_{self._file_handles[tag]['batch_count']:06d}.pkl"
+        batch_file = (
+            self._file_handles[tag]["batch_dir"]
+            / f"batch_{self._file_handles[tag]['batch_count']:06d}.pkl"
+        )
         with open(batch_file, "wb") as f:
             pickle.dump(samples, f)
-        self._file_handles[tag]['batch_count'] += 1
+        self._file_handles[tag]["batch_count"] += 1
 
         # Save raw text data (optional)
         if self.save_text:
             for problem_str, solution_str in samples:
-                formatted_line = self._format_sample_strings(
-                    problem_str, solution_str
-                )
-                self._file_handles[tag]['text'].write(f"{formatted_line}\n")
-            self._file_handles[tag]['text'].flush()
+                formatted_line = self._format_sample_strings(problem_str, solution_str)
+                self._file_handles[tag]["text"].write(f"{formatted_line}\n")
+            self._file_handles[tag]["text"].flush()
 
         # Save JSON Lines data (optional)
         if self.save_json:
             for problem_str, solution_str in samples:
                 json_data = self._get_json_data(problem_str, solution_str)
                 json_line = json.dumps(json_data, ensure_ascii=False)
-                self._file_handles[tag]['json'].write(f"{json_line}\n")
-            self._file_handles[tag]['json'].flush()
+                self._file_handles[tag]["json"].write(f"{json_line}\n")
+            self._file_handles[tag]["json"].flush()
 
     def _save_batch_legacy(
         self,
@@ -518,7 +523,7 @@ class DatasetWriter:
     ) -> None:
         """
         Legacy save_batch method for backward compatibility.
-        
+
         This method is used when file handles are not open, maintaining the original
         behavior of opening/closing files for each batch.
         """

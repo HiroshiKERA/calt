@@ -140,7 +140,9 @@ class DatasetGenerator:
         tag: str,
         problem_generator: Callable,
         statistics_calculator: Callable | None = None,
-    ) -> tuple[StringProblemOrSolution, StringProblemOrSolution, StatisticsDict | None, float]:
+    ) -> tuple[
+        StringProblemOrSolution, StringProblemOrSolution, StatisticsDict | None, float
+    ]:
         """Generate a single sample using the provided problem generator."""
         # Generate a unique seed for this job
         seed = self._generate_seed(sample_index, tag)
@@ -186,7 +188,9 @@ class DatasetGenerator:
             return self._convert_poly_to_str(str(obj))
         return str(obj)
 
-    def _convert_nested_structure(self, obj: ProblemOrSolution) -> StringProblemOrSolution:
+    def _convert_nested_structure(
+        self, obj: ProblemOrSolution
+    ) -> StringProblemOrSolution:
         """
         Convert nested structure (problem or solution) to string format.
         Handles both simple values, lists, and mixed nested lists.
@@ -200,14 +204,16 @@ class DatasetGenerator:
         if isinstance(obj, list):
             # Check if this list contains any nested lists
             has_nested_lists = any(isinstance(item, list) for item in obj)
-            
+
             if has_nested_lists:
                 # Mixed structure: handle each item appropriately
                 result = []
                 for item in obj:
                     if isinstance(item, list):
                         # Inner list: convert each item to string
-                        result.append([self._convert_obj_to_str(subitem) for subitem in item])
+                        result.append(
+                            [self._convert_obj_to_str(subitem) for subitem in item]
+                        )
                     else:
                         # Single item: convert to string
                         result.append(self._convert_obj_to_str(item))
@@ -339,11 +345,11 @@ class DatasetGenerator:
     ):
         """
         Generate multiple datasets using parallel processing with batch writing.
-        
+
         This is the main entry point for dataset generation. It supports generating
         multiple datasets (train/test) simultaneously or separately, with efficient
         memory management through batch processing and parallel execution.
-        
+
         Key features:
         - Parallel processing using joblib for high performance
         - Batch-based memory management to handle large datasets
@@ -351,7 +357,7 @@ class DatasetGenerator:
         - Reproducible generation with unique seeds for each sample
         - Support for nested data structures (up to 2 levels)
         - Multiple output formats (pickle, text, JSON) via DatasetWriter
-        
+
         Args:
             dataset_sizes: Dictionary mapping dataset names to number of samples.
                           Any string can be used as dataset name (e.g., "train", "test", "validation").
@@ -365,17 +371,17 @@ class DatasetGenerator:
                           If None, no files are saved (useful for testing).
             batch_size: Number of samples to process in each batch. Larger batches
                        use more memory but may be more efficient for I/O operations.
-                       
+
         Raises:
             ValueError: If dataset_sizes is invalid or problem_generator is None
             Exception: If parallel processing fails
-            
+
         Note:
             - Each sample gets a unique seed for reproducibility
             - Progress is logged if verbose=True (set in __init__)
             - Memory usage scales with batch_size, not total dataset size
             - Statistics are calculated incrementally to handle large datasets
-            
+
         Examples:
             >>> # Define problem generator function
             >>> def polynomial_generator(seed):
@@ -385,13 +391,13 @@ class DatasetGenerator:
             ...     problem = [random.randint(1, 1000) for _ in range(random.randint(1, 10))]
             ...     solution = sum(problem)
             ...     return problem, solution
-            >>> 
+            >>>
             >>> # Initialize dataset generator
             >>> generator = DatasetGenerator(n_jobs=-1, verbose=True)
-            >>> 
+            >>>
             >>> # Create dataset writer
             >>> writer = DatasetWriter(save_dir="./datasets", save_text=True, save_json=True)
-            >>> 
+            >>>
             >>> # Method 1: Generate multiple datasets at once (recommended)
             >>> generator.run(
             ...     dataset_sizes={"train": 10000, "test": 1000, "validation": 500},
@@ -399,7 +405,7 @@ class DatasetGenerator:
             ...     dataset_writer=writer,
             ...     batch_size=100
             ... )
-            >>> 
+            >>>
             >>> # Method 2: Generate datasets separately (if needed)
             >>> generator.run(
             ...     dataset_sizes={"train": 10000},
@@ -453,7 +459,9 @@ class DatasetGenerator:
 
         # Generate each dataset
         for dataset_name, num_samples in dataset_sizes.items():
-            self._generate_dataset(tag=dataset_name, num_samples=num_samples, **common_args)
+            self._generate_dataset(
+                tag=dataset_name, num_samples=num_samples, **common_args
+            )
 
         self.logger.info("All datasets generated successfully!")
         self.logger.info(
