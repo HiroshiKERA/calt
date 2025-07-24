@@ -51,20 +51,57 @@ class PolynomialTrainer(Trainer):
             for k, v in inputs.items()
         }
 
-    def log_metrics(self, outputs, inputs, ignore_index: int = -100):
-        """Push a single metric dictionary to Weights & Biases."""
-        if not self.is_world_process_zero():
-            return
+    def preprocess_logits_for_metrics(self, logits, labels):
+            """
+            Args:
+                logits: Tensor of shape (batch_size, seq_len, vocab_size)
+                labels: Tensor of shape (batch_size, seq_len) — ignored here
 
-        metrics = {
-            "train/loss": (outputs.loss.item() if outputs.loss is not None else 0.0)
-        }
+            Returns:
+                predictions: Tensor of shape (batch_size, seq_len)
+            """
+            # Extract predicted tokens
+            return torch.argmax(logits, dim=-1)
 
-        # Add to log history
-        self.log_history.append(metrics)
-        wandb.log(metrics)
+    def compute_metrics(self, eval_preds, ignore_index=-100):
+        """
+        Args:
+            eval_preds: tuple (predictions, labels)
+                - predictions: shape (batch_size, seq_len)
+                - labels: shape (batch_size, seq_len)
+        
+        Returns:
+            dict with accuracy
+        """
+        predictions, labels = eval_preds
 
-    def generate_evaluation(self, max_length: int = 512):
+        # Convert to tensors since inputs are often numpy arrays
+        if isinstance(predictions, np.ndarray):
+            predictions = torch.tensor(predictions)
+        if isinstance(labels, np.ndarray):
+            labels = torch.tensor(labels)
+
+        # Mask tokens with ignore_index
+        mask = labels != ignore_index
+        correct = (predictions == labels) & mask
+        acc = correct.sum().item() / mask.sum().item()
+
+        return {"eval/token_accuracy": acc}
+
+    # def log_metrics(self, outputs, inputs, ignore_index: int = -100):
+    #     """Push a single metric dictionary to Weights & Biases."""
+    #     if not self.is_world_process_zero():
+    #         return
+
+    #     metrics = {
+    #         "train/loss": (outputs.loss.item() if outputs.loss is not None else 0.0)
+    #     }
+
+    #     # Add to log history
+    #     self.log_history.append(metrics)
+    #     wandb.log(metrics)
+
+    def evaluate_and_save_generation(self, max_length: int = 512):
         """Run *greedy* or *beam search* generation on the evaluation set.
 
         The helper decodes the model outputs into strings, stores the results
@@ -75,7 +112,7 @@ class PolynomialTrainer(Trainer):
         Returns
         -------
         float
-            Exact-match accuracy in the \[0, 1\] interval.
+            Exact-match accuracy in the [0, 1] interval.
         """
         if self.eval_dataset is None:
             raise ValueError("Trainer: evaluation requires an eval_dataset.")
@@ -157,7 +194,6 @@ class PolynomialTrainer(Trainer):
             if gen_text.strip() == ref_text.strip():
                 correct_predictions += 1
 
-        accuracy = correct_predictions / total_predictions
-        self.log({"eval/accuracy": accuracy})
+        success_rate = correct_predictions / total_predictions
 
-        return accuracy
+        return success_rate
