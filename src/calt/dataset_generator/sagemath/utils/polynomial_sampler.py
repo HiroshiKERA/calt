@@ -1,5 +1,5 @@
 from typing import Any
-import random
+import sage.misc.randstate as randstate
 from sage.all import (
     PolynomialRing,
     QQ,
@@ -32,6 +32,7 @@ class PolynomialSampler:
         num_bound: int | None = None,  # Used for QQ
         strictly_conditioned: bool = True,
         nonzero_instance: bool = True,
+        nonzero_coeff: bool = False,  # Whether to exclude zero coefficients
         max_attempts: int = 1000,
     ):
         """
@@ -51,6 +52,7 @@ class PolynomialSampler:
             term_sampling: How to sample number of terms ('uniform' or 'fixed')
             strictly_conditioned: Whether to strictly enforce conditions
             nonzero_instance: Whether to enforce non-zero instance
+            nonzero_coeff: Whether to exclude zero coefficients during coefficient generation
             max_attempts: Maximum number of attempts to generate a polynomial satisfying conditions
         """
         # Validate input parameters
@@ -78,6 +80,7 @@ class PolynomialSampler:
         self.term_sampling = term_sampling
         self.strictly_conditioned = strictly_conditioned
         self.nonzero_instance = nonzero_instance
+        self.nonzero_coeff = nonzero_coeff
         self.max_attempts = max_attempts
 
     def get_field(self):
@@ -201,36 +204,54 @@ class PolynomialSampler:
         R = self.get_ring()
         field = R.base_ring()
 
-        if field == QQ:
-            bound = self.num_bound if self.num_bound is not None else 10
-            return R.random_element(
-                degree=degree,
-                terms=num_terms,
-                num_bound=bound,
-                choose_degree=choose_degree,
-            )
-        elif field == RR:
-            coeff = self.max_coeff if self.max_coeff is not None else 10
-            return R.random_element(
-                degree=degree,
-                terms=num_terms,
-                min=-coeff,
-                max=coeff,
-                choose_degree=choose_degree,
-            )
-        elif field == ZZ:
-            coeff = self.max_coeff if self.max_coeff is not None else 10
-            return R.random_element(
-                degree=degree,
-                terms=num_terms,
-                x=-coeff,
-                y=coeff + 1,
-                choose_degree=choose_degree,
-            )
-        else:  # Finite field
-            return R.random_element(
-                degree=degree, terms=num_terms, choose_degree=choose_degree
-            )
+        # First, create a polynomial with all coefficients equal to 1
+        ZZ_R = PolynomialRing(ZZ, R.gens(), order=R.term_order())
+        p = ZZ_R.random_element(degree=degree, terms=num_terms, choose_degree=choose_degree, x=1, y=2)
+        
+        # Get the dictionary representation of the polynomial
+        p_dict = p.dict()
+        
+        # Randomly sample coefficients for each term based on the appropriate field
+        for k, v in p_dict.items():
+            if field == QQ:
+                bound = self.num_bound if self.num_bound is not None else 10
+                # For QQ, generate numerator and denominator randomly
+                if self.nonzero_coeff:
+                    # Exclude zero by ensuring numerator is not zero
+                    num = randint(1, bound) if randstate.random() < 0.5 else randint(-bound, -1)
+                else:
+                    num = randint(-bound, bound)
+                den = randint(1, bound)
+                p_dict[k] = QQ(num) / QQ(den)
+            elif field == RR:
+                coeff = self.max_coeff if self.max_coeff is not None else 10
+                if self.nonzero_coeff:
+                    # Exclude zero by sampling from non-zero range
+                    p_dict[k] = RR.random_element(min=-coeff, max=coeff)
+                    # Ensure non-zero by regenerating if zero
+                    while p_dict[k] == 0:
+                        p_dict[k] = RR.random_element(min=-coeff, max=coeff)
+                else:
+                    p_dict[k] = RR.random_element(min=-coeff, max=coeff)
+            elif field == ZZ:
+                coeff = self.max_coeff if self.max_coeff is not None else 10
+                if self.nonzero_coeff:
+                    # Exclude zero by sampling from non-zero range
+                    p_dict[k] = randint(1, coeff) if randstate.random() < 0.5 else randint(-coeff, -1)
+                else:
+                    p_dict[k] = randint(-coeff, coeff)
+            else:  # Finite field
+                # For finite fields, randomly select values from 0 to p-1
+                field_order = field.characteristic()
+                if self.nonzero_coeff:
+                    # Exclude zero by sampling from 1 to p-1
+                    p_dict[k] = field(randint(1, field_order - 1))
+                else:
+                    p_dict[k] = field(randint(0, field_order - 1))
+        
+        # breakpoint()
+        # Convert to the original polynomial ring R
+        return R(p_dict)
 
     def _sample_matrix(
         self,
@@ -249,7 +270,7 @@ class PolynomialSampler:
         for _ in range(num_entries):
             p = self._sample_polynomial(max_attempts)
             # Apply density
-            if random.random() >= density:
+            if randstate.random() >= density:
                 p *= 0
             entries.append(p)
 
