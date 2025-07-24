@@ -189,7 +189,3 @@ site/
 __pycache__
 .venv
 .idea
-
-Dockerfile
-notebooks/
-scripts/
