@@ -14,14 +14,14 @@ import torch
 import wandb
 import os
 import json
-
+import numpy as np
 
 class PolynomialTrainer(Trainer):
     """Extension of *HuggingFace* :class:`~transformers.Trainer`.
 
     The trainer adds task-specific helpers that simplify training generative
     Transformer models on symbolic polynomial data.  Besides the usual
-    ``Trainer`` keyword arguments it does not introduce new parameters – the
+    ``Trainer`` keyword arguments it does not introduce new parameters - the
     default constructor is therefore forwarded verbatim.
     """
 
@@ -31,6 +31,11 @@ class PolynomialTrainer(Trainer):
         # seen.  This enables the caller to inspect the *complete* training
         # history after the run has finished without having to query WandB.
         self.log_history = []
+        
+        if self.compute_metrics is None:
+            self.compute_metrics = self._compute_metrics
+        if self.preprocess_logits_for_metrics is None:
+            self.preprocess_logits_for_metrics = self._preprocess_logits_for_metrics
 
     def _prepare_inputs(self, inputs):
         """Move every tensor in *inputs* onto ``self.args.device``.
@@ -50,28 +55,34 @@ class PolynomialTrainer(Trainer):
             k: (v.to(self.args.device) if isinstance(v, torch.Tensor) else v)
             for k, v in inputs.items()
         }
+    
+    def _preprocess_logits_for_metrics(self, logits, labels):
+        """This method is called before `compute_metrics` to preprocess the logits.
+            
+        Parameters
+        ----------
+        logits: Tensor of shape (batch_size, seq_len, vocab_size)
+        labels: Tensor of shape (batch_size, seq_len) — ignored here
 
-    def preprocess_logits_for_metrics(self, logits, labels):
-            """
-            Args:
-                logits: Tensor of shape (batch_size, seq_len, vocab_size)
-                labels: Tensor of shape (batch_size, seq_len) — ignored here
-
-            Returns:
-                predictions: Tensor of shape (batch_size, seq_len)
-            """
-            # Extract predicted tokens
-            return torch.argmax(logits, dim=-1)
-
-    def compute_metrics(self, eval_preds, ignore_index=-100):
+        Returns
+        -------
+        predictions: Tensor of shape (batch_size, seq_len)
         """
-        Args:
-            eval_preds: tuple (predictions, labels)
-                - predictions: shape (batch_size, seq_len)
-                - labels: shape (batch_size, seq_len)
+        # Extract predicted tokens
+        return torch.argmax(logits, dim=-1)
+
+    def _compute_metrics(self, eval_preds, ignore_index=-100):
+        """This method is called at each prediction step to compute the metrics.
         
-        Returns:
-            dict with accuracy
+        Parameters
+        ----------
+        eval_preds: tuple (predictions, labels)
+            predictions: shape (batch_size, seq_len)
+            labels: shape (batch_size, seq_len)
+        
+        Returns
+        -------
+        dict with accuracy
         """
         predictions, labels = eval_preds
 
@@ -86,20 +97,7 @@ class PolynomialTrainer(Trainer):
         correct = (predictions == labels) & mask
         acc = correct.sum().item() / mask.sum().item()
 
-        return {"eval/token_accuracy": acc}
-
-    # def log_metrics(self, outputs, inputs, ignore_index: int = -100):
-    #     """Push a single metric dictionary to Weights & Biases."""
-    #     if not self.is_world_process_zero():
-    #         return
-
-    #     metrics = {
-    #         "train/loss": (outputs.loss.item() if outputs.loss is not None else 0.0)
-    #     }
-
-    #     # Add to log history
-    #     self.log_history.append(metrics)
-    #     wandb.log(metrics)
+        return {"token_accuracy": acc}
 
     def evaluate_and_save_generation(self, max_length: int = 512):
         """Run *greedy* or *beam search* generation on the evaluation set.
