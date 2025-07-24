@@ -19,9 +19,10 @@ class PolynomialSampler:
 
     def __init__(
         self,
-        symbols: str,
-        field_str: str,
-        order: str | TermOrder,
+        symbols: str | None = None,
+        field_str: str | None = None,
+        order: str | TermOrder | None = None,
+        ring: Any = None,
         max_num_terms: int | None = 10,
         max_degree: int = 5,
         min_degree: int = 0,
@@ -37,9 +38,10 @@ class PolynomialSampler:
         Initialize polynomial sampler
 
         Args:
-            symbols: Symbols of polynomial ring
-            field_str: Field of polynomial ring
-            order: Order of polynomial ring
+            symbols: Symbols of polynomial ring (required if ring is None)
+            field_str: Field of polynomial ring (required if ring is None)
+            order: Order of polynomial ring (required if ring is None)
+            ring: PolynomialRing object (alternative to symbols/field_str/order)
             max_num_terms: Maximum number of terms in polynomial. If None, all possible terms are allowed.
             max_degree: Maximum degree of polynomial
             min_degree: Minimum degree of polynomial
@@ -51,9 +53,22 @@ class PolynomialSampler:
             nonzero_instance: Whether to enforce non-zero instance
             max_attempts: Maximum number of attempts to generate a polynomial satisfying conditions
         """
-        self.symbols = symbols
-        self.field_str = field_str
-        self.order = order
+        # Validate input parameters
+        if ring is not None:
+            if symbols is not None or field_str is not None or order is not None:
+                raise ValueError("Cannot specify both ring and symbols/field_str/order")
+            self.ring = ring
+            self.symbols = None
+            self.field_str = None
+            self.order = None
+        else:
+            if symbols is None or field_str is None or order is None:
+                raise ValueError("Must specify either ring or all of symbols/field_str/order")
+            self.ring = None
+            self.symbols = symbols
+            self.field_str = field_str
+            self.order = order
+
         self.max_num_terms = max_num_terms
         self.max_degree = max_degree
         self.min_degree = min_degree
@@ -67,6 +82,9 @@ class PolynomialSampler:
 
     def get_field(self):
         """Convert field_str to actual sympy domain object"""
+        if self.ring is not None:
+            return self.ring.base_ring()
+        
         # Standard field mapping
         standard_fields = {"QQ": QQ, "RR": RR, "ZZ": ZZ}
         if self.field_str in standard_fields:
@@ -97,6 +115,9 @@ class PolynomialSampler:
         Returns:
             PolynomialRing: Generated polynomial ring
         """
+        if self.ring is not None:
+            return self.ring
+        
         R = PolynomialRing(self.get_field(), self.symbols, order=self.order)
         return R
 
