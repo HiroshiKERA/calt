@@ -10,7 +10,12 @@ logger = logging.getLogger(__name__)
 
 
 class StandardDataset(Dataset):
-    def __init__(self, data_path: str, preprocessor: AbstractPreprocessor, max_samples: int | None = None) -> None:
+    def __init__(
+        self,
+        data_path: str,
+        preprocessor: AbstractPreprocessor,
+        max_samples: int | None = None,
+    ) -> None:
         self.data_path = data_path
         self.input_texts = []
         self.targets_texts = []
@@ -38,16 +43,20 @@ class StandardDataset(Dataset):
                 input_part, target_part = line.split("#", 1)
                 self.input_texts.append(input_part.strip())
                 self.targets_texts.append(target_part.strip())
-                
+
                 # Stop loading if max_samples is reached
                 if max_samples is not None and len(self.input_texts) >= max_samples:
                     break
 
         # Log information about loaded samples
         if max_samples is not None and len(self.input_texts) < max_samples:
-            logger.warning(f"Requested {max_samples} samples but only {len(self.input_texts)} valid samples found in {self.data_path}")
+            logger.warning(
+                f"Requested {max_samples} samples but only {len(self.input_texts)} valid samples found in {self.data_path}"
+            )
         elif max_samples is not None:
-            logger.info(f"Loaded {len(self.input_texts)} samples (limited to {max_samples}) from {self.data_path}")
+            logger.info(
+                f"Loaded {len(self.input_texts)} samples (limited to {max_samples}) from {self.data_path}"
+            )
         else:
             logger.info(f"Loaded {len(self.input_texts)} samples from {self.data_path}")
 
