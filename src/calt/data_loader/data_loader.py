@@ -15,7 +15,6 @@ from .utils.preprocessor import (
 )
 from .utils.tokenizer import VocabConfig, set_tokenizer
 from transformers import PreTrainedTokenizerFast as StandardTokenizer
-from typing import Tuple, Optional
 
 
 def load_data(
@@ -27,8 +26,10 @@ def load_data(
     max_coeff: int,
     max_length: int = 512,
     processor_name: str = "polynomial",
-    vocab_path: Optional[str] = None,
-) -> Tuple[StandardDataset, StandardTokenizer, StandardDataCollator]:
+    vocab_path: str | None = None,
+    num_train_samples: int | None = None,
+    num_test_samples: int | None = None,
+) -> tuple[dict[str, StandardDataset], StandardTokenizer, StandardDataCollator]:
     """Create dataset, tokenizer and data-collator objects.
 
     Parameters
@@ -55,15 +56,24 @@ def load_data(
         internal token IDs.  The default processor is ``"polynomial"``, which
         handles polynomial expressions.  The alternative processor is
         ``"integer"``, which handles integer expressions.
+    vocab_path : str | None, default ``None``
+        Path to the vocabulary configuration file. If None, a default vocabulary
+        will be generated based on the field, max_degree, and max_coeff parameters.
+    num_train_samples : int | None, default ``None``
+        Maximum number of training samples to load. If None, all available
+        training samples will be loaded.
+    num_test_samples : int | None, default ``None``
+        Maximum number of test samples to load. If None, all available
+        test samples will be loaded.
 
     Returns
     -------
-    Tuple[StandardDataset, StandardTokenizer, StandardDataCollator]
-        1. ``dataset``  – a ``dict`` with ``"train"`` and ``"test"`` splits
+    tuple[dict[str, StandardDataset], StandardTokenizer, StandardDataCollator]
+        1. ``dataset``  - a ``dict`` with ``"train"`` and ``"test"`` splits
            containing :class:`StandardDataset` instances.
-        2. ``tokenizer`` – a :class:`PreTrainedTokenizerFast` capable of
+        2. ``tokenizer`` - a :class:`PreTrainedTokenizerFast` capable of
            encoding symbolic expressions into token IDs and vice versa.
-        3. ``data_collator`` – a callable that assembles batches and applies
+        3. ``data_collator`` - a callable that assembles batches and applies
            dynamic padding so they can be fed to a HuggingFace ``Trainer``.
     """
     if processor_name == "polynomial":
@@ -77,10 +87,10 @@ def load_data(
     else:
         raise ValueError(f"Unknown processor: {processor_name}")
 
-    train_dataset = StandardDataset(train_dataset_path, preprocessor)
-    test_dataset = StandardDataset(test_dataset_path, preprocessor)
+    train_dataset = StandardDataset(train_dataset_path, preprocessor, max_samples=num_train_samples)
+    test_dataset = StandardDataset(test_dataset_path, preprocessor, max_samples=num_test_samples)
 
-    vocab_config: Optional[VocabConfig] = None
+    vocab_config: VocabConfig | None = None
     if vocab_path:
         with open(vocab_path, "r") as f:
             vocab_config = yaml.safe_load(f)
