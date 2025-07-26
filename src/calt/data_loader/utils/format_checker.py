@@ -1,5 +1,9 @@
 import os
+import logging
 from sage.all import PolynomialRing, QQ, RR, ZZ
+
+# Set up logger for this module
+logger = logging.getLogger(__name__)
 
 
 class FormatChecker:
@@ -108,7 +112,7 @@ class FormatChecker:
 
                     # Check if we've reached the maximum number of samples
                     if max_samples is not None and samples_checked >= max_samples:
-                        print(
+                        logger.info(
                             f"Checked {samples_checked} samples (max_samples={max_samples})"
                         )
                         break
@@ -118,12 +122,12 @@ class FormatChecker:
 
                     # Validate problem format
                     if not self._validate_expression(problem):
-                        print(f"Line {line_num}: Invalid problem format - {problem}")
+                        logger.error(f"Line {line_num}: Invalid problem format - {problem}")
                         return False
 
                     # Validate solution format
                     if not self._validate_expression(solution):
-                        print(f"Line {line_num}: Invalid solution format - {solution}")
+                        logger.error(f"Line {line_num}: Invalid solution format - {solution}")
                         return False
 
                     samples_checked += 1
@@ -131,7 +135,7 @@ class FormatChecker:
             return True
 
         except Exception as e:
-            print(f"Error reading dataset: {e}")
+            logger.error(f"Error reading dataset: {e}")
             return False
 
     def _parse_line(self, line: str) -> tuple[list[str], list[str]]:
