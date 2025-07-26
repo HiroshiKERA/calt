@@ -2,7 +2,7 @@
 
 This module defines helper functions that build the training and evaluation
 `Dataset`, `Tokenizer`, and `DataCollator` objects used throughout the
-library.  In particular, the `data_loader` factory translates symbolic
+library.  In particular, the `load_data` factory translates symbolic
 polynomial expressions into the internal token representation expected by the
 Transformer models.
 """
@@ -18,7 +18,7 @@ from transformers import PreTrainedTokenizerFast as StandardTokenizer
 from typing import Tuple, Optional
 
 
-def data_loader(
+def load_data(
     train_dataset_path: str,
     test_dataset_path: str,
     field: str,
