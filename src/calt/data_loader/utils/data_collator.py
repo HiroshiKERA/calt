@@ -1,16 +1,28 @@
 from transformers import PreTrainedTokenizerFast as Tokenizer
 from .preprocessor import AbstractPreprocessor
-from typing import Dict
 from torch.utils.data import Dataset
 import torch
+import os
+import logging
+
+# Set up logger for this module
+logger = logging.getLogger(__name__)
 
 
 class StandardDataset(Dataset):
-    def __init__(self, data_path: str, preprocessor: AbstractPreprocessor) -> None:
+    def __init__(self, data_path: str, preprocessor: AbstractPreprocessor, max_samples: int | None = None) -> None:
         self.data_path = data_path
         self.input_texts = []
         self.targets_texts = []
         self.preprocessor = preprocessor
+
+        # Validate max_samples parameter
+        if max_samples is not None and max_samples <= 0:
+            raise ValueError(f"max_samples must be positive, got {max_samples}")
+
+        # Check if file exists
+        if not os.path.exists(self.data_path):
+            raise FileNotFoundError(f"Data file not found: {self.data_path}")
 
         # Load and parse the data file
         with open(self.data_path, "r", encoding="utf-8") as f:
@@ -26,8 +38,20 @@ class StandardDataset(Dataset):
                 input_part, target_part = line.split("#", 1)
                 self.input_texts.append(input_part.strip())
                 self.targets_texts.append(target_part.strip())
+                
+                # Stop loading if max_samples is reached
+                if max_samples is not None and len(self.input_texts) >= max_samples:
+                    break
 
-    def __getitem__(self, idx: int) -> Dict[str, str]:
+        # Log information about loaded samples
+        if max_samples is not None and len(self.input_texts) < max_samples:
+            logger.warning(f"Requested {max_samples} samples but only {len(self.input_texts)} valid samples found in {self.data_path}")
+        elif max_samples is not None:
+            logger.info(f"Loaded {len(self.input_texts)} samples (limited to {max_samples}) from {self.data_path}")
+        else:
+            logger.info(f"Loaded {len(self.input_texts)} samples from {self.data_path}")
+
+    def __getitem__(self, idx: int) -> dict[str, str]:
         """Get dataset item and convert to internal representation.
 
         Parameters
