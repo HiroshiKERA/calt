@@ -1,4 +1,4 @@
-"""Custom HuggingFace Trainer tailored for symbolic algebra tasks.
+"""Custom HuggingFace Trainer tailored for symbolic computation tasks.
 
 This module introduces `PolynomialTrainer`, an extension of
 :class:`transformers.Trainer` that adds project-specific helpers:
