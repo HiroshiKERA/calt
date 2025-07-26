@@ -1,4 +1,4 @@
-from typing import List, Any, Tuple
+from typing import Any
 from abc import ABC, abstractmethod
 import logging
 
@@ -22,26 +22,26 @@ class AbstractPreprocessor(ABC):
         Args:
             num_variables: Number of variables in the polynomial (e.g., x0, x1, ...)
             max_degree: Maximum degree of the polynomial
-            max_coef: Maximum degree of any variable in the polynomial
+            max_coeff: Maximum coefficient value in the polynomial
         """
         if num_variables < 0:
             raise ValueError("num_variables must be positive")
         if max_degree < 0:
             raise ValueError("max_degree must be non-negative")
         if max_coeff <= 0:
-            raise ValueError("max_coef must be positive")
+            raise ValueError("max_coeff must be positive")
 
         self.num_variables = num_variables
         self.max_degree = max_degree
-        self.max_coef = max_coeff
+        self.max_coeff = max_coeff
         self.var_name_to_index = {f"x{i}": i for i in range(num_variables)}
 
-    def __call__(self, texts: List[str]) -> List[Any]:
-        """Process texts (convenience wrapper for process method)."""
-        return self.process(texts)
+    def __call__(self, text: str) -> str:
+        """Process text (convenience wrapper for process method)."""
+        return self.process(text)
 
     @abstractmethod
-    def process(self, texts: List[str]) -> List[Any]:
+    def process(self, text: str) -> str:
         """Abstract method for text processing to be implemented by subclasses."""
         raise NotImplementedError
 
@@ -63,11 +63,11 @@ class SymbolicToInternalProcessor(AbstractPreprocessor):
         """Format and log a warning message about a term."""
         logging.warning(f"{message} in term '{term_str}'")
 
-    def _get_zero_term(self) -> Tuple[int, List[int]]:
+    def _get_zero_term(self) -> tuple[int, list[int]]:
         """Return a representation of the zero term (coefficient 0, all exponents 0)."""
         return (0, [0] * self.num_variables)
 
-    def _create_exponent_vector(self) -> List[int]:
+    def _create_exponent_vector(self) -> list[int]:
         """Create a new exponent vector with all zeros."""
         return [0] * self.num_variables
 
@@ -75,7 +75,7 @@ class SymbolicToInternalProcessor(AbstractPreprocessor):
         """Generate string representation of zero exponents vector ("E0 E0 ...")."""
         return " ".join(["E0"] * self.num_variables)
 
-    def _parse_term(self, term_str: str) -> Tuple[int, List[int]]:
+    def _parse_term(self, term_str: str) -> tuple[int, list[int]]:
         """Parse a term and return the coefficient and exponent vector.
 
         Args:
@@ -164,7 +164,7 @@ class SymbolicToInternalProcessor(AbstractPreprocessor):
 
         return (final_coeff, exponents)
 
-    def _format_internal(self, terms: List[Tuple[int, List[int]]]) -> str:
+    def _format_internal(self, terms: list[tuple[int, list[int]]]) -> str:
         """Convert parsed terms to the internal token representation string.
 
         Args:
@@ -220,7 +220,7 @@ class SymbolicToInternalProcessor(AbstractPreprocessor):
 
         term_strs = [t.strip() for t in tgt.split("+") if t.strip()]
 
-        parsed_terms: List[Tuple[int, List[int]]] = []
+        parsed_terms: list[tuple[int, list[int]]] = []
         for term_str in term_strs:
             try:
                 coeff, exponents = self._parse_term(term_str)

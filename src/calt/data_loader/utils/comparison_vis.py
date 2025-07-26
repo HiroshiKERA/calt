@@ -1,4 +1,4 @@
-from typing import Mapping, Sequence, Tuple, List, Union
+from typing import Mapping, Sequence
 import re
 from sympy import Expr, Poly, Symbol, latex, symbols, Integer
 from IPython.display import display, Math
@@ -12,7 +12,7 @@ __all__ = ["display_with_diff", "load_eval_results"]
 # ---------------------------------------------------------------------------
 
 
-def _poly_to_dict(poly: Poly) -> dict[Tuple[int, ...], int]:
+def _poly_to_dict(poly: Poly) -> dict[tuple[int, ...], int]:
     """Return a mapping {exponent_tuple: coefficient}."""
     return {e: int(c) for e, c in poly.terms()}
 
@@ -75,9 +75,9 @@ def _term_latex(
 
 
 def _build_poly_latex(
-    poly_dict: Mapping[Tuple[int, ...], int],
+    poly_dict: Mapping[tuple[int, ...], int],
     var_syms: Sequence[Symbol],
-    diff_info: Mapping[Tuple[int, ...], str],
+    diff_info: Mapping[tuple[int, ...], str],
 ) -> str:
     """Return LaTeX string for *predicted* polynomial with diff marks."""
 
@@ -124,7 +124,7 @@ def display_with_diff(
     Parameters
     ----------
     gold, pred : sympy.Expr
-        Ground‑truth and model‑predicted expressions.
+        Ground-truth and model-predicted expressions.
     var_order : list[sympy.Symbol] | None
         Variable ordering (important for >2 variables). Inferred if None.
     """
@@ -141,7 +141,7 @@ def display_with_diff(
     pdict = _poly_to_dict(pred_poly)
 
     # --- diff detection --------------------------------------------------- #
-    diff: dict[Tuple[int, ...], str] = {}
+    diff: dict[tuple[int, ...], str] = {}
     for exps in set(gdict) | set(pdict):
         gcoeff = gdict.get(exps, 0)
         pcoeff = pdict.get(exps, 0)
@@ -170,7 +170,7 @@ def display_with_diff(
     )
 
 
-def load_eval_results(file_path: str) -> Tuple[List[str], List[str]]:
+def load_eval_results(file_path: str) -> tuple[list[str], list[str]]:
     """Load evaluation results from a JSON file and return lists of generated and reference texts.
 
     The JSON file should contain a list of objects with "generated" and "reference" keys.
@@ -196,7 +196,7 @@ def load_eval_results(file_path: str) -> Tuple[List[str], List[str]]:
     return generated_texts, reference_texts
 
 
-def parse_poly(tokens: str, var_names: Sequence[Union[str, Symbol]] | None = None):
+def parse_poly(tokens: str, var_names: Sequence[str | Symbol] | None = None):
     """
     Convert an internal token sequence (e.g. ``"C1 E1 E1 C-3 E0 E7"``)
     into a SymPy polynomial.
