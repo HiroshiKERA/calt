@@ -240,14 +240,19 @@ class PolynomialSampler:
                     p_dict[k] = randint(1, coeff) if randstate.random() < 0.5 else randint(-coeff, -1)
                 else:
                     p_dict[k] = randint(-coeff, coeff)
-            else:  # Finite field
+            elif field.characteristic() > 0:
                 # For finite fields, randomly select values from 0 to p-1
                 field_order = field.characteristic()
+
+                assert field.is_prime_field(), f"Non-prime field detected: {field}. This may cause unexpected behavior."
+                
                 if self.nonzero_coeff:
                     # Exclude zero by sampling from 1 to p-1
                     p_dict[k] = field(randint(1, field_order - 1))
                 else:
                     p_dict[k] = field(randint(0, field_order - 1))
+            else:
+                raise ValueError(f"Unsupported field: {field}")
         
         # breakpoint()
         # Convert to the original polynomial ring R
