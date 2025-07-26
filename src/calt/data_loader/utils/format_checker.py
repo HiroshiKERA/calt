@@ -71,7 +71,7 @@ class FormatChecker:
             max_samples: Maximum number of samples to check. If None, checks all samples.
 
         Returns:
-            True if format is valid, False otherwise
+            bool: True if format is valid, False otherwise
 
         Example:
             >>> # variable_names is specified
@@ -194,7 +194,7 @@ class FormatChecker:
             expr: List of strings to validate
 
         Returns:
-            True if all elements are valid, False otherwise
+            bool: True if all elements are valid, False otherwise
         """
         try:
             return all(self._is_valid_sagemath_string(item) for item in expr)
@@ -209,7 +209,7 @@ class FormatChecker:
             s: String to validate
 
         Returns:
-            True if valid SageMath expression, False otherwise
+            bool: True if valid SageMath expression, False otherwise
         """
         # Remove whitespace
         s = s.strip()
