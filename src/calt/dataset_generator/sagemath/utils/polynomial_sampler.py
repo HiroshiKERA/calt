@@ -65,7 +65,9 @@ class PolynomialSampler:
             self.order = None
         else:
             if symbols is None or field_str is None or order is None:
-                raise ValueError("Must specify either ring or all of symbols/field_str/order")
+                raise ValueError(
+                    "Must specify either ring or all of symbols/field_str/order"
+                )
             self.ring = None
             self.symbols = symbols
             self.field_str = field_str
@@ -87,7 +89,7 @@ class PolynomialSampler:
         """Convert field_str to actual sympy domain object"""
         if self.ring is not None:
             return self.ring.base_ring()
-        
+
         # Standard field mapping
         standard_fields = {"QQ": QQ, "RR": RR, "ZZ": ZZ}
         if self.field_str in standard_fields:
@@ -120,7 +122,7 @@ class PolynomialSampler:
         """
         if self.ring is not None:
             return self.ring
-        
+
         R = PolynomialRing(self.get_field(), self.symbols, order=self.order)
         return R
 
@@ -206,11 +208,13 @@ class PolynomialSampler:
 
         # First, create a polynomial with all coefficients equal to 1
         ZZ_R = PolynomialRing(ZZ, R.gens(), order=R.term_order())
-        p = ZZ_R.random_element(degree=degree, terms=num_terms, choose_degree=choose_degree, x=1, y=2)
-        
+        p = ZZ_R.random_element(
+            degree=degree, terms=num_terms, choose_degree=choose_degree, x=1, y=2
+        )
+
         # Get the dictionary representation of the polynomial
         p_dict = p.dict()
-        
+
         # Randomly sample coefficients for each term based on the appropriate field
         for k, v in p_dict.items():
             if field == QQ:
@@ -218,7 +222,11 @@ class PolynomialSampler:
                 # For QQ, generate numerator and denominator randomly
                 if self.nonzero_coeff:
                     # Exclude zero by ensuring numerator is not zero
-                    num = randint(1, bound) if randstate.random() < 0.5 else randint(-bound, -1)
+                    num = (
+                        randint(1, bound)
+                        if randstate.random() < 0.5
+                        else randint(-bound, -1)
+                    )
                 else:
                     num = randint(-bound, bound)
                 den = randint(1, bound)
@@ -237,15 +245,21 @@ class PolynomialSampler:
                 coeff = self.max_coeff if self.max_coeff is not None else 10
                 if self.nonzero_coeff:
                     # Exclude zero by sampling from non-zero range
-                    p_dict[k] = randint(1, coeff) if randstate.random() < 0.5 else randint(-coeff, -1)
+                    p_dict[k] = (
+                        randint(1, coeff)
+                        if randstate.random() < 0.5
+                        else randint(-coeff, -1)
+                    )
                 else:
                     p_dict[k] = randint(-coeff, coeff)
             elif field.characteristic() > 0:
                 # For finite fields, randomly select values from 0 to p-1
                 field_order = field.characteristic()
 
-                assert field.is_prime_field(), f"Non-prime field detected: {field}. This may cause unexpected behavior."
-                
+                assert field.is_prime_field(), (
+                    f"Non-prime field detected: {field}. This may cause unexpected behavior."
+                )
+
                 if self.nonzero_coeff:
                     # Exclude zero by sampling from 1 to p-1
                     p_dict[k] = field(randint(1, field_order - 1))
@@ -253,7 +267,7 @@ class PolynomialSampler:
                     p_dict[k] = field(randint(0, field_order - 1))
             else:
                 raise ValueError(f"Unsupported field: {field}")
-        
+
         # breakpoint()
         # Convert to the original polynomial ring R
         return R(p_dict)
