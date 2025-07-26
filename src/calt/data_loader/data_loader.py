@@ -82,7 +82,7 @@ def load_data(
             max_degree=max_degree,
             max_coeff=max_coeff,
         )
-    elif processor_name == "numeric":
+    elif processor_name == "integer":
         preprocessor = IntegerToInternalProcessor(max_coeff=max_coeff)
     else:
         raise ValueError(f"Unknown processor: {processor_name}")
