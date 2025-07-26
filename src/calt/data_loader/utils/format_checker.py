@@ -43,7 +43,9 @@ class FormatChecker:
         # Set variables based on parameters
         if variable_names is not None:
             # Parse comma-separated variable names into a list
-            self.variables = [var.strip() for var in variable_names.split(",") if var.strip()]
+            self.variables = [
+                var.strip() for var in variable_names.split(",") if var.strip()
+            ]
             if not self.variables:
                 raise ValueError("No valid variable names found in 'variable_names'")
         elif num_vars is not None:

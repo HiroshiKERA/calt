@@ -1,5 +1,5 @@
 from typing import Any
-import random
+import sage.misc.randstate as randstate
 from sage.all import (
     PolynomialRing,
     QQ,
@@ -19,9 +19,10 @@ class PolynomialSampler:
 
     def __init__(
         self,
-        symbols: str,
-        field_str: str,
-        order: str | TermOrder,
+        symbols: str | None = None,
+        field_str: str | None = None,
+        order: str | TermOrder | None = None,
+        ring: Any = None,
         max_num_terms: int | None = 10,
         max_degree: int = 5,
         min_degree: int = 0,
@@ -31,15 +32,17 @@ class PolynomialSampler:
         num_bound: int | None = None,  # Used for QQ
         strictly_conditioned: bool = True,
         nonzero_instance: bool = True,
+        nonzero_coeff: bool = False,  # Whether to exclude zero coefficients
         max_attempts: int = 1000,
     ):
         """
         Initialize polynomial sampler
 
         Args:
-            symbols: Symbols of polynomial ring
-            field_str: Field of polynomial ring
-            order: Order of polynomial ring
+            symbols: Symbols of polynomial ring (required if ring is None)
+            field_str: Field of polynomial ring (required if ring is None)
+            order: Order of polynomial ring (required if ring is None)
+            ring: PolynomialRing object (alternative to symbols/field_str/order)
             max_num_terms: Maximum number of terms in polynomial. If None, all possible terms are allowed.
             max_degree: Maximum degree of polynomial
             min_degree: Minimum degree of polynomial
@@ -49,11 +52,27 @@ class PolynomialSampler:
             term_sampling: How to sample number of terms ('uniform' or 'fixed')
             strictly_conditioned: Whether to strictly enforce conditions
             nonzero_instance: Whether to enforce non-zero instance
+            nonzero_coeff: Whether to exclude zero coefficients during coefficient generation
             max_attempts: Maximum number of attempts to generate a polynomial satisfying conditions
         """
-        self.symbols = symbols
-        self.field_str = field_str
-        self.order = order
+        # Validate input parameters
+        if ring is not None:
+            if symbols is not None or field_str is not None or order is not None:
+                raise ValueError("Cannot specify both ring and symbols/field_str/order")
+            self.ring = ring
+            self.symbols = None
+            self.field_str = None
+            self.order = None
+        else:
+            if symbols is None or field_str is None or order is None:
+                raise ValueError(
+                    "Must specify either ring or all of symbols/field_str/order"
+                )
+            self.ring = None
+            self.symbols = symbols
+            self.field_str = field_str
+            self.order = order
+
         self.max_num_terms = max_num_terms
         self.max_degree = max_degree
         self.min_degree = min_degree
@@ -63,10 +82,14 @@ class PolynomialSampler:
         self.term_sampling = term_sampling
         self.strictly_conditioned = strictly_conditioned
         self.nonzero_instance = nonzero_instance
+        self.nonzero_coeff = nonzero_coeff
         self.max_attempts = max_attempts
 
     def get_field(self):
         """Convert field_str to actual sympy domain object"""
+        if self.ring is not None:
+            return self.ring.base_ring()
+
         # Standard field mapping
         standard_fields = {"QQ": QQ, "RR": RR, "ZZ": ZZ}
         if self.field_str in standard_fields:
@@ -97,6 +120,9 @@ class PolynomialSampler:
         Returns:
             PolynomialRing: Generated polynomial ring
         """
+        if self.ring is not None:
+            return self.ring
+
         R = PolynomialRing(self.get_field(), self.symbols, order=self.order)
         return R
 
@@ -180,36 +206,71 @@ class PolynomialSampler:
         R = self.get_ring()
         field = R.base_ring()
 
-        if field == QQ:
-            bound = self.num_bound if self.num_bound is not None else 10
-            return R.random_element(
-                degree=degree,
-                terms=num_terms,
-                num_bound=bound,
-                choose_degree=choose_degree,
-            )
-        elif field == RR:
-            coeff = self.max_coeff if self.max_coeff is not None else 10
-            return R.random_element(
-                degree=degree,
-                terms=num_terms,
-                min=-coeff,
-                max=coeff,
-                choose_degree=choose_degree,
-            )
-        elif field == ZZ:
-            coeff = self.max_coeff if self.max_coeff is not None else 10
-            return R.random_element(
-                degree=degree,
-                terms=num_terms,
-                x=-coeff,
-                y=coeff + 1,
-                choose_degree=choose_degree,
-            )
-        else:  # Finite field
-            return R.random_element(
-                degree=degree, terms=num_terms, choose_degree=choose_degree
-            )
+        # First, create a polynomial with all coefficients equal to 1
+        ZZ_R = PolynomialRing(ZZ, R.gens(), order=R.term_order())
+        p = ZZ_R.random_element(
+            degree=degree, terms=num_terms, choose_degree=choose_degree, x=1, y=2
+        )
+
+        # Get the dictionary representation of the polynomial
+        p_dict = p.dict()
+
+        # Randomly sample coefficients for each term based on the appropriate field
+        for k, v in p_dict.items():
+            if field == QQ:
+                bound = self.num_bound if self.num_bound is not None else 10
+                # For QQ, generate numerator and denominator randomly
+                if self.nonzero_coeff:
+                    # Exclude zero by ensuring numerator is not zero
+                    num = (
+                        randint(1, bound)
+                        if randstate.random() < 0.5
+                        else randint(-bound, -1)
+                    )
+                else:
+                    num = randint(-bound, bound)
+                den = randint(1, bound)
+                p_dict[k] = QQ(num) / QQ(den)
+            elif field == RR:
+                coeff = self.max_coeff if self.max_coeff is not None else 10
+                if self.nonzero_coeff:
+                    # Exclude zero by sampling from non-zero range
+                    p_dict[k] = RR.random_element(min=-coeff, max=coeff)
+                    # Ensure non-zero by regenerating if zero
+                    while p_dict[k] == 0:
+                        p_dict[k] = RR.random_element(min=-coeff, max=coeff)
+                else:
+                    p_dict[k] = RR.random_element(min=-coeff, max=coeff)
+            elif field == ZZ:
+                coeff = self.max_coeff if self.max_coeff is not None else 10
+                if self.nonzero_coeff:
+                    # Exclude zero by sampling from non-zero range
+                    p_dict[k] = (
+                        randint(1, coeff)
+                        if randstate.random() < 0.5
+                        else randint(-coeff, -1)
+                    )
+                else:
+                    p_dict[k] = randint(-coeff, coeff)
+            elif field.characteristic() > 0:
+                # For finite fields, randomly select values from 0 to p-1
+                field_order = field.characteristic()
+
+                assert field.is_prime_field(), (
+                    f"Non-prime field detected: {field}. This may cause unexpected behavior."
+                )
+
+                if self.nonzero_coeff:
+                    # Exclude zero by sampling from 1 to p-1
+                    p_dict[k] = field(randint(1, field_order - 1))
+                else:
+                    p_dict[k] = field(randint(0, field_order - 1))
+            else:
+                raise ValueError(f"Unsupported field: {field}")
+
+        # breakpoint()
+        # Convert to the original polynomial ring R
+        return R(p_dict)
 
     def _sample_matrix(
         self,
@@ -228,7 +289,7 @@ class PolynomialSampler:
         for _ in range(num_entries):
             p = self._sample_polynomial(max_attempts)
             # Apply density
-            if random.random() >= density:
+            if randstate.random() >= density:
                 p *= 0
             entries.append(p)
 
