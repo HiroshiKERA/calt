@@ -11,10 +11,10 @@ This module introduces `PolynomialTrainer`, an extension of
 
 from transformers import Trainer
 import torch
-import wandb
 import os
 import json
 import numpy as np
+
 
 class PolynomialTrainer(Trainer):
     """Extension of *HuggingFace* :class:`~transformers.Trainer`.
@@ -31,7 +31,7 @@ class PolynomialTrainer(Trainer):
         # seen.  This enables the caller to inspect the *complete* training
         # history after the run has finished without having to query WandB.
         self.log_history = []
-        
+
         if self.compute_metrics is None:
             self.compute_metrics = self._compute_metrics
 
@@ -56,13 +56,13 @@ class PolynomialTrainer(Trainer):
 
     def _compute_metrics(self, eval_preds, ignore_index=-100):
         """This method is called at each prediction step to compute the metrics.
-        
+
         Parameters
         ----------
         eval_preds: tuple (predictions, labels)
             predictions: shape (batch_size, seq_len)
             labels: shape (batch_size, seq_len)
-        
+
         Returns
         -------
         dict with accuracy

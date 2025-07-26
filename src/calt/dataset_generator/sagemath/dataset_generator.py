@@ -318,6 +318,9 @@ class DatasetGenerator:
         statistics_calculator: Callable | None = None,
         dataset_writer: DatasetWriter | None = None,
         batch_size: int = 100000,
+        save_dir: str | None = None,
+        save_text: bool = True,
+        save_json: bool = True,
     ):
         """
         Generate multiple datasets using parallel processing with batch writing.
@@ -344,9 +347,15 @@ class DatasetGenerator:
             statistics_calculator: Optional function to calculate sample-specific statistics.
                                  Must accept (problem, solution) and return dict or None.
             dataset_writer: DatasetWriter object for saving datasets to files.
-                          If None, no files are saved (useful for testing).
+                          If None, a new DatasetWriter will be created using save_dir, save_text, and save_json parameters.
             batch_size: Number of samples to process in each batch. Larger batches
                        use more memory but may be more efficient for I/O operations.
+            save_dir: Base directory for saving datasets. Used only if dataset_writer is None.
+                     If None, uses current working directory.
+            save_text: Whether to save raw text files. Used only if dataset_writer is None.
+                      Text files use "#" as separator between problem and solution.
+            save_json: Whether to save JSON Lines files. Used only if dataset_writer is None.
+                      JSON Lines files preserve the original nested structure format.
 
         Raises:
             ValueError: If dataset_sizes is invalid or problem_generator is None
@@ -357,6 +366,7 @@ class DatasetGenerator:
             - Progress is logged if verbose=True (set in __init__)
             - Memory usage scales with batch_size, not total dataset size
             - Statistics are calculated incrementally to handle large datasets
+            - If dataset_writer is provided, save_dir, save_text, and save_json parameters are ignored
 
         Examples:
             >>> # Define problem generator function
@@ -371,31 +381,52 @@ class DatasetGenerator:
             >>> # Initialize dataset generator
             >>> generator = DatasetGenerator(n_jobs=-1, verbose=True)
             >>>
-            >>> # Create dataset writer
-            >>> writer = DatasetWriter(save_dir="./datasets", save_text=True, save_json=True)
-            >>>
-            >>> # Method 1: Generate multiple datasets at once (recommended)
+            >>> # Method 1: Automatic DatasetWriter creation
             >>> generator.run(
             ...     dataset_sizes={"train": 10000, "test": 1000, "validation": 500},
+            ...     problem_generator=polynomial_generator,
+            ...     save_dir="./datasets",
+            ...     save_text=True,
+            ...     save_json=True,
+            ...     batch_size=100
+            ... )
+            >>>
+            >>> # Method 2: Manual DatasetWriter creation (for advanced use cases)
+            >>> from calt.dataset_generator.sagemath import DatasetWriter
+            >>> writer = DatasetWriter(save_dir="./datasets", save_text=True, save_json=True)
+            >>> generator.run(
+            ...     dataset_sizes={"train": 10000, "test": 1000},
             ...     problem_generator=polynomial_generator,
             ...     dataset_writer=writer,
             ...     batch_size=100
             ... )
             >>>
-            >>> # Method 2: Generate datasets separately (if needed)
+            >>> # Method 3: Generate datasets separately (if needed)
             >>> generator.run(
             ...     dataset_sizes={"train": 10000},
             ...     problem_generator=polynomial_generator,
-            ...     dataset_writer=writer,
+            ...     save_dir="./datasets",
             ...     batch_size=100
             ... )
             >>> generator.run(
             ...     dataset_sizes={"test": 1000, "validation": 500},
             ...     problem_generator=polynomial_generator,
-            ...     dataset_writer=writer,
+            ...     save_dir="./datasets",
             ...     batch_size=100
             ... )
         """
+        # Create DatasetWriter if not provided
+        if dataset_writer is None:
+            dataset_writer = DatasetWriter(
+                save_dir=save_dir,
+                save_text=save_text,
+                save_json=save_json,
+            )
+            self.logger.info(
+                f"Created DatasetWriter with save_dir: {dataset_writer.save_dir}"
+            )
+            self.logger.info(f"Text output: {save_text}, JSON output: {save_json}")
+
         # Prepare common arguments
         common_args = {
             "problem_generator": problem_generator,
