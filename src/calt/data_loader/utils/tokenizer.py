@@ -3,12 +3,12 @@ from tokenizers import Tokenizer
 from tokenizers.models import WordLevel
 from tokenizers.processors import TemplateProcessing
 from tokenizers.pre_tokenizers import CharDelimiterSplit
-from typing import Optional, Dict, List, TypedDict
+from typing import Optional, TypedDict
 
 
 class VocabConfig(TypedDict):
-    vocab: List[str]
-    special_vocab: Dict[str, str]
+    vocab: list[str]
+    special_vocab: dict[str, str]
 
 
 def set_tokenizer(
