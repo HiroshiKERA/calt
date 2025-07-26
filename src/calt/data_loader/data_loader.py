@@ -87,8 +87,12 @@ def load_data(
     else:
         raise ValueError(f"Unknown processor: {processor_name}")
 
-    train_dataset = StandardDataset(train_dataset_path, preprocessor, max_samples=num_train_samples)
-    test_dataset = StandardDataset(test_dataset_path, preprocessor, max_samples=num_test_samples)
+    train_dataset = StandardDataset(
+        train_dataset_path, preprocessor, max_samples=num_train_samples
+    )
+    test_dataset = StandardDataset(
+        test_dataset_path, preprocessor, max_samples=num_test_samples
+    )
 
     vocab_config: VocabConfig | None = None
     if vocab_path:

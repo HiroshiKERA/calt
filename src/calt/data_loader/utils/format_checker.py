@@ -122,12 +122,16 @@ class FormatChecker:
 
                     # Validate problem format
                     if not self._validate_expression(problem):
-                        logger.error(f"Line {line_num}: Invalid problem format - {problem}")
+                        logger.error(
+                            f"Line {line_num}: Invalid problem format - {problem}"
+                        )
                         return False
 
                     # Validate solution format
                     if not self._validate_expression(solution):
-                        logger.error(f"Line {line_num}: Invalid solution format - {solution}")
+                        logger.error(
+                            f"Line {line_num}: Invalid solution format - {solution}"
+                        )
                         return False
 
                     samples_checked += 1
