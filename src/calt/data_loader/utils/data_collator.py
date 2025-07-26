@@ -18,7 +18,7 @@ class StandardDataset(Dataset):
     ) -> None:
         self.data_path = data_path
         self.input_texts = []
-        self.targets_texts = []
+        self.target_texts = []
         self.preprocessor = preprocessor
 
         # Validate max_samples parameter
@@ -42,7 +42,7 @@ class StandardDataset(Dataset):
 
                 input_part, target_part = line.split("#", 1)
                 self.input_texts.append(input_part.strip())
-                self.targets_texts.append(target_part.strip())
+                self.target_texts.append(target_part.strip())
 
                 # Stop loading if max_samples is reached
                 if max_samples is not None and len(self.input_texts) >= max_samples:
@@ -74,7 +74,7 @@ class StandardDataset(Dataset):
             A pair (src, tgt) of preprocessed source and target
         """
         src = self.preprocessor(self.input_texts[idx])
-        tgt = self.preprocessor(self.targets_texts[idx])
+        tgt = self.preprocessor(self.target_texts[idx])
         return {"input": src, "target": tgt}
 
     def __len__(self) -> int:
