@@ -446,9 +446,7 @@ class DatasetGenerator:
                 save_text=save_text,
                 save_json=save_json,
             )
-            self.logger.info(
-                f"save_dir: {dataset_writer.save_dir}"
-            )
+            self.logger.info(f"save_dir: {dataset_writer.save_dir}")
             self.logger.info(f"Text output: {save_text}")
             self.logger.info(f"JSON output: {save_json}")
 
