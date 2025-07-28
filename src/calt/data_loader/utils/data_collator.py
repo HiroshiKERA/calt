@@ -21,9 +21,15 @@ class StandardDataset(Dataset):
         self.target_texts = []
         self.preprocessor = preprocessor
 
+        # Convert -1 to None to load all samples
+        if max_samples == -1:
+            max_samples = None
+
         # Validate max_samples parameter
         if max_samples is not None and max_samples <= 0:
-            raise ValueError(f"max_samples must be positive, got {max_samples}")
+            raise ValueError(
+                f"max_samples must be positive or -1 (to load all samples), got {max_samples}"
+            )
 
         # Check if file exists
         if not os.path.exists(self.data_path):
@@ -51,7 +57,7 @@ class StandardDataset(Dataset):
         # Log information about loaded samples
         if max_samples is not None and len(self.input_texts) < max_samples:
             logger.warning(
-                f"Requested {max_samples} samples but only {len(self.input_texts)} valid samples found in {self.data_path}"
+                f"WARNING Requested {max_samples} samples but only {len(self.input_texts)} samples found in {self.data_path}"
             )
         elif max_samples is not None:
             logger.info(
