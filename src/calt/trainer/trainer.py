@@ -1,28 +1,27 @@
 """Custom HuggingFace Trainer tailored for symbolic computation tasks.
 
-This module introduces `PolynomialTrainer`, an extension of
+This module introduces `Trainer`, an extension of
 :class:`transformers.Trainer` that adds project-specific helpers:
 
-* Device-aware input preparation via :pymeth:`PolynomialTrainer._prepare_inputs`.
-* Automatic loss logging inside :pymeth:`PolynomialTrainer.compute_loss`.
+* Device-aware input preparation via :pymeth:`Trainer._prepare_inputs`.
+* Automatic metrics computation via :pymeth:`Trainer._compute_metrics`.
 * Exact-match generation evaluation with
-  :pymeth:`PolynomialTrainer.generate_evaluation`.
+  :pymeth:`Trainer.evaluate_and_save_generation`.
 """
 
-from transformers import Trainer
+from transformers import Trainer as HTrainer
 import torch
 import os
 import json
 import numpy as np
 
 
-class PolynomialTrainer(Trainer):
+class Trainer(HTrainer):
     """Extension of *HuggingFace* :class:`~transformers.Trainer`.
 
     The trainer adds task-specific helpers that simplify training generative
-    Transformer models on symbolic polynomial data.  Besides the usual
-    ``Trainer`` keyword arguments it does not introduce new parameters - the
-    default constructor is therefore forwarded verbatim.
+    Transformer models. It accepts all the usual ``HTrainer`` keyword arguments
+    and does not introduce new parameters - the default constructor is therefore forwarded verbatim.
     """
 
     def __init__(self, *args, **kwargs):
