@@ -1,1 +1,1 @@
-from .trainer import PolynomialTrainer
+from .trainer import Trainer

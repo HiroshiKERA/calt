@@ -1,4 +1,4 @@
-from .trainer.trainer import PolynomialTrainer
+from .trainer.trainer import Trainer
 from .trainer.utils import count_cuda_devices
 from .data_loader.data_loader import load_data
 from .data_loader.utils.data_collator import StandardDataset, StandardDataCollator
