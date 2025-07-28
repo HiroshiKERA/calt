@@ -423,9 +423,11 @@ class DatasetGenerator:
                 save_json=save_json,
             )
             self.logger.info(
-                f"Created DatasetWriter with save_dir: {dataset_writer.save_dir}"
+                f"save_dir: {dataset_writer.save_dir}"
             )
-            self.logger.info(f"Text output: {save_text}, JSON output: {save_json}")
+            self.logger.info(f"Text output: {save_text}")
+            self.logger.info(f"JSON output: {save_json}")
+
 
         # Prepare common arguments
         common_args = {
