@@ -7,7 +7,6 @@ from .data_loader.utils.preprocessor import (
     SymbolicToInternalProcessor,
     IntegerToInternalProcessor,
 )
-from .data_loader.utils.format_checker import FormatChecker
 from .dataset_generator.sympy.dataset_generator import DatasetGenerator
 from .dataset_generator.sympy.utils.polynomial_sampler import PolynomialSampler
 from .dataset_generator.sympy.utils.dataset_writer import DatasetWriter
