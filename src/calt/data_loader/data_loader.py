@@ -60,10 +60,10 @@ def load_data(
         Path to the vocabulary configuration file. If None, a default vocabulary
         will be generated based on the field, max_degree, and max_coeff parameters.
     num_train_samples : int | None, default ``None``
-        Maximum number of training samples to load. If None, all available
+        Maximum number of training samples to load. If None or -1, all available
         training samples will be loaded.
     num_test_samples : int | None, default ``None``
-        Maximum number of test samples to load. If None, all available
+        Maximum number of test samples to load. If None or -1, all available
         test samples will be loaded.
 
     Returns
