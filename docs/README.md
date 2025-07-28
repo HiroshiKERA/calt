@@ -1,6 +1,6 @@
 # CALT: Computer ALgebra with Transformer
 
-CALT (Computer ALgebra with Transformer) is a simple Python library for learning arithmetic and symbolic computation with Transformer models.
+CALT is a simple Python library for learning arithmetic and symbolic computation with Transformer models.
 It offers a basic Transformer model and training, and non-experts of deep learning (e.g., mathematicians) can focus on constructing datasets to train and evaluate the model. Particularly, users only need to implement an instance generator for their own task.
 
 
