@@ -1,5 +1,4 @@
 from typing import Any
-import sage.misc.randstate as randstate
 from sage.all import (
     PolynomialRing,
     QQ,
@@ -12,6 +11,7 @@ from sage.all import (
     prod,
     TermOrder,
 )
+from sage.rings.polynomial.multi_polynomial_libsingular import MPolynomial_libsingular
 
 
 class PolynomialSampler:
@@ -132,7 +132,7 @@ class PolynomialSampler:
         size: tuple[int, int] | None = None,
         density: float = 1.0,
         matrix_type: str | None = None,
-    ) -> list[Any] | list[matrix]:
+    ) -> list[MPolynomial_libsingular] | list[matrix]:
         """
         Generate random polynomial samples
 
@@ -153,7 +153,7 @@ class PolynomialSampler:
         else:
             return [self._sample_polynomial() for _ in range(num_samples)]
 
-    def _sample_polynomial(self) -> Any:
+    def _sample_polynomial(self) -> MPolynomial_libsingular:
         """Generate a single random polynomial"""
         # Determine degree
         if self.degree_sampling == "uniform":
@@ -199,7 +199,7 @@ class PolynomialSampler:
 
         return p
 
-    def _generate_random_polynomial(self, degree: int, num_terms: int) -> Any:
+    def _generate_random_polynomial(self, degree: int, num_terms: int) -> MPolynomial_libsingular:
         """Generate a random polynomial with given degree and number of terms"""
         choose_degree = self.degree_sampling == "uniform"
 
@@ -224,7 +224,7 @@ class PolynomialSampler:
                     # Exclude zero by ensuring numerator is not zero
                     num = (
                         randint(1, bound)
-                        if randstate.random() < 0.5
+                        if RR.random_element(0, 1) < 0.5
                         else randint(-bound, -1)
                     )
                 else:
@@ -247,7 +247,7 @@ class PolynomialSampler:
                     # Exclude zero by sampling from non-zero range
                     p_dict[k] = (
                         randint(1, coeff)
-                        if randstate.random() < 0.5
+                        if RR.random_element(0, 1) < 0.5
                         else randint(-coeff, -1)
                     )
                 else:
@@ -287,9 +287,9 @@ class PolynomialSampler:
         # Generate polynomial entries
         entries = []
         for _ in range(num_entries):
-            p = self._sample_polynomial(max_attempts)
+            p = self._sample_polynomial()
             # Apply density
-            if randstate.random() >= density:
+            if RR.random_element(0, 1) >= density:
                 p *= 0
             entries.append(p)
 
@@ -308,7 +308,7 @@ class PolynomialSampler:
         return M
 
 
-def compute_max_coefficient(poly: Any) -> int:
+def compute_max_coefficient(poly: MPolynomial_libsingular) -> int:
     """Compute maximum absolute coefficient value in a polynomial"""
     coeffs = poly.coefficients()
     field = poly.base_ring()
