@@ -8,9 +8,12 @@ Transformer models.
 """
 
 import yaml
-import os
 import logging
-from .utils.data_collator import StandardDataset, StandardDataCollator, _read_data_from_file
+from .utils.data_collator import (
+    StandardDataset,
+    StandardDataCollator,
+    _read_data_from_file,
+)
 from .utils.preprocessor import (
     IntegerToInternalProcessor,
     PolynomialToInternalProcessor,

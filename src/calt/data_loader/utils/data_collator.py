@@ -9,7 +9,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def _read_data_from_file(data_path: str, max_samples: int | None = None) -> tuple[list[str], list[str]]:
+def _read_data_from_file(
+    data_path: str, max_samples: int | None = None
+) -> tuple[list[str], list[str]]:
     """Reads input and target texts from a file."""
     input_texts = []
     target_texts = []
@@ -20,7 +22,9 @@ def _read_data_from_file(data_path: str, max_samples: int | None = None) -> tupl
 
     # Validate max_samples parameter
     if max_samples is not None and max_samples <= 0:
-        raise ValueError(f"max_samples must be positive or -1 (to load all samples), got {max_samples}")
+        raise ValueError(
+            f"max_samples must be positive or -1 (to load all samples), got {max_samples}"
+        )
 
     # Check if file exists
     if not os.path.exists(data_path):
@@ -51,7 +55,9 @@ def _read_data_from_file(data_path: str, max_samples: int | None = None) -> tupl
             f"WARNING Requested {max_samples} samples but only {len(input_texts)} samples found in {data_path}"
         )
     elif max_samples is not None:
-        logger.info(f"Loaded {len(input_texts)} samples (limited to {max_samples}) from {data_path}")
+        logger.info(
+            f"Loaded {len(input_texts)} samples (limited to {max_samples}) from {data_path}"
+        )
     else:
         logger.info(f"Loaded {len(input_texts)} samples from {data_path}")
 
@@ -91,11 +97,15 @@ class StandardDataset(Dataset):
 
         num_samples = len(self.input_texts)
         if len(self.target_texts) != num_samples:
-            raise ValueError("input_texts and target_texts must have the same number of samples.")
+            raise ValueError(
+                "input_texts and target_texts must have the same number of samples."
+            )
 
         for name, data in self.extra_fields.items():
             if len(data) != num_samples:
-                raise ValueError(f"Extra field '{name}' has {len(data)} samples, but {num_samples} were expected.")
+                raise ValueError(
+                    f"Extra field '{name}' has {len(data)} samples, but {num_samples} were expected."
+                )
 
     def __getitem__(self, idx: int) -> dict[str, str]:
         """Get dataset item and convert to internal representation.
