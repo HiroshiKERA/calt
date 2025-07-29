@@ -3,9 +3,10 @@ import re
 from sympy import Expr, Poly, Symbol, latex, symbols, Integer
 from IPython.display import display, Math
 import json
+from sympy.parsing.sympy_parser import parse_expr
 
 
-__all__ = ["display_with_diff", "load_eval_results"]
+__all__ = ["display_with_diff", "load_eval_results", "parse_poly"]
 
 # ---------------------------------------------------------------------------
 # Helpers -------------------------------------------------------------------
@@ -115,19 +116,27 @@ def _build_poly_latex(
 
 
 def display_with_diff(
-    gold: Expr,
-    pred: Expr,
+    gold: Expr | str,
+    pred: Expr | str,
     var_order: Sequence[Symbol] | None = None,
 ) -> None:
     """Render *gold* vs. *pred* with strikethrough on mistakes in *pred*.
 
     Parameters
     ----------
-    gold, pred : sympy.Expr
-        Ground-truth and model-predicted expressions.
+    gold, pred : sympy.Expr or str
+        Ground-truth and model-predicted expressions. If strings, they will be
+        parsed as token sequences (e.g. "C1 E1 E1 C-3 E0 E7") via `parse_poly`.
     var_order : list[sympy.Symbol] | None
-        Variable ordering (important for >2 variables). Inferred if None.
+        Variable ordering (important for >2 variables). Inferred if None. Also
+        passed to `parse_poly` if inputs are strings.
     """
+
+    # --- input conversion ------------------------------------------------- #
+    if isinstance(gold, str):
+        gold = parse_poly(gold, var_names=var_order)
+    if isinstance(pred, str):
+        pred = parse_poly(pred, var_names=var_order)
 
     # --- normalize -------------------------------------------------------- #
     if var_order is None:
@@ -196,7 +205,9 @@ def load_eval_results(file_path: str) -> tuple[list[str], list[str]]:
     return generated_texts, reference_texts
 
 
-def parse_poly(tokens: str, var_names: Sequence[str | Symbol] | None = None):
+def _parse_poly_from_tokens(
+    tokens: str, var_names: Sequence[str | Symbol] | None = None
+) -> Expr:
     """
     Convert an internal token sequence (e.g. ``"C1 E1 E1 C-3 E0 E7"``)
     into a SymPy polynomial.
@@ -283,3 +294,56 @@ def parse_poly(tokens: str, var_names: Sequence[str | Symbol] | None = None):
         expr += term
 
     return expr
+
+
+def parse_poly(text: str, var_names: Sequence[str | Symbol] | None = None) -> Expr:
+    """
+    Convert a mathematical expression string or an internal token sequence
+    into a SymPy polynomial.
+
+    This function handles:
+    1.  Standard mathematical notation (e.g., "4*x0 + 4*x1").
+    2.  SageMath-style power notation (e.g., "3*x0^2 + 3*x0").
+    3.  Internal token format (e.g., "C4 E1 E0 C4 E0 E1").
+
+    Parameters
+    ----------
+    text : str
+        The mathematical expression or token sequence to parse.
+    var_names : Sequence[str | sympy.Symbol] | None, optional
+        Variable names. Primarily used for the token sequence format to ensure
+        the correct number of variables. For expression strings, variables are
+        inferred, but providing them can ensure they are treated as symbols.
+
+    Returns
+    -------
+    sympy.Expr
+        A SymPy expression for the polynomial.
+    """
+    text = text.strip()
+
+    # Heuristic: if the text starts with a 'C' token, attempt to parse it
+    # using the token-based parser first.
+    if text.startswith("C"):
+        try:
+            return _parse_poly_from_tokens(text, var_names)
+        except (ValueError, IndexError):
+            # Fallback to standard expression parsing if token parsing fails.
+            # This allows parsing expressions that happen to start with 'C'
+            # (e.g., if 'C' is a variable name).
+            pass
+
+    # Standard expression parsing
+    # Replace SageMath-style power operator '^' with SymPy's '**'
+    text_sympy = text.replace("^", "**")
+
+    # Prepare a local dictionary of symbols if var_names are provided
+    local_dict = {}
+    if var_names:
+        if all(isinstance(v, Symbol) for v in var_names):
+            symbols_map = {s.name: s for s in var_names}
+        else:
+            symbols_map = {str(name): Symbol(str(name)) for name in var_names}
+        local_dict.update(symbols_map)
+
+    return parse_expr(text_sympy, local_dict=local_dict, evaluate=True)
