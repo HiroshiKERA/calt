@@ -1,28 +1,27 @@
-"""Custom HuggingFace Trainer tailored for symbolic algebra tasks.
+"""Custom HuggingFace Trainer tailored for symbolic computation tasks.
 
-This module introduces `PolynomialTrainer`, an extension of
+This module introduces `Trainer`, an extension of
 :class:`transformers.Trainer` that adds project-specific helpers:
 
-* Device-aware input preparation via :pymeth:`PolynomialTrainer._prepare_inputs`.
-* Automatic loss logging inside :pymeth:`PolynomialTrainer.compute_loss`.
+* Device-aware input preparation via :pymeth:`Trainer._prepare_inputs`.
+* Automatic metrics computation via :pymeth:`Trainer._compute_metrics`.
 * Exact-match generation evaluation with
-  :pymeth:`PolynomialTrainer.generate_evaluation`.
+  :pymeth:`Trainer.evaluate_and_save_generation`.
 """
 
-from transformers import Trainer
+from transformers import Trainer as HTrainer
 import torch
-import wandb
 import os
 import json
+import numpy as np
 
 
-class PolynomialTrainer(Trainer):
+class Trainer(HTrainer):
     """Extension of *HuggingFace* :class:`~transformers.Trainer`.
 
     The trainer adds task-specific helpers that simplify training generative
-    Transformer models on symbolic polynomial data.  Besides the usual
-    ``Trainer`` keyword arguments it does not introduce new parameters – the
-    default constructor is therefore forwarded verbatim.
+    Transformer models. It accepts all the usual ``HTrainer`` keyword arguments
+    and does not introduce new parameters - the default constructor is therefore forwarded verbatim.
     """
 
     def __init__(self, *args, **kwargs):
@@ -31,6 +30,9 @@ class PolynomialTrainer(Trainer):
         # seen.  This enables the caller to inspect the *complete* training
         # history after the run has finished without having to query WandB.
         self.log_history = []
+
+        if self.compute_metrics is None:
+            self.compute_metrics = self._compute_metrics
 
     def _prepare_inputs(self, inputs):
         """Move every tensor in *inputs* onto ``self.args.device``.
@@ -51,20 +53,35 @@ class PolynomialTrainer(Trainer):
             for k, v in inputs.items()
         }
 
-    def log_metrics(self, outputs, inputs, ignore_index: int = -100):
-        """Push a single metric dictionary to Weights & Biases."""
-        if not self.is_world_process_zero():
-            return
+    def _compute_metrics(self, eval_preds, ignore_index=-100):
+        """This method is called at each prediction step to compute the metrics.
 
-        metrics = {
-            "train/loss": (outputs.loss.item() if outputs.loss is not None else 0.0)
-        }
+        Parameters
+        ----------
+        eval_preds: tuple (predictions, labels)
+            predictions: shape (batch_size, seq_len)
+            labels: shape (batch_size, seq_len)
 
-        # Add to log history
-        self.log_history.append(metrics)
-        wandb.log(metrics)
+        Returns
+        -------
+        dict with accuracy
+        """
+        predictions, labels = eval_preds
 
-    def generate_evaluation(self, max_length: int = 512):
+        # Convert to tensors since inputs are often numpy arrays
+        if isinstance(predictions, np.ndarray):
+            predictions = torch.tensor(predictions)
+        if isinstance(labels, np.ndarray):
+            labels = torch.tensor(labels)
+
+        # Mask tokens with ignore_index
+        mask = labels != ignore_index
+        correct = (predictions == labels) & mask
+        acc = correct.sum().item() / mask.sum().item()
+
+        return {"token_accuracy": acc}
+
+    def evaluate_and_save_generation(self, max_length: int = 512):
         """Run *greedy* or *beam search* generation on the evaluation set.
 
         The helper decodes the model outputs into strings, stores the results
@@ -75,7 +92,7 @@ class PolynomialTrainer(Trainer):
         Returns
         -------
         float
-            Exact-match accuracy in the \[0, 1\] interval.
+            Exact-match accuracy in the [0, 1] interval.
         """
         if self.eval_dataset is None:
             raise ValueError("Trainer: evaluation requires an eval_dataset.")
@@ -157,7 +174,6 @@ class PolynomialTrainer(Trainer):
             if gen_text.strip() == ref_text.strip():
                 correct_predictions += 1
 
-        accuracy = correct_predictions / total_predictions
-        self.log({"eval/accuracy": accuracy})
+        success_rate = correct_predictions / total_predictions
 
-        return accuracy
+        return success_rate

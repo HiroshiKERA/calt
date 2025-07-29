@@ -1,7 +1,7 @@
 """Utility helpers for training scripts.
 
 This module groups together small functions that are frequently reused across
-training and evaluation scripts – for example, detecting the number of visible
+training and evaluation scripts - for example, detecting the number of visible
 CUDA devices or initialising the Weights & Biases tracking dashboard.
 """
 
@@ -56,7 +56,7 @@ def setup_wandb(
         WandB *entity* (user or team) that owns the project.  When *None*, the
         default entity configured in the local WandB settings is used.
     **extra_config
-        Additional key–value pairs that will be inserted into the run
+        Additional key-value pairs that will be inserted into the run
         configuration.  These values are useful for hyper-parameter sweeps or
         quick ad-hoc experiments.
     """

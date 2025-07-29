@@ -1,17 +1,21 @@
 # CALT: Computer ALgebra with Transformer
-(*Note: This project is currently in its initial development phase. The file structure and content are subject to significant changes. Please ensure you are referring to the latest version when using it.*)
 
-# Overview
-`calt` is a simple Python library for learning arithmetic and symbolic computation with a Transformer model (a deep neural model to realize sequece-to-sequence functions). 
+[![Documentation](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://hiroshikera.github.io/calt/)
+[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-View%20Documentation-blue.svg)](https://hiroshikera.github.io/calt/)
+
+> 📖 **📚 [View Full Documentation](https://hiroshikera.github.io/calt/)**
+
+## Overview
+
+CALT is a simple Python library for learning arithmetic and symbolic computation with a Transformer model (a deep neural model to realize sequence-to-sequence functions). 
 
 It offers a basic Transformer model and training, and non-experts of deep learning (e.g., mathematicians) can focus on constructing datasets to train and evaluate the model. Particularly, users only need to implement an instance generator for their own task.
 
-For example, for the polynomial addition task, the following will work.
-```
+For example, users define the following code for the polynomial addition task.
+
+```python
 class SumProblemGenerator:
-    ''' 
-    Task - input: F=[f_1, ..., f_s], target: g= f_1+...+f_s
-    '''
+    # Task - input: F=[f_1, ..., f_s], target: G=[g:= f_1+...+f_s]
     def __init__(
         self, sampler: PolynomialSampler, max_polynomials: int, min_polynomials: int
     ):
@@ -29,7 +33,7 @@ class SumProblemGenerator:
         return F, g
 ```
 
-Then, `calt` calls this in parallel to efficiently construct a large dataset and then train a Transformer model to learn this computation. For hard problems, the sample generation itself can suggest unexplored problems, and one can study theoretical and algorithmic solutions of them. The following is a small list of such studies from our group. 
+CALT automatically calls this generator in parallel to efficiently construct large datasets and trains a Transformer model to learn the computation. The sample generation process itself can reveal unexplored mathematical problems, enabling researchers to study their theoretical and algorithmic solutions. The following is a small list of such studies from our group. 
 
 - ["Learning to Compute Gröbner Bases," Kera et al., 2024](https://arxiv.org/abs/2311.12904)
 - ["Computational Algebra with Attention: Transformer Oracles for Border Basis Algorithms," Kera and Pelleriti et al., 2025](https://arxiv.org/abs/2505.23696)
@@ -37,44 +41,35 @@ Then, `calt` calls this in parallel to efficiently construct a large dataset and
 
 Refer to our paper ["CALT: A Library for Computer Algebra with Transformer," Kera et al., 2025](https://arxiv.org/abs/2506.08600) for a comprehensive overview.
 
-## Installation
+## 🚀 Quick Start
 
-### Standard Python environment
+### Basic Installation
 
-`calt-x` is available on PyPI. Install with:
-
-~~~bash
+```bash
 pip install calt-x
-~~~
+```
 
-### SageMath environment
+### For Research Projects
 
-If you plan to leverage **SageMath** as a backend, install from within a Sage shell:
+For researchers and developers who want to start experiments with CALT, we provide the [CALT codebase](https://github.com/HiroshiKERA/calt-codebase) - a comprehensive template repository with pre-configured environment and development tools.
 
-~~~bash
-sage -pip install calt-x
-~~~
+```bash
+git clone https://github.com/HiroshiKERA/calt-codebase.git
+cd calt-codebase
+conda env create -f environment.yml 
+```
 
-### Requirements
+## 📖 Documentation & Resources
 
-- Python ≥ 3.10  
-- SageMath ≥ 9.5 (only required when using the Sage backend)
+- **📚 [Full Documentation](https://hiroshikera.github.io/calt/)** - Complete guide with quickstart and project organization tips
+- **⚡ [Quickstart Guide](https://hiroshikera.github.io/calt/quickstart/)** - Get up and running quickly
+- **📓 [Demo Notebook](https://colab.research.google.com/github/HiroshiKERA/calt/blob/dev/notebooks/demo.ipynb)** - Interactive examples
 
+## 🔗 Links
 
-
-### Weights & Biases (wandb) Setup
-
-If you are using Weights & Biases (wandb) for the first time to log training progress, you will need to create an account on their website and set up your API key. When you run the training script for the first time, you will be prompted to enter your API key.
-
-https://wandb.ai/site/
-
-## Demos and Tutorials
-
-Simple demonstrations for data generation and training are available as Jupyter Notebook files. You can find them in the `notebooks` directory
-
-[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/HiroshiKERA/calt/blob/main/notebooks/demo.ipynb)
-
-
+- [📖 Documentation](https://hiroshikera.github.io/calt/)
+- [🐛 Issues](https://github.com/HiroshiKERA/calt/issues)
+- [💬 Discussions](https://github.com/HiroshiKERA/calt/discussions)
 
 ## Citation
 
@@ -89,3 +84,4 @@ If you use this code in your research, please cite our paper:
   eprint={2506.08600}
 }
 ```
+

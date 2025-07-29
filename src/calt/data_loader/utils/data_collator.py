@@ -1,33 +1,113 @@
 from transformers import PreTrainedTokenizerFast as Tokenizer
 from .preprocessor import AbstractPreprocessor
-from typing import Dict
 from torch.utils.data import Dataset
 import torch
+import os
+import logging
+
+# Set up logger for this module
+logger = logging.getLogger(__name__)
+
+
+def _read_data_from_file(
+    data_path: str, max_samples: int | None = None
+) -> tuple[list[str], list[str]]:
+    """Reads input and target texts from a file."""
+    input_texts = []
+    target_texts = []
+
+    # Convert -1 to None to load all samples
+    if max_samples == -1:
+        max_samples = None
+
+    # Validate max_samples parameter
+    if max_samples is not None and max_samples <= 0:
+        raise ValueError(
+            f"max_samples must be positive or -1 (to load all samples), got {max_samples}"
+        )
+
+    # Check if file exists
+    if not os.path.exists(data_path):
+        raise FileNotFoundError(f"Data file not found: {data_path}")
+
+    # Load and parse the data file
+    with open(data_path, "r", encoding="utf-8") as f:
+        for raw_line in f:
+            line = raw_line.strip()
+            if not line:
+                continue  # Skip empty lines
+
+            # Split input and target expressions using "#" delimiter
+            if "#" not in line:
+                continue  # Skip lines with unexpected format (no delimiter)
+
+            input_part, target_part = line.split("#", 1)
+            input_texts.append(input_part.strip())
+            target_texts.append(target_part.strip())
+
+            # Stop loading if max_samples is reached
+            if max_samples is not None and len(input_texts) >= max_samples:
+                break
+
+    # Log information about loaded samples
+    if max_samples is not None and len(input_texts) < max_samples:
+        logger.warning(
+            f"WARNING Requested {max_samples} samples but only {len(input_texts)} samples found in {data_path}"
+        )
+    elif max_samples is not None:
+        logger.info(
+            f"Loaded {len(input_texts)} samples (limited to {max_samples}) from {data_path}"
+        )
+    else:
+        logger.info(f"Loaded {len(input_texts)} samples from {data_path}")
+
+    return input_texts, target_texts
 
 
 class StandardDataset(Dataset):
-    def __init__(self, data_path: str, preprocessor: AbstractPreprocessor) -> None:
-        self.data_path = data_path
-        self.input_texts = []
-        self.targets_texts = []
+    @classmethod
+    def load_file(
+        cls,
+        data_path: str,
+        preprocessor: AbstractPreprocessor,
+        max_samples: int | None = None,
+    ) -> "StandardDataset":
+        """Loads data from a file and creates a StandardDataset instance.
+
+        This method maintains backward compatibility with the previous file-based initialization.
+        """
+        input_texts, target_texts = _read_data_from_file(data_path, max_samples)
+        return cls(
+            input_texts=input_texts,
+            target_texts=target_texts,
+            preprocessor=preprocessor,
+        )
+
+    def __init__(
+        self,
+        input_texts: list[str],
+        target_texts: list[str],
+        preprocessor: AbstractPreprocessor,
+        **extra_fields,
+    ) -> None:
+        self.input_texts = input_texts
+        self.target_texts = target_texts
         self.preprocessor = preprocessor
+        self.extra_fields = extra_fields
 
-        # Load and parse the data file
-        with open(self.data_path, "r", encoding="utf-8") as f:
-            for raw_line in f:
-                line = raw_line.strip()
-                if not line:
-                    continue  # Skip empty lines
+        num_samples = len(self.input_texts)
+        if len(self.target_texts) != num_samples:
+            raise ValueError(
+                "input_texts and target_texts must have the same number of samples."
+            )
 
-                # Split input and target expressions using "#" delimiter
-                if "#" not in line:
-                    continue  # Skip lines with unexpected format (no delimiter)
+        for name, data in self.extra_fields.items():
+            if len(data) != num_samples:
+                raise ValueError(
+                    f"Extra field '{name}' has {len(data)} samples, but {num_samples} were expected."
+                )
 
-                input_part, target_part = line.split("#", 1)
-                self.input_texts.append(input_part.strip())
-                self.targets_texts.append(target_part.strip())
-
-    def __getitem__(self, idx: int) -> Dict[str, str]:
+    def __getitem__(self, idx: int) -> dict[str, str]:
         """Get dataset item and convert to internal representation.
 
         Parameters
@@ -41,7 +121,7 @@ class StandardDataset(Dataset):
             A pair (src, tgt) of preprocessed source and target
         """
         src = self.preprocessor(self.input_texts[idx])
-        tgt = self.preprocessor(self.targets_texts[idx])
+        tgt = self.preprocessor(self.target_texts[idx])
         return {"input": src, "target": tgt}
 
     def __len__(self) -> int:
