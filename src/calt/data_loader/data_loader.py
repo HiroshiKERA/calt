@@ -11,7 +11,7 @@ import yaml
 from .utils.data_collator import StandardDataset, StandardDataCollator
 from .utils.preprocessor import (
     IntegerToInternalProcessor,
-    SymbolicToInternalProcessor,
+    PolynomialToInternalProcessor,
 )
 from .utils.tokenizer import VocabConfig, set_tokenizer
 from transformers import PreTrainedTokenizerFast as StandardTokenizer
@@ -77,7 +77,7 @@ def load_data(
            dynamic padding so they can be fed to a HuggingFace ``Trainer``.
     """
     if processor_name == "polynomial":
-        preprocessor = SymbolicToInternalProcessor(
+        preprocessor = PolynomialToInternalProcessor(
             num_variables=num_variables,
             max_degree=max_degree,
             max_coeff=max_coeff,
