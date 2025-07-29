@@ -122,7 +122,7 @@ class DatasetGenerator:
 
         Args:
             sample_index: Sample identifier (global sample index, independent of batch size)
-            tag: Dataset tag ("train" or "test")
+            tag: Dataset tag (e.g., "train", "test", "eval")
 
         Returns:
             Integer seed value (128 bits)
