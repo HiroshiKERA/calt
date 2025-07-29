@@ -95,14 +95,18 @@ def load_data(
     else:
         raise ValueError(f"Unknown processor: {processor_name}")
 
-    train_input_texts, train_target_texts = _read_data_from_file(train_dataset_path, max_samples=num_train_samples)
+    train_input_texts, train_target_texts = _read_data_from_file(
+        train_dataset_path, max_samples=num_train_samples
+    )
     train_dataset = StandardDataset(
         input_texts=train_input_texts,
         target_texts=train_target_texts,
         preprocessor=preprocessor,
     )
 
-    test_input_texts, test_target_texts = _read_data_from_file(test_dataset_path, max_samples=num_test_samples)
+    test_input_texts, test_target_texts = _read_data_from_file(
+        test_dataset_path, max_samples=num_test_samples
+    )
     test_dataset = StandardDataset(
         input_texts=test_input_texts,
         target_texts=test_target_texts,
