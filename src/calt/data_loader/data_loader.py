@@ -13,7 +13,7 @@ import logging
 from .utils.data_collator import StandardDataset, StandardDataCollator, _read_data_from_file
 from .utils.preprocessor import (
     IntegerToInternalProcessor,
-    PolynomialToInternalProcessor,
+    SymbolicToInternalProcessor,
 )
 from .utils.tokenizer import VocabConfig, set_tokenizer
 from transformers import PreTrainedTokenizerFast as StandardTokenizer
@@ -82,7 +82,7 @@ def load_data(
            dynamic padding so they can be fed to a HuggingFace ``Trainer``.
     """
     if processor_name == "polynomial":
-        preprocessor = PolynomialToInternalProcessor(
+        preprocessor = SymbolicToInternalProcessor(
             num_variables=num_variables,
             max_degree=max_degree,
             max_coeff=max_coeff,
