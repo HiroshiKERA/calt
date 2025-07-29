@@ -1,6 +1,7 @@
 import pytest
 from transformers import PreTrainedTokenizerFast
 from calt.data_loader.utils.tokenizer import set_tokenizer
+import yaml
 
 
 def test_set_tokenizer_dynamic_creation_gf():
@@ -51,7 +52,9 @@ def test_set_tokenizer_dynamic_creation_zz():
 def test_set_tokenizer_from_yaml():
     """Test loading a tokenizer from a file."""
     vocab_path = "config/vocab.yaml"
-    tokenizer = set_tokenizer(vocab_path=vocab_path)
+    with open(vocab_path, "r") as f:
+        vocab_config = yaml.safe_load(f)
+    tokenizer = set_tokenizer(vocab_config=vocab_config)
 
     assert isinstance(tokenizer, PreTrainedTokenizerFast)
     assert tokenizer.model_max_length == 512

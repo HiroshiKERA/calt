@@ -18,7 +18,7 @@ def int_processor():
 
 # -- PolynomialToInternalProcessor Tests --
 
-# Test cases for to_internal and to_original identity
+# Test cases for encode and decode identity
 poly_test_cases_identity = [
     "3*x0^2*x1 - 5*x2 + 2",
     "x0*x1*x2",
@@ -33,13 +33,13 @@ poly_test_cases_identity = [
 @pytest.mark.parametrize("poly_str", poly_test_cases_identity)
 def test_polynomial_processor_identity(poly_processor, poly_str):
     """
-    Test to_original(to_internal(text)) == text
+    Test decode(encode(text)) == text
     """
-    internal_rep = poly_processor.to_internal(poly_str)
+    internal_rep = poly_processor.encode(poly_str)
     # The reconstructed string might have slightly different spacing or ordering
     # so we compare the "processed" version of both. This is a weaker check.
     # A stronger check would be to parse both and compare structured representations.
-    reconstructed_poly = poly_processor.to_original(internal_rep)
+    reconstructed_poly = poly_processor.decode(internal_rep)
 
     # To handle cosmetic differences like "2*x0 - 3" vs "2*x0-3",
     # we can normalize by removing spaces.
@@ -49,16 +49,16 @@ def test_polynomial_processor_identity(poly_processor, poly_str):
     assert normalized_reconstructed == normalized_original
 
 
-# Test cases for to_original and to_internal identity
+# Test cases for decode and encode identity
 @pytest.mark.parametrize("poly_str", poly_test_cases_identity)
 def test_polynomial_processor_internal_identity(poly_processor, poly_str):
     """
-    Test to_internal(to_original(tokens)) == tokens
+    Test encode(decode(tokens)) == tokens
     """
-    internal_rep = poly_processor.to_internal(poly_str)
+    internal_rep = poly_processor.encode(poly_str)
     if internal_rep != "[ERROR_PARSING]":
-        reconstructed_internal = poly_processor.to_internal(
-            poly_processor.to_original(internal_rep)
+        reconstructed_internal = poly_processor.encode(
+            poly_processor.decode(internal_rep)
         )
         assert reconstructed_internal == internal_rep
 
@@ -83,10 +83,10 @@ poly_tests = {
 @pytest.mark.parametrize("name", poly_tests.keys())
 def test_polynomial_processor_cases(poly_processor, name):
     poly_str, internal_str = poly_tests[name]
-    # Test to_internal
-    assert poly_processor.to_internal(poly_str) == internal_str
-    # Test to_original after removing spaces for comparison
-    reconstructed_poly = poly_processor.to_original(internal_str)
+    # Test encode
+    assert poly_processor.encode(poly_str) == internal_str
+    # Test decode after removing spaces for comparison
+    reconstructed_poly = poly_processor.decode(internal_str)
     assert reconstructed_poly.replace(" ", "") == poly_str.replace(" ", "")
 
 
@@ -99,22 +99,22 @@ integer_test_cases_identity = ["12345", "0", "987", "1|2|3", "123|456", "0|00|1"
 @pytest.mark.parametrize("int_str", integer_test_cases_identity)
 def test_integer_processor_identity(int_processor, int_str):
     """
-    Test to_original(to_internal(text)) == text
+    Test decode(encode(text)) == text
     """
-    internal_rep = int_processor.to_internal(int_str)
-    reconstructed_int = int_processor.to_original(internal_rep)
+    internal_rep = int_processor.encode(int_str)
+    reconstructed_int = int_processor.decode(internal_rep)
     assert reconstructed_int == int_str
 
 
 @pytest.mark.parametrize("int_str", integer_test_cases_identity)
 def test_integer_processor_internal_identity(int_processor, int_str):
     """
-    Test to_internal(to_original(tokens)) == tokens
+    Test encode(decode(tokens)) == tokens
     """
-    internal_rep = int_processor.to_internal(int_str)
+    internal_rep = int_processor.encode(int_str)
     if internal_rep != "[ERROR_FORMAT]":
-        reconstructed_internal = int_processor.to_internal(
-            int_processor.to_original(internal_rep)
+        reconstructed_internal = int_processor.encode(
+            int_processor.decode(internal_rep)
         )
         assert reconstructed_internal == internal_rep
 
@@ -139,14 +139,14 @@ integer_tests = {
 @pytest.mark.parametrize("name", integer_tests.keys())
 def test_integer_processor_cases(int_processor, name):
     int_str, internal_str = integer_tests[name]
-    # Test to_internal
-    assert int_processor.to_internal(int_str) == internal_str
-    # Test to_original
-    assert int_processor.to_original(internal_str) == int_str
+    # Test encode
+    assert int_processor.encode(int_str) == internal_str
+    # Test encode
+    assert int_processor.decode(internal_str) == int_str
 
 
 # Backward compatibility check example from prompt
 def test_backward_compatibility_example():
     proc = PolynomialToInternalProcessor(num_variables=2, max_degree=3, max_coeff=5)
-    internal = proc.to_internal("2*x0 - 3")
-    assert proc.to_original(internal).replace(" ", "") == "2*x0-3"
+    internal = proc.encode("2*x0 - 3")
+    assert proc.decode(internal).replace(" ", "") == "2*x0-3"
