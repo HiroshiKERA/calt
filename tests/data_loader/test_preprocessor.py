@@ -1,5 +1,8 @@
 import pytest
-from calt.data_loader.utils.preprocessor import PolynomialToInternalProcessor, IntegerToInternalProcessor
+from calt.data_loader.utils.preprocessor import (
+    PolynomialToInternalProcessor,
+    IntegerToInternalProcessor,
+)
 
 
 # Fixtures for processors
@@ -16,7 +19,15 @@ def int_processor():
 # -- PolynomialToInternalProcessor Tests --
 
 # Test cases for to_internal and to_original identity
-poly_test_cases_identity = ["3*x0^2*x1 - 5*x2 + 2", "x0*x1*x2", "-x0", "10", "x0^5", "2*x0-3", "0"]
+poly_test_cases_identity = [
+    "3*x0^2*x1 - 5*x2 + 2",
+    "x0*x1*x2",
+    "-x0",
+    "10",
+    "x0^5",
+    "2*x0-3",
+    "0",
+]
 
 
 @pytest.mark.parametrize("poly_str", poly_test_cases_identity)
@@ -46,7 +57,9 @@ def test_polynomial_processor_internal_identity(poly_processor, poly_str):
     """
     internal_rep = poly_processor.to_internal(poly_str)
     if internal_rep != "[ERROR_PARSING]":
-        reconstructed_internal = poly_processor.to_internal(poly_processor.to_original(internal_rep))
+        reconstructed_internal = poly_processor.to_internal(
+            poly_processor.to_original(internal_rep)
+        )
         assert reconstructed_internal == internal_rep
 
 
@@ -100,7 +113,9 @@ def test_integer_processor_internal_identity(int_processor, int_str):
     """
     internal_rep = int_processor.to_internal(int_str)
     if internal_rep != "[ERROR_FORMAT]":
-        reconstructed_internal = int_processor.to_internal(int_processor.to_original(internal_rep))
+        reconstructed_internal = int_processor.to_internal(
+            int_processor.to_original(internal_rep)
+        )
         assert reconstructed_internal == internal_rep
 
 
