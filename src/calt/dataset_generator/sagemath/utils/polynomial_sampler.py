@@ -199,7 +199,9 @@ class PolynomialSampler:
 
         return p
 
-    def _generate_random_polynomial(self, degree: int, num_terms: int) -> MPolynomial_libsingular:
+    def _generate_random_polynomial(
+        self, degree: int, num_terms: int
+    ) -> MPolynomial_libsingular:
         """Generate a random polynomial with given degree and number of terms"""
         choose_degree = self.degree_sampling == "uniform"
 
