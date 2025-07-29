@@ -49,7 +49,7 @@ class AbstractPreprocessor(ABC):
         """Abstract method for token processing to be implemented by subclasses."""
         raise NotImplementedError
 
-    # 既存互換：process は to_internal のエイリアス
+    # For backward compatibility: process is an alias for to_internal
     def process(self, text: str) -> str:
         return self.to_internal(text)
 
