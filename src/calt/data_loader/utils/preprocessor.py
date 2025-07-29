@@ -37,21 +37,21 @@ class AbstractPreprocessor(ABC):
 
     def __call__(self, text: str) -> str:
         """Process text (convenience wrapper for process method)."""
-        return self.to_internal(text)
+        return self.encode(text)
 
     @abstractmethod
-    def to_internal(self, text: str) -> str:
+    def encode(self, text: str) -> str:
         """Abstract method for text processing to be implemented by subclasses."""
         raise NotImplementedError
 
     @abstractmethod
-    def to_original(self, tokens: str) -> str:
+    def decode(self, tokens: str) -> str:
         """Abstract method for token processing to be implemented by subclasses."""
         raise NotImplementedError
 
     # For backward compatibility: process is an alias for to_internal
     def process(self, text: str) -> str:
-        return self.to_internal(text)
+        return self.encode(text)
 
 
 class PolynomialToInternalProcessor(AbstractPreprocessor):
@@ -210,7 +210,7 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
 
         return " ".join(internal_term_strs)
 
-    def _poly_to_internal(self, poly_str: str) -> str:
+    def _poly_to_encode(self, poly_str: str) -> str:
         """Helper to convert a single polynomial string to internal representation.
 
         Args:
@@ -242,7 +242,7 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
 
         return self._format_internal(parsed_terms)
 
-    def to_internal(self, text: str) -> str:
+    def encode(self, text: str) -> str:
         """Process a symbolic text into internal token representation.
 
         If the text contains the '|' separator character, each part is processed
@@ -257,10 +257,10 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
         # If text contains '|', process each part separately and join with [SEP]
         if "|" in text:
             parts = [p.strip() for p in text.split("|")]
-            internals = [self._poly_to_internal(p) for p in parts]
+            internals = [self._poly_to_encode(p) for p in parts]
             processed_string = " [SEP] ".join(internals)
         else:
-            processed_string = self._poly_to_internal(text)
+            processed_string = self._poly_to_encode(text)
 
         return processed_string
 
@@ -326,7 +326,7 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
 
         return result.replace(" ", "").replace("+-", "-")
 
-    def to_original(self, tokens: str) -> str:
+    def decode(self, tokens: str) -> str:
         """Converts an internal token string back to a symbolic polynomial expression."""
         if "[SEP]" in tokens:
             parts = tokens.split("[SEP]")
@@ -372,7 +372,7 @@ class IntegerToInternalProcessor(AbstractPreprocessor):
             return "[ERROR_FORMAT]"
         return " ".join([f"C{digit}" for digit in number_str])
 
-    def to_internal(self, text: str) -> str:
+    def encode(self, text: str) -> str:
         """Process an integer string (potentially with '|' separators)
         into internal token representation.
 
@@ -408,7 +408,7 @@ class IntegerToInternalProcessor(AbstractPreprocessor):
             [part[1:] for part in parts if part.startswith("C") and part[1:].isdigit()]
         )
 
-    def to_original(self, tokens: str) -> str:
+    def decode(self, tokens: str) -> str:
         """Converts an internal token representation back to an integer string."""
         if "[SEP]" in tokens:
             parts = tokens.split("[SEP]")
