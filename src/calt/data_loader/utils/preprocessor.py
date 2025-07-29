@@ -37,20 +37,32 @@ class AbstractPreprocessor(ABC):
 
     def __call__(self, text: str) -> str:
         """Process text (convenience wrapper for process method)."""
-        return self.process(text)
+        return self.to_internal(text)
 
     @abstractmethod
-    def process(self, text: str) -> str:
+    def to_internal(self, text: str) -> str:
         """Abstract method for text processing to be implemented by subclasses."""
         raise NotImplementedError
 
+    @abstractmethod
+    def to_original(self, tokens: str) -> str:
+        """Abstract method for token processing to be implemented by subclasses."""
+        raise NotImplementedError
 
-class SymbolicToInternalProcessor(AbstractPreprocessor):
+    # For backward compatibility: process is an alias for to_internal
+    def process(self, text: str) -> str:
+        return self.to_internal(text)
+
+
+class PolynomialToInternalProcessor(AbstractPreprocessor):
     """
-    Convert symbolic mathematical expressions (SageMath-style) to internal token representation.
+    Convert symbolic mathematical expressions (SageMath-style) to/from internal token representation.
 
-    Example:
+    Example (to_internal):
         "2*x1^2*x0 + 5*x0 - 3" -> "C2 E1 E2 C5 E1 E0 C-3 E0 E0" (for num_vars=2)
+
+    Example (to_original):
+        "C2 E2 E1 C5 E1 E0 C-3 E0 E0" -> "2*x0^2*x1 + 5*x0 - 3"
 
     The internal representation uses:
         - 'C{n}' tokens for coefficients (e.g., C2, C-3)
@@ -230,7 +242,7 @@ class SymbolicToInternalProcessor(AbstractPreprocessor):
 
         return self._format_internal(parsed_terms)
 
-    def process(self, text: str) -> str:
+    def to_internal(self, text: str) -> str:
         """Process a symbolic text into internal token representation.
 
         If the text contains the '|' separator character, each part is processed
@@ -252,16 +264,87 @@ class SymbolicToInternalProcessor(AbstractPreprocessor):
 
         return processed_string
 
+    def _internal_to_poly(self, tokens: str) -> str:
+        """Helper to convert a single internal token string to a polynomial."""
+        parts = tokens.strip().split()
+        if not parts or (len(parts) == self.num_variables + 1 and parts[0] == "C0"):
+            return "0"
+
+        terms = []
+        i = 0
+        while i < len(parts):
+            # Each term consists of one C token and num_variables E tokens.
+            term_parts = parts[i : i + self.num_variables + 1]
+            i += self.num_variables + 1
+
+            if not term_parts or not term_parts[0].startswith("C"):
+                logging.warning(f"Invalid token sequence: {term_parts}")
+                continue  # or raise error
+
+            coeff_str = term_parts[0][1:]
+            coeff = int(coeff_str)
+
+            if coeff == 0:
+                continue
+
+            exponents = [int(p[1:]) for p in term_parts[1:]]
+
+            term_str = ""
+            # Coefficient part
+            if abs(coeff) == 1 and any(e > 0 for e in exponents):
+                if coeff == -1:
+                    term_str += "-"
+            else:
+                term_str += str(coeff)
+
+            # Variable parts
+            var_term_parts = []
+            for var_idx, exp in enumerate(exponents):
+                if exp > 0:
+                    var_str = f"x{var_idx}"
+                    if exp > 1:
+                        var_str += f"^{exp}"
+                    var_term_parts.append(var_str)
+
+            if var_term_parts:
+                if term_str and term_str != "-":
+                    term_str += "*"
+                term_str += "*".join(var_term_parts)
+
+            terms.append(term_str)
+
+        if not terms:
+            return "0"
+
+        # Join terms with signs
+        result = terms[0]
+        for term in terms[1:]:
+            if term.startswith("-"):
+                result += f" - {term[1:]}"
+            else:
+                result += f" + {term}"
+
+        return result.replace(" ", "").replace("+-", "-")
+
+    def to_original(self, tokens: str) -> str:
+        """Converts an internal token string back to a symbolic polynomial expression."""
+        if "[SEP]" in tokens:
+            parts = tokens.split("[SEP]")
+            original_parts = [self._internal_to_poly(p.strip()) for p in parts]
+            return " | ".join(original_parts)
+        else:
+            return self._internal_to_poly(tokens)
+
 
 class IntegerToInternalProcessor(AbstractPreprocessor):
     """
     Convert an integer string, potentially containing '|' separators,
-    to its internal token representation.
+    to/from its internal token representation.
 
-    Input format examples:
+    Input format examples (to_internal):
         - "12345"
         - "123|45|678"
-    Output format examples:
+    Output format examples (from_internal):
         - "C1 C2 C3 C4 C5"
         - "C1 C2 C3 [SEP] C4 C5 [SEP] C6 C7 C8"
 
@@ -289,7 +372,7 @@ class IntegerToInternalProcessor(AbstractPreprocessor):
             return "[ERROR_FORMAT]"
         return " ".join([f"C{digit}" for digit in number_str])
 
-    def process(self, text: str) -> str:
+    def to_internal(self, text: str) -> str:
         """Process an integer string (potentially with '|' separators)
         into internal token representation.
 
@@ -314,3 +397,24 @@ class IntegerToInternalProcessor(AbstractPreprocessor):
         else:
             # If no separator, process the whole string
             return self._number_to_tokens(text.strip())
+
+    def _tokens_to_number(self, tokens_str: str) -> str:
+        """Converts a string of 'C{digit}' tokens back to a number string."""
+        tokens_str = tokens_str.strip()
+        if not tokens_str:
+            return ""
+        parts = tokens_str.split()
+        return "".join(
+            [part[1:] for part in parts if part.startswith("C") and part[1:].isdigit()]
+        )
+
+    def to_original(self, tokens: str) -> str:
+        """Converts an internal token representation back to an integer string."""
+        if "[SEP]" in tokens:
+            parts = tokens.split("[SEP]")
+            # Process each part and join with '|'
+            number_parts = [self._tokens_to_number(p.strip()) for p in parts]
+            return "|".join(number_parts)
+        else:
+            # Process the whole string if no separator
+            return self._tokens_to_number(tokens.strip())

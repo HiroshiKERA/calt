@@ -8,13 +8,21 @@ Transformer models.
 """
 
 import yaml
-from .utils.data_collator import StandardDataset, StandardDataCollator
+import logging
+from .utils.data_collator import (
+    StandardDataset,
+    StandardDataCollator,
+    _read_data_from_file,
+)
 from .utils.preprocessor import (
     IntegerToInternalProcessor,
-    SymbolicToInternalProcessor,
+    PolynomialToInternalProcessor,
 )
 from .utils.tokenizer import VocabConfig, set_tokenizer
 from transformers import PreTrainedTokenizerFast as StandardTokenizer
+
+
+logger = logging.getLogger(__name__)
 
 
 def load_data(
@@ -77,7 +85,7 @@ def load_data(
            dynamic padding so they can be fed to a HuggingFace ``Trainer``.
     """
     if processor_name == "polynomial":
-        preprocessor = SymbolicToInternalProcessor(
+        preprocessor = PolynomialToInternalProcessor(
             num_variables=num_variables,
             max_degree=max_degree,
             max_coeff=max_coeff,
@@ -87,11 +95,22 @@ def load_data(
     else:
         raise ValueError(f"Unknown processor: {processor_name}")
 
+    train_input_texts, train_target_texts = _read_data_from_file(
+        train_dataset_path, max_samples=num_train_samples
+    )
     train_dataset = StandardDataset(
-        train_dataset_path, preprocessor, max_samples=num_train_samples
+        input_texts=train_input_texts,
+        target_texts=train_target_texts,
+        preprocessor=preprocessor,
+    )
+
+    test_input_texts, test_target_texts = _read_data_from_file(
+        test_dataset_path, max_samples=num_test_samples
     )
     test_dataset = StandardDataset(
-        test_dataset_path, preprocessor, max_samples=num_test_samples
+        input_texts=test_input_texts,
+        target_texts=test_target_texts,
+        preprocessor=preprocessor,
     )
 
     vocab_config: VocabConfig | None = None
