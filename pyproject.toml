@@ -9,7 +9,9 @@ description = "A library for computational algebra using Transformers"
 readme = "README.md"
 requires-python = ">=3.10,<3.13"
 authors = [
-  {name = "Yuta Sato", email = "sato.yuta@gmail.com"}
+  {name = "Hiroshi Kera", email = "kera.hiroshi@gmail.com"},
+  {name = "Yuta Sato", email = "sato.yuta@gmail.com"},
+  {name = "Shun Arakawa", email = "shun.arkw@gmail.com"}
 ]
 
 dependencies = [
