@@ -161,6 +161,7 @@ dev = [
     { name = "mkdocs-llmstxt" },
     { name = "mkdocs-macros-plugin" },
     { name = "mkdocs-material" },
+    { name = "mkdocstrings", extra = ["python"] },
     { name = "mkdocstrings-python" },
     { name = "mypy" },
     { name = "pydantic" },
@@ -188,6 +189,7 @@ dev = [
     { name = "mkdocs-llmstxt", specifier = "~=0.2.0" },
     { name = "mkdocs-macros-plugin", specifier = "~=1.3.7" },
     { name = "mkdocs-material", specifier = "~=9.6.12" },
+    { name = "mkdocstrings", extras = ["python"], specifier = ">=0.29.1" },
     { name = "mkdocstrings-python", specifier = "~=1.16.10" },
     { name = "mypy", specifier = ">=1.15.0" },
     { name = "pydantic", specifier = ">=2.10.6" },
@@ -929,6 +931,11 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/41/e8/d22922664a627a0d3d7ff4a6ca95800f5dde54f411982591b4621a76225d/mkdocstrings-0.29.1.tar.gz", hash = "sha256:8722f8f8c5cd75da56671e0a0c1bbed1df9946c0cef74794d6141b34011abd42", size = 1212686 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/98/14/22533a578bf8b187e05d67e2c1721ce10e3f526610eebaf7a149d557ea7a/mkdocstrings-0.29.1-py3-none-any.whl", hash = "sha256:37a9736134934eea89cbd055a513d40a020d87dfcae9e3052c2a6b8cd4af09b6", size = 1631075 },
+]
+
+[package.optional-dependencies]
+python = [
+    { name = "mkdocstrings-python" },
 ]
 
 [[package]]
