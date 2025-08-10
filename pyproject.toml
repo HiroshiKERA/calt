@@ -38,6 +38,7 @@ dev = [
     "mkdocstrings-python~=1.16.10",
     "mkdocs-llmstxt~=0.2.0",
     "strands-agents~=0.1.0",
+    "mkdocstrings[python]>=0.29.1",
 ]
 
 [tool.ruff]
