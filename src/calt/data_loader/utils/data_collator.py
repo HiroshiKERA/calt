@@ -9,7 +9,9 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def _read_data_from_file(data_path: str, max_samples: int | None = None) -> tuple[list[str], list[str]]:
+def _read_data_from_file(
+    data_path: str, max_samples: int | None = None
+) -> tuple[list[str], list[str]]:
     """Read input and target texts from a file.
 
     Args:
@@ -29,7 +31,9 @@ def _read_data_from_file(data_path: str, max_samples: int | None = None) -> tupl
 
     # Validate max_samples parameter
     if max_samples is not None and max_samples <= 0:
-        raise ValueError(f"max_samples must be positive or -1 (to load all samples), got {max_samples}")
+        raise ValueError(
+            f"max_samples must be positive or -1 (to load all samples), got {max_samples}"
+        )
 
     # Check if file exists
     if not os.path.exists(data_path):
@@ -60,7 +64,9 @@ def _read_data_from_file(data_path: str, max_samples: int | None = None) -> tupl
             f"WARNING Requested {max_samples} samples but only {len(input_texts)} samples found in {data_path}"
         )
     elif max_samples is not None:
-        logger.info(f"Loaded {len(input_texts)} samples (limited to {max_samples}) from {data_path}")
+        logger.info(
+            f"Loaded {len(input_texts)} samples (limited to {max_samples}) from {data_path}"
+        )
     else:
         logger.info(f"Loaded {len(input_texts)} samples from {data_path}")
 
@@ -109,11 +115,15 @@ class StandardDataset(Dataset):
 
         num_samples = len(self.input_texts)
         if len(self.target_texts) != num_samples:
-            raise ValueError("input_texts and target_texts must have the same number of samples.")
+            raise ValueError(
+                "input_texts and target_texts must have the same number of samples."
+            )
 
         for name, data in self.extra_fields.items():
             if len(data) != num_samples:
-                raise ValueError(f"Extra field '{name}' has {len(data)} samples, but {num_samples} were expected.")
+                raise ValueError(
+                    f"Extra field '{name}' has {len(data)} samples, but {num_samples} were expected."
+                )
 
     def __getitem__(self, idx: int) -> dict[str, str]:
         """Get dataset item and convert to internal representation.
@@ -195,21 +205,31 @@ class StandardDataCollator:
 
             if attribute == "input":
                 # Tokenize the input sequences.
-                inputs = self.tokenizer(attribute_batch, padding="longest", return_tensors="pt")
+                inputs = self.tokenizer(
+                    attribute_batch, padding="longest", return_tensors="pt"
+                )
                 batch_dict["input_ids"] = inputs["input_ids"]
                 batch_dict["attention_mask"] = inputs["attention_mask"]
 
             elif attribute == "target":
                 # Tokenize the target sequences.
-                targets = self.tokenizer(attribute_batch, padding="longest", return_tensors="pt")
+                targets = self.tokenizer(
+                    attribute_batch, padding="longest", return_tensors="pt"
+                )
                 # Prepare decoder input ids (remove the last token, usually EOS).
-                batch_dict["decoder_input_ids"] = targets["input_ids"][:, :-1].contiguous()
+                batch_dict["decoder_input_ids"] = targets["input_ids"][
+                    :, :-1
+                ].contiguous()
                 # Prepare decoder attention mask accordingly.
-                batch_dict["decoder_attention_mask"] = targets["attention_mask"][:, :-1].contiguous()
+                batch_dict["decoder_attention_mask"] = targets["attention_mask"][
+                    :, :-1
+                ].contiguous()
 
                 # Prepare labels for the loss calculation (shift by one, usually remove BOS).
                 labels = targets["input_ids"][:, 1:].contiguous()
-                label_attention_mask = targets["attention_mask"][:, 1:].contiguous().bool()
+                label_attention_mask = (
+                    targets["attention_mask"][:, 1:].contiguous().bool()
+                )
                 # Set padding tokens in labels to -100 to be ignored by the loss function.
                 labels[~label_attention_mask] = -100
                 batch_dict["labels"] = labels
@@ -218,10 +238,16 @@ class StandardDataCollator:
                 # For other attributes, if they start with 'target_',
                 # prefix them with 'decoder_' (e.g., 'target_aux' becomes 'decoder_aux').
                 if attribute.startswith("target_"):
-                    attribute_key = "decoder_" + attribute[7:]  #  Corrected key for batch_dict
+                    attribute_key = (
+                        "decoder_" + attribute[7:]
+                    )  #  Corrected key for batch_dict
                 else:
-                    attribute_key = attribute  # Use original attribute name if no prefix
+                    attribute_key = (
+                        attribute  # Use original attribute name if no prefix
+                    )
                 # Pad the sequences for these attributes.
-                batch_dict[attribute_key] = self._pad_sequences(attribute_batch, padding_value=0)
+                batch_dict[attribute_key] = self._pad_sequences(
+                    attribute_batch, padding_value=0
+                )
 
         return batch_dict

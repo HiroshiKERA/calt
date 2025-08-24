@@ -134,7 +134,9 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
                 var_name = base.strip()
                 exp_str = exp_str.strip()
                 if not exp_str.isdigit():
-                    raise TermParseException(f"Invalid exponent '{exp_str}' in term '{term_str}'")
+                    raise TermParseException(
+                        f"Invalid exponent '{exp_str}' in term '{term_str}'"
+                    )
                 exponent = int(exp_str)
 
             if var_name in self.var_name_to_index:
@@ -145,7 +147,9 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
                 coeff = int(var_name)
                 coeff_part_found = True
             else:
-                raise TermParseException(f"Unknown var/part '{var_name}' in term '{term_str}'")
+                raise TermParseException(
+                    f"Unknown var/part '{var_name}' in term '{term_str}'"
+                )
 
         final_coeff = sign * coeff
 
@@ -392,7 +396,9 @@ class IntegerToInternalProcessor(AbstractPreprocessor):
         if not tokens_str:
             return ""
         parts = tokens_str.split()
-        return "".join([part[1:] for part in parts if part.startswith("C") and part[1:].isdigit()])
+        return "".join(
+            [part[1:] for part in parts if part.startswith("C") and part[1:].isdigit()]
+        )
 
     def decode(self, tokens: str) -> str:
         """Convert an internal token representation back to an integer string."""
