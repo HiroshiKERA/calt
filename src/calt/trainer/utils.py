@@ -14,19 +14,14 @@ import torch
 def count_cuda_devices() -> int:
     """Count the number of CUDA devices visible to the current process.
 
-    The function first inspects the environment variable
-    ``CUDA_VISIBLE_DEVICES``.  When the variable is set, only the GPU indices
-    listed there are considered *visible* and therefore contribute to the
-    count.  When the variable is *not* set, the function falls back to
-    :pyfunc:`torch.cuda.device_count` and returns the total number of devices
-    detected by the NVIDIA runtime.
+    The function first inspects the environment variable ``CUDA_VISIBLE_DEVICES``. When set,
+    only the GPU indices listed there are considered visible and contribute to the count.
+    When not set, the function falls back to ``torch.cuda.device_count`` and returns the
+    total number of devices detected by the NVIDIA runtime.
 
-    Returns
-    -------
-    int
-        The number of GPUs that the current process is allowed to use.  A
-        value of ``0`` indicates that no GPU is available or that PyTorch was
-        compiled without CUDA support.
+    Returns:
+        int: Number of GPUs that the current process is allowed to use. ``0`` indicates no GPU
+        is available or that PyTorch was compiled without CUDA support.
     """
 
     cuda_visible_devices = os.environ.get("CUDA_VISIBLE_DEVICES")
@@ -48,17 +43,13 @@ def setup_wandb(
 ) -> None:
     """Initialise a Weights & Biases tracking session.
 
-    Parameters
-    ----------
-    project : str, default ``"transformer-algebra"``
-        Project name under which runs will appear in the WandB dashboard.
-    entity : str | None, optional
-        WandB *entity* (user or team) that owns the project.  When *None*, the
-        default entity configured in the local WandB settings is used.
-    **extra_config
-        Additional key-value pairs that will be inserted into the run
-        configuration.  These values are useful for hyper-parameter sweeps or
-        quick ad-hoc experiments.
+    Args:
+        project (str, optional): Project name under which runs will appear in the WandB dashboard.
+            Defaults to ``"transformer-algebra"``.
+        entity (str | None, optional): WandB entity (user or team) that owns the project.
+            When ``None``, the default entity configured in local WandB settings is used.
+        **extra_config: Additional key-value pairs inserted into the run configuration.
+            Useful for hyper-parameter sweeps or ad-hoc experiments.
     """
     # Initialize wandb
     import wandb

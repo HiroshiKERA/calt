@@ -20,21 +20,21 @@ def set_tokenizer(
 ) -> PreTrainedTokenizerFast:
     """Create or load a tokenizer for polynomial expressions.
 
-    If a vocab_config is provided, it builds a tokenizer from the config.
+    If a ``vocab_config`` is provided, it builds a tokenizer from the config.
     Otherwise, it creates a new tokenizer based on the provided parameters.
 
     Args:
-        field: Field specification ("QQ"/"ZZ" for rational/integer, or "GF<p>"
-               for finite field). Used if vocab_config is not provided.
-        max_coeff: Maximum absolute value for coefficients. Used if
-                   vocab_config is not provided.
-        max_degree: Maximum degree for any variable. Used if vocab_config is
-                    not provided.
-        max_length: Maximum sequence length the tokenizer will process.
-        vocab_config: Optional dictionary with "vocab" and "special_vocab".
+        field (str): Field specification ("QQ"/"ZZ" for rational/integer, or "GF<p>"
+            for finite field). Used if ``vocab_config`` is not provided.
+        max_coeff (int): Maximum absolute value for coefficients. Used if
+            ``vocab_config`` is not provided.
+        max_degree (int): Maximum degree for any variable. Used if ``vocab_config`` is
+            not provided.
+        max_length (int): Maximum sequence length the tokenizer will process.
+        vocab_config (Optional[VocabConfig]): Optional dictionary with "vocab" and "special_vocab".
 
     Returns:
-        A pre-configured HuggingFace tokenizer for polynomial expressions.
+        PreTrainedTokenizerFast: A pre-configured HuggingFace tokenizer for polynomial expressions.
     """
     if vocab_config:
         vocab_list = vocab_config["vocab"]

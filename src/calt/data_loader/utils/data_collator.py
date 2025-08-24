@@ -9,10 +9,17 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def _read_data_from_file(
-    data_path: str, max_samples: int | None = None
-) -> tuple[list[str], list[str]]:
-    """Reads input and target texts from a file."""
+def _read_data_from_file(data_path: str, max_samples: int | None = None) -> tuple[list[str], list[str]]:
+    """Read input and target texts from a file.
+
+    Args:
+        data_path (str): Path to the data file.
+        max_samples (int | None, optional): Maximum number of samples to read.
+            Use -1 or None to load all samples. Defaults to None.
+
+    Returns:
+        tuple[list[str], list[str]]: Two lists of strings for inputs and targets.
+    """
     input_texts = []
     target_texts = []
 
@@ -22,9 +29,7 @@ def _read_data_from_file(
 
     # Validate max_samples parameter
     if max_samples is not None and max_samples <= 0:
-        raise ValueError(
-            f"max_samples must be positive or -1 (to load all samples), got {max_samples}"
-        )
+        raise ValueError(f"max_samples must be positive or -1 (to load all samples), got {max_samples}")
 
     # Check if file exists
     if not os.path.exists(data_path):
@@ -55,9 +60,7 @@ def _read_data_from_file(
             f"WARNING Requested {max_samples} samples but only {len(input_texts)} samples found in {data_path}"
         )
     elif max_samples is not None:
-        logger.info(
-            f"Loaded {len(input_texts)} samples (limited to {max_samples}) from {data_path}"
-        )
+        logger.info(f"Loaded {len(input_texts)} samples (limited to {max_samples}) from {data_path}")
     else:
         logger.info(f"Loaded {len(input_texts)} samples from {data_path}")
 
@@ -72,9 +75,18 @@ class StandardDataset(Dataset):
         preprocessor: AbstractPreprocessor,
         max_samples: int | None = None,
     ) -> "StandardDataset":
-        """Loads data from a file and creates a StandardDataset instance.
+        """Load data from a file and create a ``StandardDataset`` instance.
 
         This method maintains backward compatibility with the previous file-based initialization.
+
+        Args:
+            data_path (str): Path to the data file.
+            preprocessor (AbstractPreprocessor): Preprocessor instance.
+            max_samples (int | None, optional): Maximum number of samples to load.
+                Use -1 or None to load all samples. Defaults to None.
+
+        Returns:
+            StandardDataset: Loaded dataset instance.
         """
         input_texts, target_texts = _read_data_from_file(data_path, max_samples)
         return cls(
@@ -97,28 +109,20 @@ class StandardDataset(Dataset):
 
         num_samples = len(self.input_texts)
         if len(self.target_texts) != num_samples:
-            raise ValueError(
-                "input_texts and target_texts must have the same number of samples."
-            )
+            raise ValueError("input_texts and target_texts must have the same number of samples.")
 
         for name, data in self.extra_fields.items():
             if len(data) != num_samples:
-                raise ValueError(
-                    f"Extra field '{name}' has {len(data)} samples, but {num_samples} were expected."
-                )
+                raise ValueError(f"Extra field '{name}' has {len(data)} samples, but {num_samples} were expected.")
 
     def __getitem__(self, idx: int) -> dict[str, str]:
         """Get dataset item and convert to internal representation.
 
-        Parameters
-        ----------
-        idx : int
-            Index of the item to retrieve
+        Args:
+            idx (int): Index of the item to retrieve.
 
-        Returns
-        -------
-        tuple
-            A pair (src, tgt) of preprocessed source and target
+        Returns:
+            dict[str, str]: A mapping with keys ``"input"`` and ``"target"``.
         """
         src = self.preprocessor(self.input_texts[idx])
         tgt = self.preprocessor(self.target_texts[idx])
@@ -133,7 +137,15 @@ class StandardDataCollator:
         self.tokenizer = tokenizer
 
     def _pad_sequences(self, sequences, padding_value=0):
-        """Pads a list of sequences and converts them to a tensor."""
+        """Pad a list of sequences and convert them to a tensor.
+
+        Args:
+            sequences (list[list[int]]): Sequences to pad.
+            padding_value (int, optional): Value used for padding. Defaults to 0.
+
+        Returns:
+            torch.Tensor: Padded tensor with BOS/EOS room allocated.
+        """
         # Calculate the maximum length of the sequences.
         max_length = max(len(seq) for seq in sequences)
 
@@ -154,10 +166,16 @@ class StandardDataCollator:
         return padded
 
     def __call__(self, batch):
-        """
-        Collates a batch of data samples.
-        If a tokenizer is provided, it tokenizes 'input' and 'target' attributes.
-        Other attributes starting with 'target_' are prefixed with 'decoder_' and padded.
+        """Collate a batch of data samples.
+
+        If a tokenizer is provided, it tokenizes ``input`` and ``target`` attributes.
+        Other attributes starting with ``target_`` are prefixed with ``decoder_`` and padded.
+
+        Args:
+            batch (list[dict[str, Any]]): Mini-batch samples.
+
+        Returns:
+            dict[str, torch.Tensor | list[str]]: Batched tensors and/or lists.
         """
         batch_dict = {}
 
@@ -177,31 +195,21 @@ class StandardDataCollator:
 
             if attribute == "input":
                 # Tokenize the input sequences.
-                inputs = self.tokenizer(
-                    attribute_batch, padding="longest", return_tensors="pt"
-                )
+                inputs = self.tokenizer(attribute_batch, padding="longest", return_tensors="pt")
                 batch_dict["input_ids"] = inputs["input_ids"]
                 batch_dict["attention_mask"] = inputs["attention_mask"]
 
             elif attribute == "target":
                 # Tokenize the target sequences.
-                targets = self.tokenizer(
-                    attribute_batch, padding="longest", return_tensors="pt"
-                )
+                targets = self.tokenizer(attribute_batch, padding="longest", return_tensors="pt")
                 # Prepare decoder input ids (remove the last token, usually EOS).
-                batch_dict["decoder_input_ids"] = targets["input_ids"][
-                    :, :-1
-                ].contiguous()
+                batch_dict["decoder_input_ids"] = targets["input_ids"][:, :-1].contiguous()
                 # Prepare decoder attention mask accordingly.
-                batch_dict["decoder_attention_mask"] = targets["attention_mask"][
-                    :, :-1
-                ].contiguous()
+                batch_dict["decoder_attention_mask"] = targets["attention_mask"][:, :-1].contiguous()
 
                 # Prepare labels for the loss calculation (shift by one, usually remove BOS).
                 labels = targets["input_ids"][:, 1:].contiguous()
-                label_attention_mask = (
-                    targets["attention_mask"][:, 1:].contiguous().bool()
-                )
+                label_attention_mask = targets["attention_mask"][:, 1:].contiguous().bool()
                 # Set padding tokens in labels to -100 to be ignored by the loss function.
                 labels[~label_attention_mask] = -100
                 batch_dict["labels"] = labels
@@ -210,16 +218,10 @@ class StandardDataCollator:
                 # For other attributes, if they start with 'target_',
                 # prefix them with 'decoder_' (e.g., 'target_aux' becomes 'decoder_aux').
                 if attribute.startswith("target_"):
-                    attribute_key = (
-                        "decoder_" + attribute[7:]
-                    )  #  Corrected key for batch_dict
+                    attribute_key = "decoder_" + attribute[7:]  #  Corrected key for batch_dict
                 else:
-                    attribute_key = (
-                        attribute  # Use original attribute name if no prefix
-                    )
+                    attribute_key = attribute  # Use original attribute name if no prefix
                 # Pad the sequences for these attributes.
-                batch_dict[attribute_key] = self._pad_sequences(
-                    attribute_batch, padding_value=0
-                )
+                batch_dict[attribute_key] = self._pad_sequences(attribute_batch, padding_value=0)
 
         return batch_dict
