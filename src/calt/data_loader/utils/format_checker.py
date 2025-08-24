@@ -44,7 +44,9 @@ class FormatChecker:
             if num_vars is not None:
                 raise ValueError("Cannot specify both 'variable_names' and 'num_vars'")
             if variable_name is not None:
-                raise ValueError("Cannot specify both 'variable_names' and 'variable_name'")
+                raise ValueError(
+                    "Cannot specify both 'variable_names' and 'variable_name'"
+                )
 
         if num_vars is not None:
             if variable_name is None:
@@ -56,7 +58,9 @@ class FormatChecker:
         """Set up variables based on parameters."""
         if variable_names is not None:
             # Parse comma-separated variable names into a list
-            variables = [var.strip() for var in variable_names.split(",") if var.strip()]
+            variables = [
+                var.strip() for var in variable_names.split(",") if var.strip()
+            ]
             if not variables:
                 raise ValueError("No valid variables found in 'variable_names'")
 
@@ -140,7 +144,9 @@ class FormatChecker:
 
         return self._check_format_from_lines(dataset, num_samples)
 
-    def _check_format_from_lines(self, lines: list[str], num_samples: int | None = None) -> bool:
+    def _check_format_from_lines(
+        self, lines: list[str], num_samples: int | None = None
+    ) -> bool:
         """Check format from a list of lines.
 
         Args:
@@ -159,7 +165,9 @@ class FormatChecker:
 
                 # Check if we've reached the maximum number of samples
                 if num_samples is not None and samples_checked >= num_samples:
-                    logger.info(f"Checked {samples_checked} samples (num_samples={num_samples})")
+                    logger.info(
+                        f"Checked {samples_checked} samples (num_samples={num_samples})"
+                    )
                     break
 
                 # Parse the line to extract problem and solution
@@ -177,7 +185,9 @@ class FormatChecker:
 
                 # Validate solution format
                 if not self._validate_expression(solution):
-                    logger.error(f"Line {line_num}: Invalid solution format - {solution}")
+                    logger.error(
+                        f"Line {line_num}: Invalid solution format - {solution}"
+                    )
                     return False
 
                 samples_checked += 1

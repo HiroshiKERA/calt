@@ -44,7 +44,10 @@ class Trainer(HTrainer):
             dict[str, Any]: The same dictionary with all tensors on the target device.
         """
 
-        return {k: (v.to(self.args.device) if isinstance(v, torch.Tensor) else v) for k, v in inputs.items()}
+        return {
+            k: (v.to(self.args.device) if isinstance(v, torch.Tensor) else v)
+            for k, v in inputs.items()
+        }
 
     def _compute_metrics(self, eval_preds, ignore_index=-100):
         """Compute metrics at each prediction step.
