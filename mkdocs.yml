@@ -68,10 +68,10 @@ extra_javascript:
 nav:
   - User Guide:
     - Welcome: README.md
-    # - API Reference: api.md
-    - Data Loader: data_loader.md
-    - Trainer: trainer.md
-    - Generator: generator.md
+    - API Reference:
+      - Dataset Generator: dataset_generator.md
+      - Data Loader: data_loader.md
+      - Trainer: trainer.md
 
 exclude_docs: |
   node_modules
@@ -123,6 +123,9 @@ plugins:
           - examples/**/*.md
         API Reference:
           - api.md
+          - dataset_generator.md
+          - data_loader.md
+          - trainer.md
 
 extra:
   social:
