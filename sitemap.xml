@@ -1,15 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
-         <loc>https://calt.github.io/</loc>
-         <lastmod>2025-07-28</lastmod>
+         <loc>https://hiroshikera.github.io/calt/</loc>
+         <lastmod>2025-08-28</lastmod>
     </url>
     <url>
-         <loc>https://calt.github.io/_quickstart/</loc>
-         <lastmod>2025-07-28</lastmod>
+         <loc>https://hiroshikera.github.io/calt/data_loader/</loc>
+         <lastmod>2025-08-28</lastmod>
     </url>
     <url>
-         <loc>https://calt.github.io/demo/a/</loc>
-         <lastmod>2025-07-28</lastmod>
+         <loc>https://hiroshikera.github.io/calt/dataset_generator/</loc>
+         <lastmod>2025-08-28</lastmod>
+    </url>
+    <url>
+         <loc>https://hiroshikera.github.io/calt/trainer/</loc>
+         <lastmod>2025-08-28</lastmod>
     </url>
 </urlset>

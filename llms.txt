@@ -4,11 +4,14 @@
 
 ## User Guide
 
-- [Welcome](https://calt.github.io/index.md)
+- [Welcome](https://hiroshikera.github.io/calt/index.md)
 
 ## Examples
 
 
 ## API Reference
 
+- [Data Loader](https://hiroshikera.github.io/calt/data_loader/index.md)
+- [Dataset Generator](https://hiroshikera.github.io/calt/dataset_generator/index.md)
+- [Trainer](https://hiroshikera.github.io/calt/trainer/index.md)
 
