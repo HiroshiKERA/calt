@@ -68,7 +68,7 @@ extra_javascript:
 nav:
   - User Guide:
     - Welcome: README.md
-    - API Reference:
+    - CALT Components:
       - Dataset Generator: dataset_generator.md
       - Data Loader: data_loader.md
       - Trainer: trainer.md
