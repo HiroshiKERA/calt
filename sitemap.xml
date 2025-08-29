@@ -2,18 +2,18 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://hiroshikera.github.io/calt/</loc>
-         <lastmod>2025-08-28</lastmod>
+         <lastmod>2025-08-29</lastmod>
     </url>
     <url>
          <loc>https://hiroshikera.github.io/calt/data_loader/</loc>
-         <lastmod>2025-08-28</lastmod>
+         <lastmod>2025-08-29</lastmod>
     </url>
     <url>
          <loc>https://hiroshikera.github.io/calt/dataset_generator/</loc>
-         <lastmod>2025-08-28</lastmod>
+         <lastmod>2025-08-29</lastmod>
     </url>
     <url>
          <loc>https://hiroshikera.github.io/calt/trainer/</loc>
-         <lastmod>2025-08-28</lastmod>
+         <lastmod>2025-08-29</lastmod>
     </url>
 </urlset>
