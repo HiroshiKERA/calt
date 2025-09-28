@@ -12,7 +12,16 @@ logger = logging.getLogger(__name__)
 def _read_data_from_file(
     data_path: str, max_samples: int | None = None
 ) -> tuple[list[str], list[str]]:
-    """Reads input and target texts from a file."""
+    """Read input and target texts from a file.
+
+    Args:
+        data_path (str): Path to the data file.
+        max_samples (int | None, optional): Maximum number of samples to read.
+            Use -1 or None to load all samples. Defaults to None.
+
+    Returns:
+        tuple[list[str], list[str]]: Two lists of strings for inputs and targets.
+    """
     input_texts = []
     target_texts = []
 
@@ -72,9 +81,18 @@ class StandardDataset(Dataset):
         preprocessor: AbstractPreprocessor,
         max_samples: int | None = None,
     ) -> "StandardDataset":
-        """Loads data from a file and creates a StandardDataset instance.
+        """Load data from a file and create a ``StandardDataset`` instance.
 
         This method maintains backward compatibility with the previous file-based initialization.
+
+        Args:
+            data_path (str): Path to the data file.
+            preprocessor (AbstractPreprocessor): Preprocessor instance.
+            max_samples (int | None, optional): Maximum number of samples to load.
+                Use -1 or None to load all samples. Defaults to None.
+
+        Returns:
+            StandardDataset: Loaded dataset instance.
         """
         input_texts, target_texts = _read_data_from_file(data_path, max_samples)
         return cls(
@@ -110,15 +128,11 @@ class StandardDataset(Dataset):
     def __getitem__(self, idx: int) -> dict[str, str]:
         """Get dataset item and convert to internal representation.
 
-        Parameters
-        ----------
-        idx : int
-            Index of the item to retrieve
+        Args:
+            idx (int): Index of the item to retrieve.
 
-        Returns
-        -------
-        tuple
-            A pair (src, tgt) of preprocessed source and target
+        Returns:
+            dict[str, str]: A mapping with keys ``"input"`` and ``"target"``.
         """
         src = self.preprocessor(self.input_texts[idx])
         tgt = self.preprocessor(self.target_texts[idx])
@@ -133,7 +147,15 @@ class StandardDataCollator:
         self.tokenizer = tokenizer
 
     def _pad_sequences(self, sequences, padding_value=0):
-        """Pads a list of sequences and converts them to a tensor."""
+        """Pad a list of sequences and convert them to a tensor.
+
+        Args:
+            sequences (list[list[int]]): Sequences to pad.
+            padding_value (int, optional): Value used for padding. Defaults to 0.
+
+        Returns:
+            torch.Tensor: Padded tensor with BOS/EOS room allocated.
+        """
         # Calculate the maximum length of the sequences.
         max_length = max(len(seq) for seq in sequences)
 
@@ -154,10 +176,16 @@ class StandardDataCollator:
         return padded
 
     def __call__(self, batch):
-        """
-        Collates a batch of data samples.
-        If a tokenizer is provided, it tokenizes 'input' and 'target' attributes.
-        Other attributes starting with 'target_' are prefixed with 'decoder_' and padded.
+        """Collate a batch of data samples.
+
+        If a tokenizer is provided, it tokenizes ``input`` and ``target`` attributes.
+        Other attributes starting with ``target_`` are prefixed with ``decoder_`` and padded.
+
+        Args:
+            batch (list[dict[str, Any]]): Mini-batch samples.
+
+        Returns:
+            dict[str, torch.Tensor | list[str]]: Batched tensors and/or lists.
         """
         batch_dict = {}
 
