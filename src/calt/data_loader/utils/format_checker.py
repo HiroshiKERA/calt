@@ -7,8 +7,7 @@ logger = logging.getLogger(__name__)
 
 
 class FormatChecker:
-    """
-    Format checker for SageMath dataset validation.
+    """Format checker for SageMath dataset validation.
 
     This class validates that generated datasets are in the correct SageMath format
     before they are used as input to models. It ensures that all problems and solutions
@@ -24,16 +23,15 @@ class FormatChecker:
         num_vars: int | None = None,
         variable_name: str | None = None,
     ):
-        """
-        Initialize the format checker.
+        """Initialize the format checker.
 
         Args:
-            variable_names: Comma-separated string of variable names (e.g., "x, y, z").
-            num_vars: Number of variables to generate (this is required, if variable_names is not specified).
-            variable_name: Base name for variables when using num_vars (this is required, if num_vars is specified).
+            variable_names (str | None): Comma-separated string of variable names (e.g., "x, y, z").
+            num_vars (int | None): Number of variables to generate (required if ``variable_names`` is not specified).
+            variable_name (str | None): Base name for variables when using ``num_vars`` (required if ``num_vars`` is specified).
 
         Raises:
-            ValueError: If both variable_names and num_vars are specified, or if num_vars is specified without variable_name.
+            ValueError: If both ``variable_names`` and ``num_vars`` are specified, or if ``num_vars`` is specified without ``variable_name``.
         """
         self._validate_parameters(variable_names, num_vars, variable_name)
         self.variables = self._setup_variables(variable_names, num_vars, variable_name)
@@ -57,7 +55,7 @@ class FormatChecker:
                 raise ValueError("'num_vars' must be positive")
 
     def _setup_variables(self, variable_names, num_vars, variable_name):
-        """Setup variables based on parameters."""
+        """Set up variables based on parameters."""
         if variable_names is not None:
             # Parse comma-separated variable names into a list
             variables = [
@@ -76,7 +74,7 @@ class FormatChecker:
         return None
 
     def _setup_polynomial_rings(self):
-        """Setup polynomial rings for efficiency."""
+        """Set up polynomial rings for efficiency."""
         if not self.variables:
             return []
 
@@ -91,8 +89,7 @@ class FormatChecker:
         return rings
 
     def check_format(self, dataset: list[str], num_samples: int | None = None) -> bool:
-        """
-        Check if the dataset follows the correct SageMath format.
+        """Check if the dataset follows the correct SageMath format.
 
         This method validates that all problems and solutions in the dataset can be
         properly parsed and cast to SageMath's mathematical structures (PolynomialRing, RR, QQ, ZZ).
@@ -100,11 +97,11 @@ class FormatChecker:
         to ensure data quality and prevent runtime errors.
 
         Args:
-            dataset: List of dataset lines (list[str])
-            num_samples: Maximum number of samples to check. If None, checks all samples.
+            dataset (list[str]): List of dataset lines.
+            num_samples (int | None, optional): Maximum number of samples to check. If ``None``, checks all samples.
 
         Returns:
-            bool: True if format is valid, False otherwise
+            bool: ``True`` if format is valid, ``False`` otherwise.
 
         Example:
             >>> # variable_names is specified
@@ -150,15 +147,14 @@ class FormatChecker:
     def _check_format_from_lines(
         self, lines: list[str], num_samples: int | None = None
     ) -> bool:
-        """
-        Check format from a list of lines.
+        """Check format from a list of lines.
 
         Args:
-            lines: List of dataset lines
-            num_samples: the number of samples to check. If None, checks all samples.
+            lines (list[str]): List of dataset lines.
+            num_samples (int | None, optional): Number of samples to check. If ``None``, checks all samples.
 
         Returns:
-            bool: True if format is valid, False otherwise
+            bool: ``True`` if format is valid, ``False`` otherwise.
         """
         try:
             samples_checked = 0
@@ -203,14 +199,13 @@ class FormatChecker:
             return False
 
     def _parse_line(self, line: str) -> tuple[list[str], list[str]] | None:
-        """
-        Parse a line in the format "problem # solution".
+        """Parse a line in the format "problem # solution".
 
         Args:
-            line: Input line to parse
+            line (str): Input line to parse.
 
         Returns:
-            Tuple of (problem, solution) where each is a list of strings, or None if parsing fails
+            tuple[list[str], list[str]] | None: Tuple of (problem, solution) where each is a list of strings, or ``None`` if parsing fails.
         """
         if "#" not in line:
             logger.error(f"Line must contain '#' separator: {line}")
@@ -226,8 +221,7 @@ class FormatChecker:
             return None
 
     def _parse_expression(self, expr: str) -> list[str]:
-        """
-        Parse an expression part (problem or solution) into a flat list.
+        """Parse an expression part (problem or solution) into a flat list.
 
         Handles formats like:
         - "x + 1" -> ["x + 1"] (single expression)
@@ -236,10 +230,10 @@ class FormatChecker:
         - "x + 1 | y + 2 || z + 3 | w + 4 ||| a + 5 | b + 6 || c + 7 | d + 8" -> ["x + 1", "y + 2", "z + 3", "w + 4", "a + 5", "b + 6", "c + 7", "d + 8"]
 
         Args:
-            expr: Expression string to parse
+            expr (str): Expression string to parse.
 
         Returns:
-            Flat list of all elements
+            list[str]: Flat list of all elements.
         """
         # Check if there are any separators
         if "|" in expr:
@@ -253,14 +247,13 @@ class FormatChecker:
             return [expr.strip()]
 
     def _validate_expression(self, expr: list[str]) -> bool:
-        """
-        Validate if all elements in the expression can be cast to SageMath's PolynomialRing or any of RR, QQ, ZZ.
+        """Validate if elements can be cast to SageMath's rings.
 
         Args:
-            expr: List of strings to validate
+            expr (list[str]): List of strings to validate.
 
         Returns:
-            bool: True if all elements are valid, False otherwise
+            bool: ``True`` if all elements are valid, ``False`` otherwise.
         """
         try:
             return all(self._is_valid_sagemath_format(item) for item in expr)
@@ -268,14 +261,13 @@ class FormatChecker:
             return False
 
     def _is_valid_sagemath_format(self, s: str) -> bool:
-        """
-        Check if a string can be cast to SageMath's PolynomialRing or any of RR, QQ, ZZ.
+        """Check castability to PolynomialRing or RR/QQ/ZZ.
 
         Args:
-            s: String to validate
+            s (str): String to validate.
 
         Returns:
-            bool: True if valid SageMath expression, False otherwise
+            bool: ``True`` if valid SageMath expression, ``False`` otherwise.
         """
         # Remove whitespace
         s = s.strip()

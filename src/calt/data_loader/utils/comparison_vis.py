@@ -120,16 +120,18 @@ def display_with_diff(
     pred: Expr | str,
     var_order: Sequence[Symbol] | None = None,
 ) -> None:
-    """Render *gold* vs. *pred* with strikethrough on mistakes in *pred*.
+    """Render "gold" vs. "pred" with strikethrough on mistakes in "pred".
 
-    Parameters
-    ----------
-    gold, pred : sympy.Expr or str
-        Ground-truth and model-predicted expressions. If strings, they will be
-        parsed as token sequences (e.g. "C1 E1 E1 C-3 E0 E7") via `parse_poly`.
-    var_order : list[sympy.Symbol] | None
-        Variable ordering (important for >2 variables). Inferred if None. Also
-        passed to `parse_poly` if inputs are strings.
+    Args:
+        gold (sympy.Expr | str):
+            Ground-truth expression. If a string, it will be parsed as a token
+            sequence (e.g., "C1 E1 E1 C-3 E0 E7") via ``parse_poly``.
+        pred (sympy.Expr | str):
+            Model-predicted expression. If a string, it will be parsed as a token
+            sequence via ``parse_poly``.
+        var_order (Sequence[sympy.Symbol] | None, optional):
+            Variable ordering (important for >2 variables). Inferred if None. Also
+            passed to ``parse_poly`` if inputs are strings. Defaults to None.
     """
 
     # --- input conversion ------------------------------------------------- #
@@ -180,17 +182,17 @@ def display_with_diff(
 
 
 def load_eval_results(file_path: str) -> tuple[list[str], list[str]]:
-    """Load evaluation results from a JSON file and return lists of generated and reference texts.
+    """Load evaluation results from a JSON file.
 
     The JSON file should contain a list of objects with "generated" and "reference" keys.
 
     Args:
-        file_path: Path to the JSON file.
+        file_path (str): Path to the JSON file.
 
     Returns:
-        A tuple containing two lists:
-        - List of generated texts.
-        - List of reference texts.
+        tuple[list[str], list[str]]: A tuple containing two lists:
+            - List of generated texts.
+            - List of reference texts.
     """
     generated_texts = []
     reference_texts = []
@@ -208,29 +210,24 @@ def load_eval_results(file_path: str) -> tuple[list[str], list[str]]:
 def _parse_poly_from_tokens(
     tokens: str, var_names: Sequence[str | Symbol] | None = None
 ) -> Expr:
-    """
-    Convert an internal token sequence (e.g. ``"C1 E1 E1 C-3 E0 E7"``)
-    into a SymPy polynomial.
+    """Convert an internal token sequence into a SymPy polynomial.
 
-    Parameters
-    ----------
-    tokens : str
-        Whitespace-separated string where a token starting with ``C`` indicates
-        a coefficient and the following ``E`` tokens indicate exponents.
-    var_names : Sequence[str | sympy.Symbol] | None, optional
-        Variable names (either strings or pre-created Symbol objects). If
-        ``None`` (default), variables are auto-generated as x0, x1, …
+    For example: ``"C1 E1 E1 C-3 E0 E7"``.
 
-    Returns
-    -------
-    sympy.Expr
-        A SymPy expression corresponding to the polynomial.
+    Args:
+        tokens (str):
+            Whitespace-separated string where a token starting with ``C`` indicates
+            a coefficient and the following ``E`` tokens indicate exponents.
+        var_names (Sequence[str | sympy.Symbol] | None, optional):
+            Variable names (either strings or pre-created Symbol objects). If
+            ``None`` (default), variables are auto-generated as x0, x1, …
 
-    Raises
-    ------
-    ValueError
-        If the token sequence is malformed or the number of variables does not
-        match ``var_names``.
+    Returns:
+        sympy.Expr: A SymPy expression corresponding to the polynomial.
+
+    Raises:
+        ValueError: If the token sequence is malformed or the number of variables does not
+            match ``var_names``.
     """
     parts = tokens.strip().split()
     if not parts or not parts[0].startswith("C"):
@@ -297,28 +294,23 @@ def _parse_poly_from_tokens(
 
 
 def parse_poly(text: str, var_names: Sequence[str | Symbol] | None = None) -> Expr:
-    """
-    Convert a mathematical expression string or an internal token sequence
-    into a SymPy polynomial.
+    """Convert a math expression string or token sequence to a SymPy polynomial.
 
     This function handles:
-    1.  Standard mathematical notation (e.g., "4*x0 + 4*x1").
-    2.  SageMath-style power notation (e.g., "3*x0^2 + 3*x0").
-    3.  Internal token format (e.g., "C4 E1 E0 C4 E0 E1").
+    1. Standard mathematical notation (e.g., "4*x0 + 4*x1").
+    2. SageMath-style power notation (e.g., "3*x0^2 + 3*x0").
+    3. Internal token format (e.g., "C4 E1 E0 C4 E0 E1").
 
-    Parameters
-    ----------
-    text : str
-        The mathematical expression or token sequence to parse.
-    var_names : Sequence[str | sympy.Symbol] | None, optional
-        Variable names. Primarily used for the token sequence format to ensure
-        the correct number of variables. For expression strings, variables are
-        inferred, but providing them can ensure they are treated as symbols.
+    Args:
+        text (str):
+            The mathematical expression or token sequence to parse.
+        var_names (Sequence[str | sympy.Symbol] | None, optional):
+            Variable names. Primarily used for the token sequence format to ensure
+            the correct number of variables. For expression strings, variables are
+            inferred, but providing them can ensure they are treated as symbols.
 
-    Returns
-    -------
-    sympy.Expr
-        A SymPy expression for the polynomial.
+    Returns:
+        sympy.Expr: A SymPy expression for the polynomial.
     """
     text = text.strip()
 

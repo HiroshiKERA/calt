@@ -35,17 +35,13 @@ class Trainer(HTrainer):
             self.compute_metrics = self._compute_metrics
 
     def _prepare_inputs(self, inputs):
-        """Move every tensor in *inputs* onto ``self.args.device``.
+        """Move every tensor in "inputs" onto ``self.args.device``.
 
-        Parameters
-        ----------
-        inputs : dict[str, Any]
-            Batch dict returned by the data loader.
+        Args:
+            inputs (dict[str, Any]): Batch dict returned by the data loader.
 
-        Returns
-        -------
-        dict[str, Any]
-            The same dictionary with all tensors on the target device.
+        Returns:
+            dict[str, Any]: The same dictionary with all tensors on the target device.
         """
 
         return {
@@ -54,17 +50,16 @@ class Trainer(HTrainer):
         }
 
     def _compute_metrics(self, eval_preds, ignore_index=-100):
-        """This method is called at each prediction step to compute the metrics.
+        """Compute metrics at each prediction step.
 
-        Parameters
-        ----------
-        eval_preds: tuple (predictions, labels)
-            predictions: shape (batch_size, seq_len)
-            labels: shape (batch_size, seq_len)
+        Args:
+            eval_preds (tuple): (predictions, labels) where
+                - predictions: shape (batch_size, seq_len)
+                - labels: shape (batch_size, seq_len)
+            ignore_index (int, optional): Label id to ignore. Defaults to -100.
 
-        Returns
-        -------
-        dict with accuracy
+        Returns:
+            dict: Dictionary with accuracy metrics.
         """
         predictions, labels = eval_preds
 
@@ -82,17 +77,17 @@ class Trainer(HTrainer):
         return {"token_accuracy": acc}
 
     def evaluate_and_save_generation(self, max_length: int = 512):
-        """Run *greedy* or *beam search* generation on the evaluation set.
+        """Run greedy/beam-search generation on the evaluation set.
 
-        The helper decodes the model outputs into strings, stores the results
-        in ``eval_results.json`` inside the trainer's output directory and
-        finally computes *exact match* accuracy between the generated and
-        reference sequences.
+        The helper decodes the model outputs into strings, stores the results in
+        ``eval_results.json`` inside the trainer's output directory and finally computes
+        exact-match accuracy between the generated and reference sequences.
 
-        Returns
-        -------
-        float
-            Exact-match accuracy in the [0, 1] interval.
+        Args:
+            max_length (int, optional): Maximum generation length. Defaults to 512.
+
+        Returns:
+            float: Exact-match accuracy in the [0, 1] interval.
         """
         if self.eval_dataset is None:
             raise ValueError("Trainer: evaluation requires an eval_dataset.")
