@@ -15,13 +15,12 @@ class AbstractPreprocessor(ABC):
     """Base abstract class for all preprocessors."""
 
     def __init__(self, num_variables: int, max_degree: int, max_coeff: int):
-        """
-        Initialize preprocessor parameters.
+        """Initialize preprocessor parameters.
 
         Args:
-            num_variables: Number of variables in the polynomial (e.g., x0, x1, ...)
-            max_degree: Maximum degree of the polynomial
-            max_coeff: Maximum coefficient value in the polynomial
+            num_variables (int): Number of variables in the polynomial (e.g., x0, x1, ...).
+            max_degree (int): Maximum degree of the polynomial.
+            max_coeff (int): Maximum coefficient value in the polynomial.
         """
         if num_variables < 0:
             raise ValueError("num_variables must be positive")
@@ -55,18 +54,17 @@ class AbstractPreprocessor(ABC):
 
 
 class PolynomialToInternalProcessor(AbstractPreprocessor):
-    """
-    Convert symbolic mathematical expressions (SageMath-style) to/from internal token representation.
+    """Convert SageMath-style expressions to/from internal token representation.
 
     Example (to_internal):
-        "2*x1^2*x0 + 5*x0 - 3" -> "C2 E1 E2 C5 E1 E0 C-3 E0 E0" (for num_vars=2)
+        "2*x1^2*x0 + 5*x0 - 3" -> "C2 E1 E2 C5 E1 E0 C-3 E0 E0" (for ``num_vars=2``)
 
     Example (to_original):
         "C2 E2 E1 C5 E1 E0 C-3 E0 E0" -> "2*x0^2*x1 + 5*x0 - 3"
 
     The internal representation uses:
-        - 'C{n}' tokens for coefficients (e.g., C2, C-3)
-        - 'E{n}' tokens for exponents (e.g., E1, E2, E0)
+        - ``C{n}`` tokens for coefficients (e.g., ``C2``, ``C-3``)
+        - ``E{n}`` tokens for exponents (e.g., ``E1``, ``E2``, ``E0``)
     Each term is represented as a coefficient token followed by exponent tokens for each variable.
     """
 
@@ -75,7 +73,7 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
         logging.warning(f"{message} in term '{term_str}'")
 
     def _get_zero_term(self) -> tuple[int, list[int]]:
-        """Return a representation of the zero term (coefficient 0, all exponents 0)."""
+        """Return the zero term (coefficient 0, all exponents 0)."""
         return (0, [0] * self.num_variables)
 
     def _create_exponent_vector(self) -> list[int]:
@@ -83,20 +81,20 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
         return [0] * self.num_variables
 
     def _get_zero_exponents_str(self) -> str:
-        """Generate string representation of zero exponents vector ("E0 E0 ...")."""
+        """Generate string for zero exponents vector ("E0 E0 ...")."""
         return " ".join(["E0"] * self.num_variables)
 
     def _parse_term(self, term_str: str) -> tuple[int, list[int]]:
         """Parse a term and return the coefficient and exponent vector.
 
         Args:
-            term_str: String representation of a single term like "2*x0^2*x1"
+            term_str (str): String representation of a single term like "2*x0^2*x1".
 
         Returns:
-            Tuple of (coefficient, exponent_vector)
+            tuple[int, list[int]]: Pair of (coefficient, exponent_vector).
 
         Raises:
-            TermParseException: If the term cannot be parsed correctly
+            TermParseException: If the term cannot be parsed correctly.
         """
         term_str = term_str.strip()
         if not term_str:
@@ -179,10 +177,10 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
         """Convert parsed terms to the internal token representation string.
 
         Args:
-            terms: List of (coefficient, exponent_vector) tuples
+            terms (list[tuple[int, list[int]]]): List of (coefficient, exponent_vector) tuples.
 
         Returns:
-            String in the internal representation format
+            str: String in the internal representation format.
         """
         if not terms:
             return f"C0 {self._get_zero_exponents_str()}"
@@ -211,13 +209,13 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
         return " ".join(internal_term_strs)
 
     def _poly_to_encode(self, poly_str: str) -> str:
-        """Helper to convert a single polynomial string to internal representation.
+        """Convert a single polynomial string to internal representation.
 
         Args:
-            poly_str: String representation of a polynomial
+            poly_str (str): String representation of a polynomial.
 
         Returns:
-            String in the internal token format
+            str: String in the internal token format.
         """
         tgt = poly_str.strip()
         if tgt == "" or tgt == "0":
@@ -249,10 +247,10 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
         separately and joined with '[SEP]' token.
 
         Args:
-            text: Input symbolic text to process
+            text (str): Input symbolic text to process.
 
         Returns:
-            String in the internal token representation
+            str: String in the internal token representation.
         """
         # If text contains '|', process each part separately and join with [SEP]
         if "|" in text:
@@ -265,7 +263,7 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
         return processed_string
 
     def _internal_to_poly(self, tokens: str) -> str:
-        """Helper to convert a single internal token string to a polynomial."""
+        """Convert a single internal token string to a polynomial."""
         parts = tokens.strip().split()
         if not parts or (len(parts) == self.num_variables + 1 and parts[0] == "C0"):
             return "0"
@@ -327,7 +325,7 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
         return result.replace(" ", "").replace("+-", "-")
 
     def decode(self, tokens: str) -> str:
-        """Converts an internal token string back to a symbolic polynomial expression."""
+        """Convert an internal token string back to a symbolic polynomial expression."""
         if "[SEP]" in tokens:
             parts = tokens.split("[SEP]")
             original_parts = [self._internal_to_poly(p.strip()) for p in parts]
@@ -337,9 +335,7 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
 
 
 class IntegerToInternalProcessor(AbstractPreprocessor):
-    """
-    Convert an integer string, potentially containing '|' separators,
-    to/from its internal token representation.
+    """Convert an integer string to/from internal token representation.
 
     Input format examples (to_internal):
         - "12345"
@@ -348,24 +344,22 @@ class IntegerToInternalProcessor(AbstractPreprocessor):
         - "C1 C2 C3 C4 C5"
         - "C1 C2 C3 [SEP] C4 C5 [SEP] C6 C7 C8"
 
-    The internal representation uses 'C{n}' tokens for digits.
-    Parts separated by '|' are converted individually and joined by '[SEP]'.
-    Note: num_variables, max_degree, max_coeff are inherited but not directly used.
+    The internal representation uses ``C{n}`` tokens for digits.
+    Parts separated by '|' are converted individually and joined by ``[SEP]``.
+    Note: ``num_variables``, ``max_degree``, ``max_coeff`` are inherited but not directly used.
     """
 
     def __init__(self, max_coeff: int = 9):
-        """
-        Initialize the processor.
+        """Initialize the processor.
 
         Args:
-            max_coeff: The maximum digit value (typically 9).
-                       Passed to superclass but primarily used for validation context.
+            max_coeff (int): The maximum digit value (typically 9). Passed to superclass but primarily used for validation context.
         """
         # Use dummy values for num_variables and max_degree as they are not relevant
         super().__init__(num_variables=0, max_degree=0, max_coeff=max_coeff)
 
     def _number_to_tokens(self, number_str: str) -> str:
-        """Convert a string of digits to space-separated 'C{digit}' tokens."""
+        """Convert a string of digits to space-separated ``C{digit}`` tokens."""
         number_str = number_str.strip()  # Strip whitespace from individual parts
         if not number_str.isdigit():
             logging.warning(f"Invalid number format encountered: '{number_str}'")
@@ -373,15 +367,13 @@ class IntegerToInternalProcessor(AbstractPreprocessor):
         return " ".join([f"C{digit}" for digit in number_str])
 
     def encode(self, text: str) -> str:
-        """Process an integer string (potentially with '|' separators)
-        into internal token representation.
+        """Process an integer string into internal token representation.
 
         Args:
-            text: Input string representing one or more integers separated by '|'.
+            text (str): Input string representing one or more integers separated by '|'.
 
         Returns:
-            String in the internal token representation (e.g., "C1 C2 [SEP] C3 C4"),
-            or "[ERROR_FORMAT]" if any part is not a valid integer string.
+            str: Internal token representation (e.g., "C1 C2 [SEP] C3 C4"), or "[ERROR_FORMAT]" if any part is not a valid integer string.
         """
         if "|" in text:
             parts = [p.strip() for p in text.split("|")]
@@ -399,7 +391,7 @@ class IntegerToInternalProcessor(AbstractPreprocessor):
             return self._number_to_tokens(text.strip())
 
     def _tokens_to_number(self, tokens_str: str) -> str:
-        """Converts a string of 'C{digit}' tokens back to a number string."""
+        """Convert a string of ``C{digit}`` tokens back to a number string."""
         tokens_str = tokens_str.strip()
         if not tokens_str:
             return ""
@@ -409,7 +401,7 @@ class IntegerToInternalProcessor(AbstractPreprocessor):
         )
 
     def decode(self, tokens: str) -> str:
-        """Converts an internal token representation back to an integer string."""
+        """Convert an internal token representation back to an integer string."""
         if "[SEP]" in tokens:
             parts = tokens.split("[SEP]")
             # Process each part and join with '|'

@@ -68,7 +68,10 @@ extra_javascript:
 nav:
   - User Guide:
     - Welcome: README.md
-    - API Reference: api.md
+    - CALT Components:
+      - Dataset Generator: dataset_generator.md
+      - Data Loader: data_loader.md
+      - Trainer: trainer.md
 
 exclude_docs: |
   node_modules
@@ -87,7 +90,7 @@ plugins:
         python:
           options:
             # Which docstring style to interpret
-            docstring_style: numpy        # or numpy / sphinx
+            docstring_style: google        # or numpy / sphinx
             # Rendering style for Parameters/Returns, etc.
             docstring_section_style: table # or list / spacy
             # Headings and signatures
@@ -120,6 +123,9 @@ plugins:
           - examples/**/*.md
         API Reference:
           - api.md
+          - dataset_generator.md
+          - data_loader.md
+          - trainer.md
 
 extra:
   social:

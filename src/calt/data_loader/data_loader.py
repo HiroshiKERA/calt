@@ -40,49 +40,49 @@ def load_data(
 ) -> tuple[dict[str, StandardDataset], StandardTokenizer, StandardDataCollator]:
     """Create dataset, tokenizer and data-collator objects.
 
-    Parameters
-    ----------
-    train_dataset_path : str
-        Path to the file that stores the *training* samples.
-    test_dataset_path : str
-        Path to the file that stores the *evaluation* samples.
-    field : str
-        Finite-field identifier (e.g. ``"Q"`` for the rationals or ``"Zp"``
-        for a prime field) used to generate the vocabulary.
-    num_variables : int
-        Maximum number of symbolic variables (\\(x_1, \\dots, x_n\\)) that can
-        appear in a polynomial.
-    max_degree : int
-        Maximum total degree allowed for any monomial term.
-    max_coeff : int
-        Maximum absolute value of the coefficients appearing in the data.
-    max_length : int, default ``512``
-        Hard upper bound on the token sequence length.  Longer sequences will
-        be *right-truncated*.
-    processor_name : str, default ``"polynomial"``
-        Name of the processor to use for converting symbolic expressions into
-        internal token IDs.  The default processor is ``"polynomial"``, which
-        handles polynomial expressions.  The alternative processor is
-        ``"integer"``, which handles integer expressions.
-    vocab_path : str | None, default ``None``
-        Path to the vocabulary configuration file. If None, a default vocabulary
-        will be generated based on the field, max_degree, and max_coeff parameters.
-    num_train_samples : int | None, default ``None``
-        Maximum number of training samples to load. If None or -1, all available
-        training samples will be loaded.
-    num_test_samples : int | None, default ``None``
-        Maximum number of test samples to load. If None or -1, all available
-        test samples will be loaded.
+    Args:
+        train_dataset_path (str):
+            Path to the file that stores the "training" samples.
+        test_dataset_path (str):
+            Path to the file that stores the "evaluation" samples.
+        field (str):
+            Finite-field identifier (e.g. ``"Q"`` for the rationals or ``"Zp"``
+            for a prime field) used to generate the vocabulary.
+        num_variables (int):
+            Maximum number of symbolic variables (\(x_1, \dots, x_n\)) that can
+            appear in a polynomial.
+        max_degree (int):
+            Maximum total degree allowed for any monomial term.
+        max_coeff (int):
+            Maximum absolute value of the coefficients appearing in the data.
+        max_length (int, optional):
+            Hard upper bound on the token sequence length. Longer sequences will
+            be right-truncated. Defaults to 512.
+        processor_name (str, optional):
+            Name of the processor to use for converting symbolic expressions into
+            internal token IDs. The default processor is ``"polynomial"``, which
+            handles polynomial expressions. The alternative processor is
+            ``"integer"``, which handles integer expressions. Defaults to
+            ``"polynomial"``.
+        vocab_path (str | None, optional):
+            Path to the vocabulary configuration file. If None, a default vocabulary
+            will be generated based on the field, max_degree, and max_coeff parameters.
+            Defaults to None.
+        num_train_samples (int | None, optional):
+            Maximum number of training samples to load. If None or -1, all available
+            training samples will be loaded. Defaults to None.
+        num_test_samples (int | None, optional):
+            Maximum number of test samples to load. If None or -1, all available
+            test samples will be loaded. Defaults to None.
 
-    Returns
-    -------
-    tuple[dict[str, StandardDataset], StandardTokenizer, StandardDataCollator]
-        1. ``dataset``  - a ``dict`` with ``"train"`` and ``"test"`` splits
-           containing :class:`StandardDataset` instances.
-        2. ``tokenizer`` - a :class:`PreTrainedTokenizerFast` capable of
-           encoding symbolic expressions into token IDs and vice versa.
-        3. ``data_collator`` - a callable that assembles batches and applies
-           dynamic padding so they can be fed to a HuggingFace ``Trainer``.
+    Returns:
+        tuple[dict[str, StandardDataset], StandardTokenizer, StandardDataCollator]:
+            1. ``dataset`` - a ``dict`` with ``"train"`` and ``"test"`` splits
+               containing ``StandardDataset`` instances.
+            2. ``tokenizer`` - a ``PreTrainedTokenizerFast`` capable of encoding
+               symbolic expressions into token IDs and vice versa.
+            3. ``data_collator`` - a callable that assembles batches and applies
+               dynamic padding so they can be fed to a HuggingFace ``Trainer``.
     """
     if processor_name == "polynomial":
         preprocessor = PolynomialToInternalProcessor(
