@@ -76,7 +76,9 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
         max_coeff: int,
         digit_group_size: int | None = None,
     ):
-        super().__init__(num_variables=num_variables, max_degree=max_degree, max_coeff=max_coeff)
+        super().__init__(
+            num_variables=num_variables, max_degree=max_degree, max_coeff=max_coeff
+        )
         self.digit_group_size = digit_group_size
 
     def _log_warning(self, message: str, term_str: str) -> None:
@@ -333,13 +335,17 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
                     if not part or not part.isdigit():
                         logging.warning(f"Invalid number format encountered: '{part}'")
                         return "[ERROR_FORMAT]"
-                    tokens = self._split_int_string_to_chunks(part, self.digit_group_size)
+                    tokens = self._split_int_string_to_chunks(
+                        part, self.digit_group_size
+                    )
                     encoded_parts.append(" ".join(tokens))
                 return " [SEP] ".join(encoded_parts)
             if not stripped_text.isdigit():
                 logging.warning(f"Invalid number format encountered: '{stripped_text}'")
                 return "[ERROR_FORMAT]"
-            tokens = self._split_int_string_to_chunks(stripped_text, self.digit_group_size)
+            tokens = self._split_int_string_to_chunks(
+                stripped_text, self.digit_group_size
+            )
             return " ".join(tokens) if tokens else "[ERROR_FORMAT]"
 
         if "|" in text:
@@ -367,7 +373,9 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
                 i += 1
 
             if not coeff_tokens:
-                logging.warning(f"Invalid token sequence starting at index {i}: {parts[i:]}")
+                logging.warning(
+                    f"Invalid token sequence starting at index {i}: {parts[i:]}"
+                )
                 break
 
             exponent_tokens = parts[i : i + self.num_variables]
