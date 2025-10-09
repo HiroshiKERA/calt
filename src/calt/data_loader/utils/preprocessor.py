@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 import logging
+import warnings
 
 # Basic logging configuration
 logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
@@ -67,6 +68,16 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
         - ``E{n}`` tokens for exponents (e.g., ``E1``, ``E2``, ``E0``)
     Each term is represented as a coefficient token followed by exponent tokens for each variable.
     """
+
+    def __init__(
+        self,
+        num_variables: int,
+        max_degree: int,
+        max_coeff: int,
+        digit_group_size: int | None = None,
+    ):
+        super().__init__(num_variables=num_variables, max_degree=max_degree, max_coeff=max_coeff)
+        self.digit_group_size = digit_group_size
 
     def _log_warning(self, message: str, term_str: str) -> None:
         """Format and log a warning message about a term."""
@@ -173,6 +184,56 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
 
         return (final_coeff, exponents)
 
+    def _chunk_numeric_string(self, digits: str, k: int) -> list[str]:
+        """Split a numeric string into groups of size ``k`` without zero padding."""
+        if k <= 0 or not digits:
+            return [digits]
+
+        chunks: list[str] = []
+        idx = len(digits)
+        while idx > 0:
+            start = max(0, idx - k)
+            chunks.append(digits[start:idx])
+            idx = start
+        chunks.reverse()
+
+        if len(chunks) <= 1:
+            return chunks
+
+        adjusted = chunks[:]
+        for i in range(len(adjusted) - 1):
+            if len(adjusted[i]) == 1 and len(adjusted[i + 1]) > 1:
+                needed = min(k - 1, len(adjusted[i + 1]) - 1)
+                if needed <= 0:
+                    continue
+                adjusted[i] += adjusted[i + 1][:needed]
+                adjusted[i + 1] = adjusted[i + 1][needed:]
+
+        return [chunk for chunk in adjusted if chunk]
+
+    def _split_coeff_to_chunks(self, value: int, k: int | None) -> list[str]:
+        """Split coefficient into C tokens according to the grouping size."""
+        if value == 0:
+            return ["C0"]
+        if not k or k <= 0:
+            return [f"C{value}"]
+
+        digits = str(abs(value))
+        chunks = self._chunk_numeric_string(digits, k)
+        if value < 0:
+            chunks[0] = f"-{chunks[0]}"
+        return [f"C{chunk}" for chunk in chunks]
+
+    def _split_int_string_to_chunks(self, s: str, k: int | None) -> list[str]:
+        """Split integer string into C tokens according to the grouping size."""
+        if not s:
+            return []
+        if not k or k <= 0:
+            return [f"C{digit}" for digit in s]
+
+        chunks = self._chunk_numeric_string(s, k)
+        return [f"C{chunk}" for chunk in chunks]
+
     def _format_internal(self, terms: list[tuple[int, list[int]]]) -> str:
         """Convert parsed terms to the internal token representation string.
 
@@ -183,14 +244,16 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
             str: String in the internal representation format.
         """
         if not terms:
-            return f"C0 {self._get_zero_exponents_str()}"
+            zero_tokens = ["C0"]
+            if self.num_variables:
+                zero_tokens.extend(["E0"] * self.num_variables)
+            return " ".join(zero_tokens)
 
-        internal_term_strs = []
+        internal_term_strs: list[str] = []
         for coeff, exponents in terms:
             if coeff == 0:
                 continue
 
-            coeff_token = f"C{coeff}"
             if len(exponents) != self.num_variables:
                 raise ValueError(
                     (
@@ -199,12 +262,16 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
                         f"got {len(exponents)}."
                     )
                 )
+            coeff_tokens = self._split_coeff_to_chunks(coeff, self.digit_group_size)
             exponent_tokens = [f"E{e}" for e in exponents]
-            term_str = f"{coeff_token} {' '.join(exponent_tokens)}"
-            internal_term_strs.append(term_str)
+            term_tokens = coeff_tokens + exponent_tokens
+            internal_term_strs.append(" ".join(term_tokens))
 
         if not internal_term_strs:
-            return f"C0 {self._get_zero_exponents_str()}"
+            zero_tokens = ["C0"]
+            if self.num_variables:
+                zero_tokens.extend(["E0"] * self.num_variables)
+            return " ".join(zero_tokens)
 
         return " ".join(internal_term_strs)
 
@@ -219,7 +286,10 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
         """
         tgt = poly_str.strip()
         if tgt == "" or tgt == "0":
-            return f"C0 {self._get_zero_exponents_str()}"
+            zero_tokens = ["C0"]
+            if self.num_variables:
+                zero_tokens.extend(["E0"] * self.num_variables)
+            return " ".join(zero_tokens)
 
         # Normalize: remove spaces, convert '-' to '+-' for easier splitting
         tgt = tgt.replace(" ", "")
@@ -252,50 +322,82 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
         Returns:
             str: String in the internal token representation.
         """
-        # If text contains '|', process each part separately and join with [SEP]
+        if self.num_variables == 0:
+            stripped_text = text.strip()
+            if stripped_text == "":
+                return "[ERROR_FORMAT]"
+            if "|" in stripped_text:
+                parts = [p.strip() for p in stripped_text.split("|")]
+                encoded_parts: list[str] = []
+                for part in parts:
+                    if not part or not part.isdigit():
+                        logging.warning(f"Invalid number format encountered: '{part}'")
+                        return "[ERROR_FORMAT]"
+                    tokens = self._split_int_string_to_chunks(part, self.digit_group_size)
+                    encoded_parts.append(" ".join(tokens))
+                return " [SEP] ".join(encoded_parts)
+            if not stripped_text.isdigit():
+                logging.warning(f"Invalid number format encountered: '{stripped_text}'")
+                return "[ERROR_FORMAT]"
+            tokens = self._split_int_string_to_chunks(stripped_text, self.digit_group_size)
+            return " ".join(tokens) if tokens else "[ERROR_FORMAT]"
+
         if "|" in text:
             parts = [p.strip() for p in text.split("|")]
             internals = [self._poly_to_encode(p) for p in parts]
-            processed_string = " [SEP] ".join(internals)
-        else:
-            processed_string = self._poly_to_encode(text)
-
-        return processed_string
+            return " [SEP] ".join(internals)
+        return self._poly_to_encode(text)
 
     def _internal_to_poly(self, tokens: str) -> str:
         """Convert a single internal token string to a polynomial."""
-        parts = tokens.strip().split()
+        stripped = tokens.strip()
+        if stripped == "[ERROR_PARSING]":
+            return "[ERROR_PARSING]"
+
+        parts = stripped.split()
         if not parts or (len(parts) == self.num_variables + 1 and parts[0] == "C0"):
             return "0"
 
         terms = []
         i = 0
         while i < len(parts):
-            # Each term consists of one C token and num_variables E tokens.
-            term_parts = parts[i : i + self.num_variables + 1]
-            i += self.num_variables + 1
+            coeff_tokens: list[str] = []
+            while i < len(parts) and parts[i].startswith("C"):
+                coeff_tokens.append(parts[i])
+                i += 1
 
-            if not term_parts or not term_parts[0].startswith("C"):
-                logging.warning(f"Invalid token sequence: {term_parts}")
-                continue  # or raise error
+            if not coeff_tokens:
+                logging.warning(f"Invalid token sequence starting at index {i}: {parts[i:]}")
+                break
 
-            coeff_str = term_parts[0][1:]
+            exponent_tokens = parts[i : i + self.num_variables]
+            if len(exponent_tokens) != self.num_variables or any(
+                not token.startswith("E") for token in exponent_tokens
+            ):
+                logging.warning(
+                    f"Invalid exponent sequence for coeff tokens {coeff_tokens}: {exponent_tokens}"
+                )
+                break
+            i += self.num_variables
+
+            if len(coeff_tokens) == 1 and coeff_tokens[0] == "C0":
+                continue
+
+            coeff_str_parts = [token[1:] for token in coeff_tokens]
+            coeff_str = "".join(coeff_str_parts)
             coeff = int(coeff_str)
-
             if coeff == 0:
                 continue
 
-            exponents = [int(p[1:]) for p in term_parts[1:]]
+            exponents = [int(token[1:]) for token in exponent_tokens]
 
             term_str = ""
-            # Coefficient part
             if abs(coeff) == 1 and any(e > 0 for e in exponents):
                 if coeff == -1:
                     term_str += "-"
             else:
                 term_str += str(coeff)
 
-            # Variable parts
             var_term_parts = []
             for var_idx, exp in enumerate(exponents):
                 if exp > 0:
@@ -326,87 +428,63 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
 
     def decode(self, tokens: str) -> str:
         """Convert an internal token string back to a symbolic polynomial expression."""
+        if self.num_variables == 0:
+            stripped = tokens.strip()
+            if stripped == "[ERROR_FORMAT]":
+                return "[ERROR_FORMAT]"
+            if "[SEP]" in stripped:
+                parts = [p.strip() for p in stripped.split("[SEP]")]
+            else:
+                parts = [stripped]
+
+            numbers: list[str] = []
+            for part in parts:
+                if not part:
+                    numbers.append("")
+                    continue
+
+                digits: list[str] = []
+                for token in part.split():
+                    if not token.startswith("C") or not token[1:].isdigit():
+                        logging.warning(f"Invalid integer token encountered: '{token}'")
+                        return "[ERROR_FORMAT]"
+                    digits.append(token[1:])
+                numbers.append("".join(digits))
+            return "|".join(numbers)
+
         if "[SEP]" in tokens:
             parts = tokens.split("[SEP]")
             original_parts = [self._internal_to_poly(p.strip()) for p in parts]
             return " | ".join(original_parts)
-        else:
-            return self._internal_to_poly(tokens)
+        return self._internal_to_poly(tokens)
 
 
 class IntegerToInternalProcessor(AbstractPreprocessor):
-    """Convert an integer string to/from internal token representation.
+    """Deprecated wrapper around :class:`PolynomialToInternalProcessor` for integer strings."""
 
-    Input format examples (to_internal):
-        - "12345"
-        - "123|45|678"
-    Output format examples (from_internal):
-        - "C1 C2 C3 C4 C5"
-        - "C1 C2 C3 [SEP] C4 C5 [SEP] C6 C7 C8"
-
-    The internal representation uses ``C{n}`` tokens for digits.
-    Parts separated by '|' are converted individually and joined by ``[SEP]``.
-    Note: ``num_variables``, ``max_degree``, ``max_coeff`` are inherited but not directly used.
-    """
-
-    def __init__(self, max_coeff: int = 9):
-        """Initialize the processor.
-
-        Args:
-            max_coeff (int): The maximum digit value (typically 9). Passed to superclass but primarily used for validation context.
-        """
-        # Use dummy values for num_variables and max_degree as they are not relevant
+    def __init__(
+        self,
+        max_coeff: int = 9,
+        digit_group_size: int | None = None,
+    ):
+        warnings.warn(
+            (
+                "IntegerToInternalProcessor is deprecated; "
+                "use PolynomialToInternalProcessor(num_variables=0, ...) instead."
+            ),
+            DeprecationWarning,
+            stacklevel=2,
+        )
         super().__init__(num_variables=0, max_degree=0, max_coeff=max_coeff)
-
-    def _number_to_tokens(self, number_str: str) -> str:
-        """Convert a string of digits to space-separated ``C{digit}`` tokens."""
-        number_str = number_str.strip()  # Strip whitespace from individual parts
-        if not number_str.isdigit():
-            logging.warning(f"Invalid number format encountered: '{number_str}'")
-            return "[ERROR_FORMAT]"
-        return " ".join([f"C{digit}" for digit in number_str])
-
-    def encode(self, text: str) -> str:
-        """Process an integer string into internal token representation.
-
-        Args:
-            text (str): Input string representing one or more integers separated by '|'.
-
-        Returns:
-            str: Internal token representation (e.g., "C1 C2 [SEP] C3 C4"), or "[ERROR_FORMAT]" if any part is not a valid integer string.
-        """
-        if "|" in text:
-            parts = [p.strip() for p in text.split("|")]
-            tokenized_parts = []
-            for part in parts:
-                tokens = self._number_to_tokens(part)
-                if tokens == "[ERROR_FORMAT]":
-                    # If any part fails, return error for the whole input
-                    return "[ERROR_FORMAT]"
-                tokenized_parts.append(tokens)
-            # Join the tokenized parts with [SEP]
-            return " [SEP] ".join(tokenized_parts)
-        else:
-            # If no separator, process the whole string
-            return self._number_to_tokens(text.strip())
-
-    def _tokens_to_number(self, tokens_str: str) -> str:
-        """Convert a string of ``C{digit}`` tokens back to a number string."""
-        tokens_str = tokens_str.strip()
-        if not tokens_str:
-            return ""
-        parts = tokens_str.split()
-        return "".join(
-            [part[1:] for part in parts if part.startswith("C") and part[1:].isdigit()]
+        self._delegate = PolynomialToInternalProcessor(
+            num_variables=0,
+            max_degree=0,
+            max_coeff=max_coeff,
+            digit_group_size=digit_group_size,
         )
 
+    def encode(self, text: str) -> str:
+        return self._delegate.encode(text)
+
     def decode(self, tokens: str) -> str:
-        """Convert an internal token representation back to an integer string."""
-        if "[SEP]" in tokens:
-            parts = tokens.split("[SEP]")
-            # Process each part and join with '|'
-            number_parts = [self._tokens_to_number(p.strip()) for p in parts]
-            return "|".join(number_parts)
-        else:
-            # Process the whole string if no separator
-            return self._tokens_to_number(tokens.strip())
+        return self._delegate.decode(tokens)
