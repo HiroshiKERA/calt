@@ -12,8 +12,28 @@ def poly_processor():
 
 
 @pytest.fixture
+def poly_processor_chunked():
+    return PolynomialToInternalProcessor(
+        num_variables=2, max_degree=5, max_coeff=100, digit_group_size=3
+    )
+
+
+@pytest.fixture
 def int_processor():
-    return IntegerToInternalProcessor(max_coeff=9)
+    return PolynomialToInternalProcessor(num_variables=0, max_degree=0, max_coeff=9)
+
+
+@pytest.fixture
+def int_processor_chunked():
+    return PolynomialToInternalProcessor(
+        num_variables=0, max_degree=0, max_coeff=9, digit_group_size=3
+    )
+
+
+@pytest.fixture
+def deprecated_int_processor():
+    with pytest.deprecated_call():
+        return IntegerToInternalProcessor(max_coeff=9)
 
 
 # -- PolynomialToInternalProcessor Tests --
@@ -90,6 +110,24 @@ def test_polynomial_processor_cases(poly_processor, name):
     assert reconstructed_poly.replace(" ", "") == poly_str.replace(" ", "")
 
 
+def test_polynomial_processor_digit_grouping(poly_processor_chunked):
+    encoded = poly_processor_chunked.encode("12345*x0*x1^2")
+    assert encoded == "C12 C345 E1 E2"
+    decoded = poly_processor_chunked.decode(encoded)
+    assert decoded.replace(" ", "") == "12345*x0*x1^2"
+
+
+def test_polynomial_processor_digit_grouping_negative(poly_processor_chunked):
+    encoded = poly_processor_chunked.encode("-12345*x0")
+    assert encoded == "C-12 C345 E1 E0"
+    decoded = poly_processor_chunked.decode(encoded)
+    assert decoded.replace(" ", "") == "-12345*x0"
+
+
+def test_polynomial_processor_zero_coeff_chunked(poly_processor_chunked):
+    assert poly_processor_chunked.encode("0") == "C0 E0 E0"
+
+
 # -- IntegerToInternalProcessor Tests --
 
 # Test cases for integer identity
@@ -143,6 +181,34 @@ def test_integer_processor_cases(int_processor, name):
     assert int_processor.encode(int_str) == internal_str
     # Test encode
     assert int_processor.decode(internal_str) == int_str
+
+
+def test_integer_processor_digit_grouping_single(int_processor_chunked):
+    encoded = int_processor_chunked.encode("12345")
+    assert encoded == "C12 C345"
+    assert int_processor_chunked.decode(encoded) == "12345"
+
+
+def test_integer_processor_digit_grouping_with_leading_zeros(int_processor_chunked):
+    encoded = int_processor_chunked.encode("007")
+    assert encoded == "C007"
+    assert int_processor_chunked.decode(encoded) == "007"
+
+
+def test_integer_processor_digit_grouping_multiple_parts(int_processor_chunked):
+    encoded = int_processor_chunked.encode("12|3456")
+    assert encoded == "C12 [SEP] C345 C6"
+    assert int_processor_chunked.decode(encoded) == "12|3456"
+
+
+def test_integer_processor_invalid_input(int_processor):
+    assert int_processor.encode("12|34x") == "[ERROR_FORMAT]"
+
+
+def test_integer_processor_wrapper_still_works(deprecated_int_processor):
+    encoded = deprecated_int_processor.encode("123")
+    assert encoded == "C1 C2 C3"
+    assert deprecated_int_processor.decode(encoded) == "123"
 
 
 # Backward compatibility check example from prompt
