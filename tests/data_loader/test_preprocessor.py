@@ -131,7 +131,17 @@ def test_polynomial_processor_zero_coeff_chunked(poly_processor_chunked):
 # -- IntegerToInternalProcessor Tests --
 
 # Test cases for integer identity
-integer_test_cases_identity = ["12345", "0", "987", "1|2|3", "123|456", "0|00|1"]
+integer_test_cases_identity = [
+    "12345",
+    "0",
+    "987",
+    "1|2|3",
+    "123|456",
+    "0|00|1",
+    "-12",
+    "-12|34",
+    "1|-2|03",
+]
 
 
 @pytest.mark.parametrize("int_str", integer_test_cases_identity)
@@ -163,14 +173,17 @@ integer_tests = {
     "single_1": ("123", "C1 C2 C3"),
     "single_2": ("90", "C9 C0"),
     "single_3": ("7", "C7"),
+    "negative_single": ("-100", "C-1 C0 C0"),
     # Multiple numbers with |
     "multi_1": ("1|23", "C1 [SEP] C2 C3"),
     "multi_2": ("8|9|0", "C8 [SEP] C9 [SEP] C0"),
     "multi_3": ("100|200", "C1 C0 C0 [SEP] C2 C0 C0"),
+    "negative_multi": ("-12|34", "C-1 C2 [SEP] C3 C4"),
     # Leading zeros
     "leading_zero_1": ("01", "C0 C1"),
     "leading_zero_2": ("007", "C0 C0 C7"),
     "leading_zero_3": ("0|1", "C0 [SEP] C1"),
+    "negative_leading_zero": ("-007", "C-0 C0 C7"),
 }
 
 
@@ -199,6 +212,12 @@ def test_integer_processor_digit_grouping_multiple_parts(int_processor_chunked):
     encoded = int_processor_chunked.encode("12|3456")
     assert encoded == "C12 [SEP] C345 C6"
     assert int_processor_chunked.decode(encoded) == "12|3456"
+
+
+def test_integer_processor_digit_grouping_negative(int_processor_chunked):
+    encoded = int_processor_chunked.encode("-12345")
+    assert encoded == "C-12 C345"
+    assert int_processor_chunked.decode(encoded) == "-12345"
 
 
 def test_integer_processor_invalid_input(int_processor):
