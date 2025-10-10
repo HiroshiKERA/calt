@@ -170,20 +170,20 @@ def test_integer_processor_internal_identity(int_processor, int_str):
 # Specific test cases for integers
 integer_tests = {
     # Single numbers
-    "single_1": ("123", "C1 C2 C3"),
-    "single_2": ("90", "C9 C0"),
+    "single_1": ("123", "C123"),
+    "single_2": ("90", "C90"),
     "single_3": ("7", "C7"),
-    "negative_single": ("-100", "C-1 C0 C0"),
+    "negative_single": ("-100", "C-100"),
     # Multiple numbers with |
-    "multi_1": ("1|23", "C1 [SEP] C2 C3"),
+    "multi_1": ("1|23", "C1 [SEP] C23"),
     "multi_2": ("8|9|0", "C8 [SEP] C9 [SEP] C0"),
-    "multi_3": ("100|200", "C1 C0 C0 [SEP] C2 C0 C0"),
-    "negative_multi": ("-12|34", "C-1 C2 [SEP] C3 C4"),
+    "multi_3": ("100|200", "C100 [SEP] C200"),
+    "negative_multi": ("-12|34", "C-12 [SEP] C34"),
     # Leading zeros
-    "leading_zero_1": ("01", "C0 C1"),
-    "leading_zero_2": ("007", "C0 C0 C7"),
+    "leading_zero_1": ("01", "C01"),
+    "leading_zero_2": ("007", "C007"),
     "leading_zero_3": ("0|1", "C0 [SEP] C1"),
-    "negative_leading_zero": ("-007", "C-0 C0 C7"),
+    "negative_leading_zero": ("-007", "C-007"),
 }
 
 
@@ -226,7 +226,7 @@ def test_integer_processor_invalid_input(int_processor):
 
 def test_integer_processor_wrapper_still_works(deprecated_int_processor):
     encoded = deprecated_int_processor.encode("123")
-    assert encoded == "C1 C2 C3"
+    assert encoded == "C123"
     assert deprecated_int_processor.decode(encoded) == "123"
 
 
