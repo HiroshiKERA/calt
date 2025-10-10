@@ -37,6 +37,7 @@ def load_data(
     vocab_path: str | None = None,
     num_train_samples: int | None = None,
     num_test_samples: int | None = None,
+    digit_group_size: int | None = None,
 ) -> tuple[dict[str, StandardDataset], StandardTokenizer, StandardDataCollator]:
     """Create dataset, tokenizer and data-collator objects.
 
@@ -89,9 +90,12 @@ def load_data(
             num_variables=num_variables,
             max_degree=max_degree,
             max_coeff=max_coeff,
+            digit_group_size=digit_group_size,
         )
     elif processor_name == "integer":
-        preprocessor = IntegerToInternalProcessor(max_coeff=max_coeff)
+        preprocessor = IntegerToInternalProcessor(
+            max_coeff=max_coeff, digit_group_size=digit_group_size
+        )
     else:
         raise ValueError(f"Unknown processor: {processor_name}")
 
