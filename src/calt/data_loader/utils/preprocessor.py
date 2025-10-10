@@ -213,36 +213,28 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
 
         return [chunk for chunk in adjusted if chunk]
 
-    def _split_coeff_to_chunks(self, value: int, k: int | None) -> list[str]:
-        """Split coefficient into C tokens according to the grouping size."""
-        if value == 0:
-            return ["C0"]
-        if not k or k <= 0:
-            return [f"C{value}"]
+    def _number_to_tokens(self, number_str: str, k: int | None) -> list[str]:
+        """Return coefficient tokens for a signed integer string.
 
-        digits = str(abs(value))
-        chunks = self._chunk_numeric_string(digits, k)
-        if value < 0:
-            chunks[0] = f"-{chunks[0]}"
-        return [f"C{chunk}" for chunk in chunks]
+        Applies digit grouping only when ``k`` is positive; otherwise keeps the entire
+        literal (including any leading zeros) as a single token.
+        """
+        stripped = number_str.strip()
+        if not stripped:
+            raise ValueError(f"Invalid integer literal '{number_str}'")
 
-    def _split_int_string_to_chunks(self, s: str, k: int | None) -> list[str]:
-        """Split integer string into C tokens according to the grouping size."""
-        if not s:
-            return []
         sign = ""
-        digits = s
+        digits = stripped
         if digits[0] in "+-":
-            sign = digits[0]
+            if digits[0] == "-":
+                sign = "-"
             digits = digits[1:]
         if not digits or not digits.isdigit():
-            raise ValueError(f"Invalid integer literal '{s}'")
+            raise ValueError(f"Invalid integer literal '{number_str}'")
 
         if not k or k <= 0:
-            tokens = [f"C{digit}" for digit in digits]
-            if sign == "-":
-                tokens[0] = f"C-{tokens[0][1:]}"
-            return tokens
+            payload = digits if not sign else f"-{digits}"
+            return [f"C{payload}"]
 
         chunks = self._chunk_numeric_string(digits, k)
         if sign == "-":
@@ -277,7 +269,7 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
                         f"got {len(exponents)}."
                     )
                 )
-            coeff_tokens = self._split_coeff_to_chunks(coeff, self.digit_group_size)
+            coeff_tokens = self._number_to_tokens(str(coeff), self.digit_group_size)
             exponent_tokens = [f"E{e}" for e in exponents]
             term_tokens = coeff_tokens + exponent_tokens
             internal_term_strs.append(" ".join(term_tokens))
@@ -349,14 +341,14 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
                         logging.warning(f"Invalid number format encountered: '{part}'")
                         return "[ERROR_FORMAT]"
                     try:
-                        tokens = self._split_int_string_to_chunks(part, self.digit_group_size)
+                        tokens = self._number_to_tokens(part, self.digit_group_size)
                     except ValueError:
                         logging.warning(f"Invalid number format encountered: '{part}'")
                         return "[ERROR_FORMAT]"
                     encoded_parts.append(" ".join(tokens))
                 return " [SEP] ".join(encoded_parts)
             try:
-                tokens = self._split_int_string_to_chunks(stripped_text, self.digit_group_size)
+                tokens = self._number_to_tokens(stripped_text, self.digit_group_size)
             except ValueError:
                 logging.warning(f"Invalid number format encountered: '{stripped_text}'")
                 return "[ERROR_FORMAT]"
