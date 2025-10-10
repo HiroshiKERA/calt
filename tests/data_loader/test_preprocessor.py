@@ -13,9 +13,7 @@ def poly_processor():
 
 @pytest.fixture
 def poly_processor_chunked():
-    return PolynomialToInternalProcessor(
-        num_variables=2, max_degree=5, max_coeff=100, digit_group_size=3
-    )
+    return PolynomialToInternalProcessor(num_variables=2, max_degree=5, max_coeff=100, digit_group_size=3)
 
 
 @pytest.fixture
@@ -25,9 +23,7 @@ def int_processor():
 
 @pytest.fixture
 def int_processor_chunked():
-    return PolynomialToInternalProcessor(
-        num_variables=0, max_degree=0, max_coeff=9, digit_group_size=3
-    )
+    return PolynomialToInternalProcessor(num_variables=0, max_degree=0, max_coeff=9, digit_group_size=3)
 
 
 @pytest.fixture
@@ -77,9 +73,7 @@ def test_polynomial_processor_internal_identity(poly_processor, poly_str):
     """
     internal_rep = poly_processor.encode(poly_str)
     if internal_rep != "[ERROR_PARSING]":
-        reconstructed_internal = poly_processor.encode(
-            poly_processor.decode(internal_rep)
-        )
+        reconstructed_internal = poly_processor.encode(poly_processor.decode(internal_rep))
         assert reconstructed_internal == internal_rep
 
 
@@ -135,12 +129,12 @@ integer_test_cases_identity = [
     "12345",
     "0",
     "987",
-    "1|2|3",
-    "123|456",
-    "0|00|1",
+    "1 | 2 | 3",
+    "123 | 456",
+    "0 | 00 | 1",
     "-12",
-    "-12|34",
-    "1|-2|03",
+    "-12 | 34",
+    "1 | -2 | 03",
 ]
 
 
@@ -161,9 +155,7 @@ def test_integer_processor_internal_identity(int_processor, int_str):
     """
     internal_rep = int_processor.encode(int_str)
     if internal_rep != "[ERROR_FORMAT]":
-        reconstructed_internal = int_processor.encode(
-            int_processor.decode(internal_rep)
-        )
+        reconstructed_internal = int_processor.encode(int_processor.decode(internal_rep))
         assert reconstructed_internal == internal_rep
 
 
@@ -175,14 +167,14 @@ integer_tests = {
     "single_3": ("7", "C7"),
     "negative_single": ("-100", "C-100"),
     # Multiple numbers with |
-    "multi_1": ("1|23", "C1 [SEP] C23"),
-    "multi_2": ("8|9|0", "C8 [SEP] C9 [SEP] C0"),
-    "multi_3": ("100|200", "C100 [SEP] C200"),
-    "negative_multi": ("-12|34", "C-12 [SEP] C34"),
+    "multi_1": ("1 | 23", "C1 [SEP] C23"),
+    "multi_2": ("8 | 9 | 0", "C8 [SEP] C9 [SEP] C0"),
+    "multi_3": ("100 | 200", "C100 [SEP] C200"),
+    "negative_multi": ("-12 | 34", "C-12 [SEP] C34"),
     # Leading zeros
     "leading_zero_1": ("01", "C01"),
     "leading_zero_2": ("007", "C007"),
-    "leading_zero_3": ("0|1", "C0 [SEP] C1"),
+    "leading_zero_3": ("0 | 1", "C0 [SEP] C1"),
     "negative_leading_zero": ("-007", "C-007"),
 }
 
@@ -209,9 +201,9 @@ def test_integer_processor_digit_grouping_with_leading_zeros(int_processor_chunk
 
 
 def test_integer_processor_digit_grouping_multiple_parts(int_processor_chunked):
-    encoded = int_processor_chunked.encode("12|3456")
+    encoded = int_processor_chunked.encode("12 | 3456")
     assert encoded == "C12 [SEP] C345 C6"
-    assert int_processor_chunked.decode(encoded) == "12|3456"
+    assert int_processor_chunked.decode(encoded) == "12 | 3456"
 
 
 def test_integer_processor_digit_grouping_negative(int_processor_chunked):
