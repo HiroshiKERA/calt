@@ -76,7 +76,9 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
         max_coeff: int,
         digit_group_size: int | None = None,
     ):
-        super().__init__(num_variables=num_variables, max_degree=max_degree, max_coeff=max_coeff)
+        super().__init__(
+            num_variables=num_variables, max_degree=max_degree, max_coeff=max_coeff
+        )
         self.digit_group_size = digit_group_size
 
     def _log_warning(self, message: str, term_str: str) -> None:
@@ -145,7 +147,9 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
                 var_name = base.strip()
                 exp_str = exp_str.strip()
                 if not exp_str.isdigit():
-                    raise TermParseException(f"Invalid exponent '{exp_str}' in term '{term_str}'")
+                    raise TermParseException(
+                        f"Invalid exponent '{exp_str}' in term '{term_str}'"
+                    )
                 exponent = int(exp_str)
 
             if var_name in self.var_name_to_index:
@@ -156,7 +160,9 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
                 coeff = int(var_name)
                 coeff_part_found = True
             else:
-                raise TermParseException(f"Unknown var/part '{var_name}' in term '{term_str}'")
+                raise TermParseException(
+                    f"Unknown var/part '{var_name}' in term '{term_str}'"
+                )
 
         final_coeff = sign * coeff
 
@@ -373,14 +379,18 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
                 i += 1
 
             if not coeff_tokens:
-                logging.warning(f"Invalid token sequence starting at index {i}: {parts[i:]}")
+                logging.warning(
+                    f"Invalid token sequence starting at index {i}: {parts[i:]}"
+                )
                 break
 
             exponent_tokens = parts[i : i + self.num_variables]
             if len(exponent_tokens) != self.num_variables or any(
                 not token.startswith("E") for token in exponent_tokens
             ):
-                logging.warning(f"Invalid exponent sequence for coeff tokens {coeff_tokens}: {exponent_tokens}")
+                logging.warning(
+                    f"Invalid exponent sequence for coeff tokens {coeff_tokens}: {exponent_tokens}"
+                )
                 break
             i += self.num_variables
 

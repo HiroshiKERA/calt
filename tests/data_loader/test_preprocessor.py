@@ -13,7 +13,9 @@ def poly_processor():
 
 @pytest.fixture
 def poly_processor_chunked():
-    return PolynomialToInternalProcessor(num_variables=2, max_degree=5, max_coeff=100, digit_group_size=3)
+    return PolynomialToInternalProcessor(
+        num_variables=2, max_degree=5, max_coeff=100, digit_group_size=3
+    )
 
 
 @pytest.fixture
@@ -23,7 +25,9 @@ def int_processor():
 
 @pytest.fixture
 def int_processor_chunked():
-    return PolynomialToInternalProcessor(num_variables=0, max_degree=0, max_coeff=9, digit_group_size=3)
+    return PolynomialToInternalProcessor(
+        num_variables=0, max_degree=0, max_coeff=9, digit_group_size=3
+    )
 
 
 @pytest.fixture
@@ -73,7 +77,9 @@ def test_polynomial_processor_internal_identity(poly_processor, poly_str):
     """
     internal_rep = poly_processor.encode(poly_str)
     if internal_rep != "[ERROR_PARSING]":
-        reconstructed_internal = poly_processor.encode(poly_processor.decode(internal_rep))
+        reconstructed_internal = poly_processor.encode(
+            poly_processor.decode(internal_rep)
+        )
         assert reconstructed_internal == internal_rep
 
 
@@ -155,7 +161,9 @@ def test_integer_processor_internal_identity(int_processor, int_str):
     """
     internal_rep = int_processor.encode(int_str)
     if internal_rep != "[ERROR_FORMAT]":
-        reconstructed_internal = int_processor.encode(int_processor.decode(internal_rep))
+        reconstructed_internal = int_processor.encode(
+            int_processor.decode(internal_rep)
+        )
         assert reconstructed_internal == internal_rep
 
 
