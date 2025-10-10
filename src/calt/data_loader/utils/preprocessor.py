@@ -230,10 +230,23 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
         """Split integer string into C tokens according to the grouping size."""
         if not s:
             return []
-        if not k or k <= 0:
-            return [f"C{digit}" for digit in s]
+        sign = ""
+        digits = s
+        if digits[0] in "+-":
+            sign = digits[0]
+            digits = digits[1:]
+        if not digits or not digits.isdigit():
+            raise ValueError(f"Invalid integer literal '{s}'")
 
-        chunks = self._chunk_numeric_string(s, k)
+        if not k or k <= 0:
+            tokens = [f"C{digit}" for digit in digits]
+            if sign == "-":
+                tokens[0] = f"C-{tokens[0][1:]}"
+            return tokens
+
+        chunks = self._chunk_numeric_string(digits, k)
+        if sign == "-":
+            chunks[0] = f"-{chunks[0]}"
         return [f"C{chunk}" for chunk in chunks]
 
     def _format_internal(self, terms: list[tuple[int, list[int]]]) -> str:
@@ -332,20 +345,21 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
                 parts = [p.strip() for p in stripped_text.split("|")]
                 encoded_parts: list[str] = []
                 for part in parts:
-                    if not part or not part.isdigit():
+                    if not part:
                         logging.warning(f"Invalid number format encountered: '{part}'")
                         return "[ERROR_FORMAT]"
-                    tokens = self._split_int_string_to_chunks(
-                        part, self.digit_group_size
-                    )
+                    try:
+                        tokens = self._split_int_string_to_chunks(part, self.digit_group_size)
+                    except ValueError:
+                        logging.warning(f"Invalid number format encountered: '{part}'")
+                        return "[ERROR_FORMAT]"
                     encoded_parts.append(" ".join(tokens))
                 return " [SEP] ".join(encoded_parts)
-            if not stripped_text.isdigit():
+            try:
+                tokens = self._split_int_string_to_chunks(stripped_text, self.digit_group_size)
+            except ValueError:
                 logging.warning(f"Invalid number format encountered: '{stripped_text}'")
                 return "[ERROR_FORMAT]"
-            tokens = self._split_int_string_to_chunks(
-                stripped_text, self.digit_group_size
-            )
             return " ".join(tokens) if tokens else "[ERROR_FORMAT]"
 
         if "|" in text:
@@ -451,13 +465,23 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
                     numbers.append("")
                     continue
 
+                tokens_in_part = part.split()
+                sign = ""
                 digits: list[str] = []
-                for token in part.split():
-                    if not token.startswith("C") or not token[1:].isdigit():
+                for idx, token in enumerate(tokens_in_part):
+                    if not token.startswith("C"):
                         logging.warning(f"Invalid integer token encountered: '{token}'")
                         return "[ERROR_FORMAT]"
-                    digits.append(token[1:])
-                numbers.append("".join(digits))
+
+                    payload = token[1:]
+                    if idx == 0 and payload.startswith("-"):
+                        sign = "-"
+                        payload = payload[1:]
+                    if not payload or not payload.isdigit():
+                        logging.warning(f"Invalid integer token encountered: '{token}'")
+                        return "[ERROR_FORMAT]"
+                    digits.append(payload)
+                numbers.append(f"{sign}{''.join(digits)}")
             return "|".join(numbers)
 
         if "[SEP]" in tokens:
