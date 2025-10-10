@@ -210,7 +210,7 @@ def test_integer_processor_digit_grouping_with_leading_zeros(int_processor_chunk
 
 def test_integer_processor_digit_grouping_multiple_parts(int_processor_chunked):
     encoded = int_processor_chunked.encode("12 | 3456")
-    assert encoded == "C12 [SEP] C345 C6"
+    assert encoded == "C12 [SEP] C3 C456"
     assert int_processor_chunked.decode(encoded) == "12 | 3456"
 
 
@@ -218,6 +218,47 @@ def test_integer_processor_digit_grouping_negative(int_processor_chunked):
     encoded = int_processor_chunked.encode("-12345")
     assert encoded == "C-12 C345"
     assert int_processor_chunked.decode(encoded) == "-12345"
+
+
+@pytest.mark.parametrize(
+    ("digit_group_size", "expected_tokens"),
+    [
+        (4, "C1 C2345"),
+        (3, "C12 C345"),
+        (2, "C1 C23 C45"),
+    ],
+)
+def test_integer_processor_digit_grouping_right_aligned(
+    digit_group_size, expected_tokens
+):
+    proc = PolynomialToInternalProcessor(
+        num_variables=0, max_degree=0, max_coeff=9, digit_group_size=digit_group_size
+    )
+    assert proc.encode("12345") == expected_tokens
+    assert proc.decode(expected_tokens) == "12345"
+
+
+@pytest.mark.parametrize(
+    ("digit_group_size", "expected_tokens"),
+    [
+        (4, "C1 C2345 E1 E1"),
+        (3, "C12 C345 E1 E1"),
+        (2, "C1 C23 C45 E1 E1"),
+    ],
+)
+def test_polynomial_processor_digit_grouping_right_aligned(
+    digit_group_size, expected_tokens
+):
+    proc = PolynomialToInternalProcessor(
+        num_variables=2,
+        max_degree=5,
+        max_coeff=100000,
+        digit_group_size=digit_group_size,
+    )
+    encoded = proc.encode("12345*x0*x1")
+    assert encoded == expected_tokens
+    decoded = proc.decode(encoded)
+    assert decoded.replace(" ", "") == "12345*x0*x1"
 
 
 def test_integer_processor_invalid_input(int_processor):

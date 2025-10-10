@@ -198,20 +198,7 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
             chunks.append(digits[start:idx])
             idx = start
         chunks.reverse()
-
-        if len(chunks) <= 1:
-            return chunks
-
-        adjusted = chunks[:]
-        for i in range(len(adjusted) - 1):
-            if len(adjusted[i]) == 1 and len(adjusted[i + 1]) > 1:
-                needed = min(k - 1, len(adjusted[i + 1]) - 1)
-                if needed <= 0:
-                    continue
-                adjusted[i] += adjusted[i + 1][:needed]
-                adjusted[i + 1] = adjusted[i + 1][needed:]
-
-        return [chunk for chunk in adjusted if chunk]
+        return chunks
 
     def _number_to_tokens(self, number_str: str, k: int | None) -> list[str]:
         """Return coefficient tokens for a signed integer string.
@@ -333,7 +320,7 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
             stripped_text = text.strip()
             if stripped_text == "":
                 return "[ERROR_FORMAT]"
-            if " | " in stripped_text:
+            if "|" in stripped_text:
                 parts = [p.strip() for p in stripped_text.split("|")]
                 encoded_parts: list[str] = []
                 for part in parts:
@@ -354,7 +341,7 @@ class PolynomialToInternalProcessor(AbstractPreprocessor):
                 return "[ERROR_FORMAT]"
             return " ".join(tokens) if tokens else "[ERROR_FORMAT]"
 
-        if " | " in text:
+        if "|" in text:
             parts = [p.strip() for p in text.split("|")]
             internals = [self._poly_to_encode(p) for p in parts]
             return " [SEP] ".join(internals)
