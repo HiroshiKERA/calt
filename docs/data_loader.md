@@ -38,8 +38,8 @@ single implementation used for both polynomial and integer preprocessing
 
 - **Integer mode** (`num_variables=0`) – the same chunking logic is applied to each
   `|`-separated integer. Encoded parts are joined with `[SEP]`, e.g.
-  `-0012|34 -> C-0012 [SEP] C34` and, with `digit_group_size=3`,
-  `100|2000 -> C100 [SEP] C2 C000`. Decoding rejoins the coefficient chunks and restores
+  `-0012 | 34 -> C-0012 [SEP] C34` and, with `digit_group_size=3`,
+  `100 | 2000 -> C100 [SEP] C2 C000`. Decoding rejoins the coefficient chunks and restores
   the original separators.
 
 - **Compatibility wrapper** – `IntegerToInternalProcessor` simply delegates to
