@@ -12,8 +12,28 @@ def poly_processor():
 
 
 @pytest.fixture
+def poly_processor_chunked():
+    return PolynomialToInternalProcessor(
+        num_variables=2, max_degree=5, max_coeff=100, digit_group_size=3
+    )
+
+
+@pytest.fixture
 def int_processor():
-    return IntegerToInternalProcessor(max_coeff=9)
+    return PolynomialToInternalProcessor(num_variables=0, max_degree=0, max_coeff=9)
+
+
+@pytest.fixture
+def int_processor_chunked():
+    return PolynomialToInternalProcessor(
+        num_variables=0, max_degree=0, max_coeff=9, digit_group_size=3
+    )
+
+
+@pytest.fixture
+def deprecated_int_processor():
+    with pytest.deprecated_call():
+        return IntegerToInternalProcessor(max_coeff=9)
 
 
 # -- PolynomialToInternalProcessor Tests --
@@ -90,10 +110,38 @@ def test_polynomial_processor_cases(poly_processor, name):
     assert reconstructed_poly.replace(" ", "") == poly_str.replace(" ", "")
 
 
+def test_polynomial_processor_digit_grouping(poly_processor_chunked):
+    encoded = poly_processor_chunked.encode("12345*x0*x1^2")
+    assert encoded == "C12 C345 E1 E2"
+    decoded = poly_processor_chunked.decode(encoded)
+    assert decoded.replace(" ", "") == "12345*x0*x1^2"
+
+
+def test_polynomial_processor_digit_grouping_negative(poly_processor_chunked):
+    encoded = poly_processor_chunked.encode("-12345*x0")
+    assert encoded == "C-12 C345 E1 E0"
+    decoded = poly_processor_chunked.decode(encoded)
+    assert decoded.replace(" ", "") == "-12345*x0"
+
+
+def test_polynomial_processor_zero_coeff_chunked(poly_processor_chunked):
+    assert poly_processor_chunked.encode("0") == "C0 E0 E0"
+
+
 # -- IntegerToInternalProcessor Tests --
 
 # Test cases for integer identity
-integer_test_cases_identity = ["12345", "0", "987", "1|2|3", "123|456", "0|00|1"]
+integer_test_cases_identity = [
+    "12345",
+    "0",
+    "987",
+    "1 | 2 | 3",
+    "123 | 456",
+    "0 | 00 | 1",
+    "-12",
+    "-12 | 34",
+    "1 | -2 | 03",
+]
 
 
 @pytest.mark.parametrize("int_str", integer_test_cases_identity)
@@ -122,17 +170,20 @@ def test_integer_processor_internal_identity(int_processor, int_str):
 # Specific test cases for integers
 integer_tests = {
     # Single numbers
-    "single_1": ("123", "C1 C2 C3"),
-    "single_2": ("90", "C9 C0"),
+    "single_1": ("123", "C123"),
+    "single_2": ("90", "C90"),
     "single_3": ("7", "C7"),
+    "negative_single": ("-100", "C-100"),
     # Multiple numbers with |
-    "multi_1": ("1|23", "C1 [SEP] C2 C3"),
-    "multi_2": ("8|9|0", "C8 [SEP] C9 [SEP] C0"),
-    "multi_3": ("100|200", "C1 C0 C0 [SEP] C2 C0 C0"),
+    "multi_1": ("1 | 23", "C1 [SEP] C23"),
+    "multi_2": ("8 | 9 | 0", "C8 [SEP] C9 [SEP] C0"),
+    "multi_3": ("100 | 200", "C100 [SEP] C200"),
+    "negative_multi": ("-12 | 34", "C-12 [SEP] C34"),
     # Leading zeros
-    "leading_zero_1": ("01", "C0 C1"),
-    "leading_zero_2": ("007", "C0 C0 C7"),
-    "leading_zero_3": ("0|1", "C0 [SEP] C1"),
+    "leading_zero_1": ("01", "C01"),
+    "leading_zero_2": ("007", "C007"),
+    "leading_zero_3": ("0 | 1", "C0 [SEP] C1"),
+    "negative_leading_zero": ("-007", "C-007"),
 }
 
 
@@ -143,6 +194,81 @@ def test_integer_processor_cases(int_processor, name):
     assert int_processor.encode(int_str) == internal_str
     # Test encode
     assert int_processor.decode(internal_str) == int_str
+
+
+def test_integer_processor_digit_grouping_single(int_processor_chunked):
+    encoded = int_processor_chunked.encode("12345")
+    assert encoded == "C12 C345"
+    assert int_processor_chunked.decode(encoded) == "12345"
+
+
+def test_integer_processor_digit_grouping_with_leading_zeros(int_processor_chunked):
+    encoded = int_processor_chunked.encode("007")
+    assert encoded == "C007"
+    assert int_processor_chunked.decode(encoded) == "007"
+
+
+def test_integer_processor_digit_grouping_multiple_parts(int_processor_chunked):
+    encoded = int_processor_chunked.encode("12 | 3456")
+    assert encoded == "C12 [SEP] C3 C456"
+    assert int_processor_chunked.decode(encoded) == "12 | 3456"
+
+
+def test_integer_processor_digit_grouping_negative(int_processor_chunked):
+    encoded = int_processor_chunked.encode("-12345")
+    assert encoded == "C-12 C345"
+    assert int_processor_chunked.decode(encoded) == "-12345"
+
+
+@pytest.mark.parametrize(
+    ("digit_group_size", "expected_tokens"),
+    [
+        (4, "C1 C2345"),
+        (3, "C12 C345"),
+        (2, "C1 C23 C45"),
+    ],
+)
+def test_integer_processor_digit_grouping_right_aligned(
+    digit_group_size, expected_tokens
+):
+    proc = PolynomialToInternalProcessor(
+        num_variables=0, max_degree=0, max_coeff=9, digit_group_size=digit_group_size
+    )
+    assert proc.encode("12345") == expected_tokens
+    assert proc.decode(expected_tokens) == "12345"
+
+
+@pytest.mark.parametrize(
+    ("digit_group_size", "expected_tokens"),
+    [
+        (4, "C1 C2345 E1 E1"),
+        (3, "C12 C345 E1 E1"),
+        (2, "C1 C23 C45 E1 E1"),
+    ],
+)
+def test_polynomial_processor_digit_grouping_right_aligned(
+    digit_group_size, expected_tokens
+):
+    proc = PolynomialToInternalProcessor(
+        num_variables=2,
+        max_degree=5,
+        max_coeff=100000,
+        digit_group_size=digit_group_size,
+    )
+    encoded = proc.encode("12345*x0*x1")
+    assert encoded == expected_tokens
+    decoded = proc.decode(encoded)
+    assert decoded.replace(" ", "") == "12345*x0*x1"
+
+
+def test_integer_processor_invalid_input(int_processor):
+    assert int_processor.encode("12|34x") == "[ERROR_FORMAT]"
+
+
+def test_integer_processor_wrapper_still_works(deprecated_int_processor):
+    encoded = deprecated_int_processor.encode("123")
+    assert encoded == "C123"
+    assert deprecated_int_processor.decode(encoded) == "123"
 
 
 # Backward compatibility check example from prompt
