@@ -15,6 +15,7 @@ from .utils.data_collator import (
     _read_data_from_file,
 )
 from .utils.preprocessor import (
+    AbstractPreprocessor,
     IntegerToInternalProcessor,
     PolynomialToInternalProcessor,
 )
@@ -33,7 +34,8 @@ def load_data(
     max_degree: int,
     max_coeff: int,
     max_length: int = 512,
-    processor_name: str = "polynomial",
+    processor_name: str | None = "polynomial",
+    processor: AbstractPreprocessor | None = None,
     vocab_path: str | None = None,
     num_train_samples: int | None = None,
     num_test_samples: int | None = None,
@@ -59,12 +61,16 @@ def load_data(
         max_length (int, optional):
             Hard upper bound on the token sequence length. Longer sequences will
             be right-truncated. Defaults to 512.
-        processor_name (str, optional):
+        processor_name (str | None, optional):
             Name of the processor to use for converting symbolic expressions into
             internal token IDs. The default processor is ``"polynomial"``, which
             handles polynomial expressions. The alternative processor is
             ``"integer"``, which handles integer expressions. Defaults to
-            ``"polynomial"``.
+            ``"polynomial"``. Ignored when ``processor`` is supplied.
+        processor (AbstractPreprocessor | None, optional):
+            Preprocessor instance applied directly to expressions. When provided, it
+            takes precedence over ``processor_name`` and allows chaining multiple
+            preprocessors together. Defaults to None.
         vocab_path (str | None, optional):
             Path to the vocabulary configuration file. If None, a default vocabulary
             will be generated based on the field, max_degree, and max_coeff parameters.
@@ -85,19 +91,23 @@ def load_data(
             3. ``data_collator`` - a callable that assembles batches and applies
                dynamic padding so they can be fed to a HuggingFace ``Trainer``.
     """
-    if processor_name == "polynomial":
-        preprocessor = PolynomialToInternalProcessor(
-            num_variables=num_variables,
-            max_degree=max_degree,
-            max_coeff=max_coeff,
-            digit_group_size=digit_group_size,
-        )
-    elif processor_name == "integer":
-        preprocessor = IntegerToInternalProcessor(
-            max_coeff=max_coeff, digit_group_size=digit_group_size
-        )
-    else:
-        raise ValueError(f"Unknown processor: {processor_name}")
+    selected_preprocessor = processor
+
+    if selected_preprocessor is None:
+        resolved_name = processor_name or "polynomial"
+        if resolved_name == "polynomial":
+            selected_preprocessor = PolynomialToInternalProcessor(
+                num_variables=num_variables,
+                max_degree=max_degree,
+                max_coeff=max_coeff,
+                digit_group_size=digit_group_size,
+            )
+        elif resolved_name == "integer":
+            selected_preprocessor = IntegerToInternalProcessor(
+                max_coeff=max_coeff, digit_group_size=digit_group_size
+            )
+        else:
+            raise ValueError(f"Unknown processor: {resolved_name}")
 
     train_input_texts, train_target_texts = _read_data_from_file(
         train_dataset_path, max_samples=num_train_samples
@@ -105,7 +115,7 @@ def load_data(
     train_dataset = StandardDataset(
         input_texts=train_input_texts,
         target_texts=train_target_texts,
-        preprocessor=preprocessor,
+        preprocessor=selected_preprocessor,
     )
 
     test_input_texts, test_target_texts = _read_data_from_file(
@@ -114,7 +124,7 @@ def load_data(
     test_dataset = StandardDataset(
         input_texts=test_input_texts,
         target_texts=test_target_texts,
-        preprocessor=preprocessor,
+        preprocessor=selected_preprocessor,
     )
 
     vocab_config: VocabConfig | None = None
