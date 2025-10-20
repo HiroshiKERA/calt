@@ -111,9 +111,9 @@ class CoefficientPostfixProcessor(AbstractPreprocessor):
     def _reorder_tokens(
         self, tokens: list[str], *, coefficients_last: bool
     ) -> list[str]:
-        reordered: list[str] = []
-        current_coeffs: list[str] = []
-        current_exponents: list[str] = []
+        reordered = []
+        current_coeffs = []
+        current_exponents = []
 
         def flush_term() -> None:
             nonlocal current_coeffs, current_exponents
