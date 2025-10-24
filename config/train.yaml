@@ -9,7 +9,7 @@ model:
   max_sequence_length: 512
   
 train:
-  output_dir: results/prod_problem/GF7_n=2
+  output_dir: results/tests/
   num_train_epochs: 100
   learning_rate: 0.0001
   weight_decay: 0.01
@@ -24,8 +24,8 @@ train:
   dryrun: False
 
 data:
-  train_dataset_path: dataset/prod_problem/GF7_n=2/train_raw.txt
-  test_dataset_path: dataset/prod_problem/GF7_n=2/test_raw.txt
+  train_dataset_path: samples/test_raw.txt
+  test_dataset_path: samples/test_raw.txt
   num_variables: 2
   max_degree: 20
   max_coeff: 10
