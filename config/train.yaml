@@ -1,0 +1,40 @@
+model:
+  num_encoder_layers: 6
+  num_encoder_heads: 8
+  num_decoder_layers: 6
+  num_decoder_heads: 8
+  d_model: 512
+  encoder_ffn_dim: 2048
+  decoder_ffn_dim: 2048
+  max_sequence_length: 512
+  
+train:
+  output_dir: results/prod_problem/GF7_n=2
+  num_train_epochs: 100
+  learning_rate: 0.0001
+  weight_decay: 0.01
+  warmup_ratio: 0.1
+  batch_size: 64
+  test_batch_size: 64
+  lr_scheduler_type: "linear"
+  max_grad_norm: 1.0
+  optimizer: adamw_torch
+  num_workers: 4
+  seed: 42
+  dryrun: False
+
+data:
+  train_dataset_path: dataset/prod_problem/GF7_n=2/train_raw.txt
+  test_dataset_path: dataset/prod_problem/GF7_n=2/test_raw.txt
+  num_variables: 2
+  max_degree: 20
+  max_coeff: 10
+  field: GF7
+  num_train_samples: -1
+  num_test_samples: -1
+
+wandb:
+  project: calt-test
+  group: prod_problem
+  name: GF7_n=2
+  no_wandb: False
