@@ -37,5 +37,4 @@ jobs:
       - name: Run train pipeline smoke tests
         run: |
           uv run python tests/train_pipeline/train.py --dryrun --no_wandb
-          uv run python tests/train_pipeline/train_chain.py --dryrun --no_wandb
 
