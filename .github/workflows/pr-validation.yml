@@ -1,0 +1,41 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches:
+      - dev
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.11", "3.12"]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Install dependencies
+        run: |
+          uv venv
+          uv pip install -e ".[dev]"
+
+      - name: Run pytest (data_loader)
+        run: uv run pytest tests/data_loader
+
+      - name: Run train pipeline smoke tests
+        run: |
+          uv run python tests/train_pipeline/train.py --dryrun --no_wandb
+          uv run python tests/train_pipeline/train_chain.py --dryrun --no_wandb
+
