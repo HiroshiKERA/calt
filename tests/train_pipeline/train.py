@@ -16,8 +16,8 @@ from calt import (
     count_cuda_devices,
 )
 from calt import load_data
-import wandb
 import torch
+import wandb
 
 
 @click.command()
@@ -59,8 +59,11 @@ def main(config, dryrun, no_wandb):
     with open(os.path.join(cfg.train.output_dir, config_file_name), "w") as f:
         OmegaConf.save(cfg, f)
 
-    # Set up wandb
-    if not cfg.wandb.no_wandb:
+    report_target = "wandb"
+    if cfg.wandb.no_wandb:
+        os.environ["WANDB_DISABLED"] = "true"
+        report_target = "none"
+    else:
         wandb.init(
             project=cfg.wandb.project,
             group=cfg.wandb.group,
@@ -135,7 +138,7 @@ def main(config, dryrun, no_wandb):
         # Logging settings
         logging_strategy="steps",
         logging_steps=50,
-        report_to="wandb",
+        report_to=report_target,
         # Others
         remove_unused_columns=False,
         seed=cfg.train.seed,
@@ -162,8 +165,9 @@ def main(config, dryrun, no_wandb):
     metrics["test_success_rate"] = success_rate
 
     trainer.save_metrics("all", metrics)
-    wandb.log(metrics)
-    wandb.finish()
+    if not cfg.wandb.no_wandb:
+        wandb.log(metrics)
+        wandb.finish()
 
 
 if __name__ == "__main__":
