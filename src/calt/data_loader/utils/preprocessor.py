@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import logging
 import warnings
+from typing import Iterable
 
 # Basic logging configuration
 logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
@@ -52,6 +53,107 @@ class AbstractPreprocessor(ABC):
     # For backward compatibility: process is an alias for to_internal
     def process(self, text: str) -> str:
         return self.encode(text)
+
+
+class ProcessorChain(AbstractPreprocessor):
+    """Compose multiple preprocessors and apply them sequentially."""
+
+    def __init__(self, processors: Iterable["AbstractPreprocessor"]) -> None:
+        processors = list(processors)
+        if not processors:
+            raise ValueError("ProcessorChain requires at least one preprocessor.")
+
+        first = processors[0]
+        super().__init__(
+            num_variables=first.num_variables,
+            max_degree=first.max_degree,
+            max_coeff=first.max_coeff,
+        )
+        self.processors = processors
+
+    def encode(self, text: str) -> str:
+        for processor in self.processors:
+            text = processor.encode(text)
+        return text
+
+    def decode(self, tokens: str) -> str:
+        for processor in reversed(self.processors):
+            tokens = processor.decode(tokens)
+        return tokens
+
+
+class CoefficientPostfixProcessor(AbstractPreprocessor):
+    """Move coefficient tokens so they follow their exponent tokens within each term."""
+
+    def __init__(
+        self,
+        coefficient_prefix: str = "C",
+        exponent_prefix: str = "E",
+    ) -> None:
+        super().__init__(num_variables=0, max_degree=0, max_coeff=1)
+        self.coefficient_prefix = coefficient_prefix
+        self.exponent_prefix = exponent_prefix
+
+    def encode(self, text: str) -> str:
+        stripped = text.strip()
+        if not stripped:
+            return text
+        tokens = stripped.split()
+        return " ".join(self._reorder_tokens(tokens, coefficients_last=True))
+
+    def decode(self, tokens: str) -> str:
+        stripped = tokens.strip()
+        if not stripped:
+            return tokens
+        pieces = stripped.split()
+        return " ".join(self._reorder_tokens(pieces, coefficients_last=False))
+
+    def _reorder_tokens(
+        self, tokens: list[str], *, coefficients_last: bool
+    ) -> list[str]:
+        reordered = []
+        current_coeffs = []
+        current_exponents = []
+
+        def flush_term() -> None:
+            nonlocal current_coeffs, current_exponents
+            if not current_coeffs and not current_exponents:
+                return
+            if coefficients_last:
+                reordered.extend(current_exponents)
+                reordered.extend(current_coeffs)
+            else:
+                reordered.extend(current_coeffs)
+                reordered.extend(current_exponents)
+            current_coeffs = []
+            current_exponents = []
+
+        for token in tokens:
+            is_coeff = token.startswith(self.coefficient_prefix)
+            is_exp = token.startswith(self.exponent_prefix)
+
+            if not (is_coeff or is_exp):
+                flush_term()
+                reordered.append(token)
+                continue
+
+            if coefficients_last:
+                if is_coeff:
+                    if current_exponents:
+                        flush_term()
+                    current_coeffs.append(token)
+                else:
+                    current_exponents.append(token)
+            else:
+                if is_exp:
+                    if current_coeffs and current_exponents:
+                        flush_term()
+                    current_exponents.append(token)
+                else:
+                    current_coeffs.append(token)
+
+        flush_term()
+        return reordered
 
 
 class PolynomialToInternalProcessor(AbstractPreprocessor):

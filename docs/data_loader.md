@@ -6,11 +6,19 @@ Utilities to prepare training/evaluation datasets, tokenizers, and data collator
 
 ::: calt.data_loader.data_loader.load_data
 
+- `load_data` accepts either a legacy ``processor_name`` or a fully-configured
+  ``processor`` (an :class:`~calt.data_loader.utils.preprocessor.AbstractPreprocessor`
+  instance). When both are supplied, the explicit ``processor`` wins, enabling
+  advanced pipelines without breaking backward compatibility.
+
 ### Dataset and collator
 ::: calt.data_loader.utils.data_collator.StandardDataset
 ::: calt.data_loader.utils.data_collator.StandardDataCollator
 
 ### Preprocessing (expression → internal tokens)
+::: calt.data_loader.utils.preprocessor.AbstractPreprocessor
+::: calt.data_loader.utils.preprocessor.ProcessorChain
+::: calt.data_loader.utils.preprocessor.CoefficientPostfixProcessor
 ::: calt.data_loader.utils.preprocessor.PolynomialToInternalProcessor
 ::: calt.data_loader.utils.preprocessor.IntegerToInternalProcessor
 
@@ -45,6 +53,36 @@ single implementation used for both polynomial and integer preprocessing
 - **Compatibility wrapper** – `IntegerToInternalProcessor` simply delegates to
   `PolynomialToInternalProcessor(num_variables=0, …)` and is kept for legacy callers.
 
+#### Processor chaining example
+
+```python
+from calt.data_loader.utils.preprocessor import (
+    PolynomialToInternalProcessor,
+    CoefficientPostfixProcessor,
+    ProcessorChain,
+)
+from calt.data_loader.data_loader import load_data
+
+poly = PolynomialToInternalProcessor(num_variables=2, max_degree=3, max_coeff=200)
+postfix = CoefficientPostfixProcessor()
+chain = ProcessorChain([poly, postfix])
+
+assert chain.encode("123*x0*x1^2") == "E1 E2 C123"
+
+dataset, tokenizer, collator = load_data(
+    train_dataset_path="dataset/train.txt",
+    test_dataset_path="dataset/test.txt",
+    field="ZZ",
+    num_variables=2,
+    max_degree=3,
+    max_coeff=200,
+    processor=chain,
+)
+```
+
+You can append additional custom processors to `ProcessorChain` to insert validation,
+data augmentation, or token-level rewrites that should run before batching.
+
 ### Tokenizer
 Build or load a tokenizer for polynomial expressions and configure the vocabulary.
 ::: calt.data_loader.utils.tokenizer.set_tokenizer
@@ -55,3 +93,9 @@ Quickly render visual diffs between predictions and references.
 ::: calt.data_loader.utils.comparison_vis.display_with_diff
 ::: calt.data_loader.utils.comparison_vis.load_eval_results
 ::: calt.data_loader.utils.comparison_vis.parse_poly
+
+### Changelog
+
+- Added `ProcessorChain` and `CoefficientPostfixProcessor` for composable preprocessing,
+  along with the new `processor` argument on `load_data`. Existing ``processor_name``
+  flows continue to work unchanged.
