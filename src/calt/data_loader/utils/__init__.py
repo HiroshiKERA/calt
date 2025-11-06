@@ -1,1 +1,1 @@
-from .comparison_vis import parse_poly, load_eval_results, display_with_diff
+from .comparison_vis import display_with_diff, load_eval_results, parse_poly
