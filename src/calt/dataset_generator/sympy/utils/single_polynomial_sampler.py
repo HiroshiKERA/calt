@@ -1,9 +1,10 @@
 import math
 import random
 from typing import Any
-from sympy import ZZ, QQ, RR
-from sympy.polys.rings import PolyRing, PolyElement
+
+from sympy import QQ, RR, ZZ
 from sympy.polys.domains.domain import Domain
+from sympy.polys.rings import PolyElement, PolyRing
 
 
 class SinglePolynomialSampler:
