@@ -10,8 +10,13 @@ os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
 import click
 import torch
 from omegaconf import OmegaConf
-from transformers import BartConfig, TrainingArguments
-from transformers import BartForConditionalGeneration as Transformer
+from transformers import (
+    BartConfig,
+    TrainingArguments,
+)
+from transformers import (
+    BartForConditionalGeneration as Transformer,
+)
 
 import wandb
 from calt import (
