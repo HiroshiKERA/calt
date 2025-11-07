@@ -32,7 +32,7 @@ jobs:
           uv pip install -e ".[dev]"
 
       - name: Run pytest (data_loader)
-        run: uv run pytest tests/data_loader
+        run: uv run pytest tests/
 
       - name: Run train pipeline smoke tests
         run: |
