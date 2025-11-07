@@ -1,7 +1,7 @@
 from .statistics_calculator import (
-                                    BaseStatisticsCalculator,
-                                    IncrementalStatistics,
-                                    MemoryEfficientStatisticsCalculator,
+    BaseStatisticsCalculator,
+    IncrementalStatistics,
+    MemoryEfficientStatisticsCalculator,
 )
 
 __all__ = [
