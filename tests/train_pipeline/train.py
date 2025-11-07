@@ -6,11 +6,13 @@ import torch
 from omegaconf import OmegaConf
 from transformers import (
     BartConfig,
-    BartForConditionalGeneration as Transformer,
     TrainingArguments,
 )
-import wandb
+from transformers import (
+    BartForConditionalGeneration as Transformer,
+)
 
+import wandb
 from calt import (
     Trainer,
     count_cuda_devices,
