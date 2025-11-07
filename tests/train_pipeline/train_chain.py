@@ -1,12 +1,6 @@
 import os
 import sys
 
-sys.path.append("src")
-
-# Environment variables for reproducibility
-os.environ["TOKENIZERS_PARALLELISM"] = "false"
-os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
-
 import click
 import torch
 from omegaconf import OmegaConf
@@ -125,9 +119,7 @@ def main(config, dryrun, no_wandb):
         warmup_ratio=cfg.train.warmup_ratio,
         per_device_train_batch_size=train_batch_size,
         per_device_eval_batch_size=test_batch_size,
-        lr_scheduler_type="constant"
-        if cfg.train.lr_scheduler_type == "constant"
-        else "linear",
+        lr_scheduler_type="constant" if cfg.train.lr_scheduler_type == "constant" else "linear",
         max_grad_norm=cfg.train.max_grad_norm,
         optim=cfg.train.optimizer,  # Set optimizer type
         # Dataloader settings
