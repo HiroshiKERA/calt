@@ -6,7 +6,7 @@ import torch
 from omegaconf import OmegaConf
 from transformers import (
     BartConfig,
-    BartForConditionalGeneration as Transformer
+    BartForConditionalGeneration as Transformer,
     TrainingArguments,
 )
 import wandb
