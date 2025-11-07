@@ -1,6 +1,8 @@
-from .statistics_calculator import (BaseStatisticsCalculator,
+from .statistics_calculator import (
+                                    BaseStatisticsCalculator,
                                     IncrementalStatistics,
-                                    MemoryEfficientStatisticsCalculator)
+                                    MemoryEfficientStatisticsCalculator,
+)
 
 __all__ = [
     "BaseStatisticsCalculator",
