@@ -1,9 +1,8 @@
 repos:
 - repo: https://github.com/astral-sh/ruff-pre-commit
-  rev: v0.9.9
+  rev: v0.14.4
   hooks:
     - id: ruff-check
-      args: ["--select=I"]
     - id: ruff-format
-      args: ["--diff", "--select=I"]
+      args: ["--diff"]
 
