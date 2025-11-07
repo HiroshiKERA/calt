@@ -44,6 +44,7 @@ dev = [
 ]
 
 [tool.ruff]
+lint.select = ["I"]
 lint.per-file-ignores = {"src/calt/__init__.py" = ["F401"], "src/calt/data_loader/__init__.py" = ["F401"],"src/calt/generate/__init__.py" = ["F401"],"src/calt/generate_by_sage/__init__.py" = ["F401"],"src/calt/trainer/__init__.py" = ["F401"],"src/calt/data_loader/utils/__init__.py" = ["F401"],"src/calt/generator/__init__.py" = ["F401"],"src/calt/generator/sagemath/__init__.py" = ["F401"],"src/calt/generator/sympy/__init__.py" = ["F401"]}
 exclude = [
   "docs/*",
