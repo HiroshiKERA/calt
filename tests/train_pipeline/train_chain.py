@@ -4,10 +4,13 @@ import sys
 import click
 import torch
 from omegaconf import OmegaConf
-from transformers import BartConfig, TrainingArguments
-from transformers import BartForConditionalGeneration as Transformer
-
+from transformers import (
+    BartConfig,
+    BartForConditionalGeneration as Transformer
+    TrainingArguments,
+)
 import wandb
+
 from calt import Trainer, count_cuda_devices, load_data
 from calt.data_loader.utils.preprocessor import (
     CoefficientPostfixProcessor,
