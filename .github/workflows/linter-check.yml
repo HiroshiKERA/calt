@@ -25,5 +25,5 @@ jobs:
         run: uv sync --dev
 
       - name: Run linters + formatters
-        run: uv run ruff check . --output-format=github --select=I
+        run: uv run ruff check . --output-format=github
       
