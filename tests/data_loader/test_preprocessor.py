@@ -1,9 +1,7 @@
 import pytest
 
-from calt.data_loader.utils.preprocessor import (
-    IntegerToInternalProcessor,
-    PolynomialToInternalProcessor,
-)
+from calt.data_loader.utils.preprocessor import (IntegerToInternalProcessor,
+                                                 PolynomialToInternalProcessor)
 
 
 # Fixtures for processors

@@ -1,11 +1,9 @@
 import pytest
 
-from calt.data_loader.utils.preprocessor import (
-    AbstractPreprocessor,
-    CoefficientPostfixProcessor,
-    PolynomialToInternalProcessor,
-    ProcessorChain,
-)
+from calt.data_loader.utils.preprocessor import (AbstractPreprocessor,
+                                                 CoefficientPostfixProcessor,
+                                                 PolynomialToInternalProcessor,
+                                                 ProcessorChain)
 
 
 class _SuffixPreprocessor(AbstractPreprocessor):
