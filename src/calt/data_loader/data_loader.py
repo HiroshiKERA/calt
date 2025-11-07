@@ -12,11 +12,16 @@ import logging
 import yaml
 from transformers import PreTrainedTokenizerFast as StandardTokenizer
 
-from .utils.data_collator import (StandardDataCollator, StandardDataset,
-                                  _read_data_from_file)
-from .utils.preprocessor import (AbstractPreprocessor,
-                                 IntegerToInternalProcessor,
-                                 PolynomialToInternalProcessor)
+from .utils.data_collator import (
+    StandardDataCollator,
+    StandardDataset,
+    _read_data_from_file,
+)
+from .utils.preprocessor import (
+    AbstractPreprocessor,
+    IntegerToInternalProcessor,
+    PolynomialToInternalProcessor,
+)
 from .utils.tokenizer import VocabConfig, set_tokenizer
 
 logger = logging.getLogger(__name__)
