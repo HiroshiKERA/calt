@@ -32,9 +32,9 @@ jobs:
           uv sync --dev
 
       - name: Run pytest (data_loader)
-        run: uv run pytest tests/
+        run: uvx --with tox-uv tox -e test
 
       - name: Run train pipeline smoke tests
         run: |
-          uv run python tests/train_pipeline/train.py --dryrun --no_wandb
+          uvx --with tox-uv tox -e train-test
 
