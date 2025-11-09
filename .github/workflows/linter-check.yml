@@ -22,5 +22,5 @@ jobs:
           python-version-file: ".python-version"
 
       - name: Run linters + formatters
-        run: uv run tox -e check
+        run: uvx --with tox-uv tox -e check
       
