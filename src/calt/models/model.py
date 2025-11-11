@@ -1,6 +1,6 @@
 """
-Hugging Face Trainerで使用できるPyTorch Transformerモデル
-既存のtransformer.pyのTransformerクラスを継承・拡張
+A PyTorch Transformer model usable with the Hugging Face Trainer.
+Extends the existing Transformer class from transformer.py.
 """
 
 import torch
@@ -16,7 +16,7 @@ logger = logging.get_logger(__name__)
 
 
 class CaltModelConfig(PretrainedConfig):
-    """Transformerモデルの設定クラス"""
+    """Configuration class for the Transformer model."""
 
     model_type = "transformer"
 
@@ -71,7 +71,7 @@ class CaltModelConfig(PretrainedConfig):
 
 
 class CaltModel(PreTrainedModel):
-    """Hugging FaceのTrainerで使用できるTransformerモデル"""
+    """Transformer model compatible with the Hugging Face Trainer."""
 
     config_class = CaltModelConfig
 
@@ -80,10 +80,10 @@ class CaltModel(PreTrainedModel):
 
         self.config = config
 
-        # 埋め込み層
+        # Embedding layer
         self.embedding = nn.Embedding(config.vocab_size, config.d_model)
 
-        # 位置エンべディング（設定に応じて有無を切り替え）
+        # Positional embedding (controlled by config)
         if config.use_positional_embedding == "learned":
             self.positional_embedding = nn.Embedding(
                 config.max_input_len, config.d_model
@@ -95,7 +95,7 @@ class CaltModel(PreTrainedModel):
                 f"Unsupported positional embedding type: {config.use_positional_embedding}"
             )
 
-        # Transformerモデル（PyTorchの標準的なTransformerを使用）
+        # Transformer model (uses PyTorch's standard Transformer)
         self.transformer = nn.Transformer(
             d_model=config.d_model,
             nhead=config.nhead,
@@ -110,10 +110,10 @@ class CaltModel(PreTrainedModel):
             bias=config.bias,
         )
 
-        # 出力層
+        # Output layer
         self.lm_head = nn.Linear(config.d_model, config.vocab_size, bias=False)
 
-        # 重みの初期化
+        # Initialize weights
         self.apply(self._init_weights)
         self.tie_weights()
         self.seed = config.seed
@@ -122,17 +122,17 @@ class CaltModel(PreTrainedModel):
             torch.cuda.manual_seed_all(self.seed)
 
     def _init_weights(self, module):
-        """重みの初期化メソッド"""
+        """Weight initialization method."""
         if isinstance(module, nn.Linear):
-            # Linear層の重みを正規分布で初期化
+            # Initialize linear layer weights with a normal distribution
             module.weight.data.normal_(mean=0.0, std=self.config.init_std)
             if module.bias is not None:
                 module.bias.data.zero_()
         elif isinstance(module, nn.Embedding):
-            # Embedding層の重みを正規分布で初期化
+            # Initialize embedding weights with a normal distribution
             module.weight.data.normal_(mean=0.0, std=self.config.init_std)
         elif isinstance(module, nn.LayerNorm):
-            # LayerNormの重みを1、バイアスを0で初期化
+            # Initialize LayerNorm with weight=1 and bias=0
             module.bias.data.zero_()
             module.weight.data.fill_(1.0)
 
@@ -168,33 +168,33 @@ class CaltModel(PreTrainedModel):
         Forward pass for the transformer model.
 
         Args:
-            input_ids: エンコーダーへの入力トークンID
-            attention_mask: エンコーダーのアテンションマスク
-            decoder_input_ids: デコーダーへの入力トークンID
-            decoder_attention_mask: デコーダーのアテンションマスク
-            labels: 教師ラベル（損失計算用）
-            output_attentions: アテンション重みを出力するか
-            output_hidden_states: 隠れ状態を出力するか
-            return_dict: 辞書形式で返すか
+            input_ids: Token IDs for the encoder input.
+            attention_mask: Attention mask for the encoder.
+            decoder_input_ids: Token IDs for the decoder input.
+            decoder_attention_mask: Attention mask for the decoder.
+            labels: Teacher labels for loss computation.
+            output_attentions: Whether to return attention weights.
+            output_hidden_states: Whether to return hidden states.
+            return_dict: Whether to return outputs as a dictionary.
 
         Returns:
-            モデルの出力（損失、ロジット、隠れ状態など）
+            Model outputs (loss, logits, hidden states, etc.).
         """
 
         return_dict = (
             return_dict if return_dict is not None else self.config.use_return_dict
         )
 
-        # 入力の検証
+        # Validate inputs
         if input_ids is None and decoder_input_ids is None:
             raise ValueError("input_ids または decoder_input_ids のいずれかが必要です")
 
-        # エンコーダー入力の処理
+        # Process encoder inputs
         if input_ids is not None:
             batch_size, seq_len = input_ids.shape
             encoder_embeddings = self.embedding(input_ids)
 
-            # 位置エンべディングの追加（設定に応じて）
+            # Add positional embeddings (if enabled)
             if self.positional_embedding is not None:
                 position_ids = (
                     torch.arange(seq_len, device=input_ids.device)
@@ -207,12 +207,12 @@ class CaltModel(PreTrainedModel):
         else:
             encoder_embeddings = None
 
-        # デコーダー入力の処理
+        # Process decoder inputs
         if decoder_input_ids is not None:
             batch_size, seq_len = decoder_input_ids.shape
             decoder_embeddings = self.embedding(decoder_input_ids)
 
-            # 位置エンべディングの追加（設定に応じて）
+            # Add positional embeddings (if enabled)
             if self.positional_embedding is not None:
                 position_ids = (
                     torch.arange(seq_len, device=decoder_input_ids.device)
@@ -232,13 +232,13 @@ class CaltModel(PreTrainedModel):
                 tgt_seq_len, decoder_embeddings.device
             )
 
-        # Transformerのforward pass
+        # Transformer forward pass
         encoder_key_padding_mask = self._prepare_key_padding_mask(attention_mask)
         decoder_key_padding_mask = self._prepare_key_padding_mask(
             decoder_attention_mask
         )
         if encoder_embeddings is not None and decoder_embeddings is not None:
-            # エンコーダー-デコーダー形式
+            # Encoder-decoder mode
             transformer_output = self.transformer(
                 src=encoder_embeddings,
                 tgt=decoder_embeddings,
@@ -249,9 +249,9 @@ class CaltModel(PreTrainedModel):
         else:
             print("encoder_embeddings or decoder_embeddings is None")
 
-        # 出力の処理
+        # Process outputs
         logits = self.lm_head(transformer_output)
-        # 損失の計算
+        # Compute loss
         loss = None
         if labels is not None:
             loss_fct = nn.CrossEntropyLoss()
@@ -287,7 +287,7 @@ class CaltModel(PreTrainedModel):
         **kwargs,
     ) -> torch.LongTensor:
         """
-        テキスト生成のためのメソッド
+        Method for text generation.
         """
         if pad_token_id is None:
             pad_token_id = self.config.pad_token_id
@@ -297,10 +297,10 @@ class CaltModel(PreTrainedModel):
         batch_size = input_ids.shape[0]
         device = input_ids.device
 
-        # エンコーダー出力を計算
+        # Compute encoder outputs
         encoder_embeddings = self.embedding(input_ids)
 
-        # 位置エンべディングの追加（設定に応じて）
+        # Add positional embeddings (if enabled)
         if self.positional_embedding is not None:
             seq_len = input_ids.shape[1]
             position_ids = (
@@ -320,16 +320,16 @@ class CaltModel(PreTrainedModel):
         else:
             encoder_output = self.transformer.encoder(encoder_embeddings)
 
-        # デコーダー入力の初期化
+        # Initialize decoder inputs
         decoder_input_ids = torch.full(
             (batch_size, 1), self.config.bos_token_id, device=device
         )
 
         for _ in range(max_length):
-            # デコーダー埋め込み
+            # Decoder embeddings
             decoder_embeddings = self.embedding(decoder_input_ids)
 
-            # 位置エンべディングの追加（設定に応じて）
+            # Add positional embeddings (if enabled)
             if self.positional_embedding is not None:
                 seq_len = decoder_input_ids.shape[1]
                 position_ids = (
@@ -341,7 +341,7 @@ class CaltModel(PreTrainedModel):
                     position_ids
                 )
 
-            # デコーダーのforward pass
+            # Decoder forward pass
             tgt_mask = self._generate_causal_mask(decoder_embeddings.size(1), device)
             decoder_output = self.transformer.decoder(
                 decoder_embeddings,
@@ -349,7 +349,7 @@ class CaltModel(PreTrainedModel):
                 tgt_mask=tgt_mask,
             )
 
-            # 次のトークンの予測
+            # Predict next token
             next_token_logits = self.lm_head(decoder_output[:, -1, :])
 
             if do_sample:
@@ -360,10 +360,10 @@ class CaltModel(PreTrainedModel):
             else:
                 next_token = torch.argmax(next_token_logits, dim=-1, keepdim=True)
 
-            # デコーダー入力に追加
+            # Append to decoder inputs
             decoder_input_ids = torch.cat([decoder_input_ids, next_token], dim=1)
 
-            # EOSトークンが生成されたら停止
+            # Stop if EOS token is generated
             if (next_token == eos_token_id).all():
                 break
 
