@@ -2,6 +2,7 @@ import os
 
 import click
 import torch
+import wandb
 from omegaconf import OmegaConf
 from transformers import (
     BartConfig,
@@ -11,7 +12,6 @@ from transformers import (
     BartForConditionalGeneration as Transformer,
 )
 
-import wandb
 from calt import Trainer, count_cuda_devices, load_data
 from calt.data_loader.utils.preprocessor import (
     CoefficientPostfixProcessor,
