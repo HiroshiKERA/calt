@@ -23,10 +23,12 @@ class CaltModelConfig(PretrainedConfig):
     def __init__(
         self,
         d_model: int = 512,
-        nhead: int = 8,
+        encoder_attention_heads: int = 8,
+        decoder_attention_heads: int = 8,
         num_encoder_layers: int = 6,
         num_decoder_layers: int = 6,
-        dim_feedforward: int = 2048,
+        encoder_dim_feedforward: int = 2048,
+        decoder_dim_feedforward: int = 2048,
         dropout: float = 0.1,
         activation: str = "relu",
         layer_norm_eps: float = 1e-5,
@@ -38,7 +40,7 @@ class CaltModelConfig(PretrainedConfig):
         pad_token_id: int = 0,
         eos_token_id: int = 1,
         bos_token_id: int = 2,
-        use_positional_embedding: bool = True,
+        use_positional_embedding: str = "learned",
         init_std: float = 0.02,
         tie_word_embeddings: bool = False,
         seed: int = 42,
@@ -52,10 +54,12 @@ class CaltModelConfig(PretrainedConfig):
         )
 
         self.d_model = d_model
-        self.nhead = nhead
+        self.encoder_attention_heads = encoder_attention_heads
+        self.decoder_attention_heads = decoder_attention_heads
         self.num_encoder_layers = num_encoder_layers
         self.num_decoder_layers = num_decoder_layers
-        self.dim_feedforward = dim_feedforward
+        self.encoder_dim_feedforward = encoder_dim_feedforward
+        self.decoder_dim_feedforward = decoder_dim_feedforward
         self.dropout = dropout
         self.activation = activation
         self.layer_norm_eps = layer_norm_eps
@@ -98,10 +102,12 @@ class CaltModel(PreTrainedModel):
         # Transformer model (uses PyTorch's standard Transformer)
         self.transformer = nn.Transformer(
             d_model=config.d_model,
-            nhead=config.nhead,
+            encoder_attention_heads=config.encoder_attention_heads,
+            decoder_attention_heads=config.decoder_attention_heads,
             num_encoder_layers=config.num_encoder_layers,
             num_decoder_layers=config.num_decoder_layers,
-            dim_feedforward=config.dim_feedforward,
+            encoder_dim_feedforward=config.encoder_dim_feedforward,
+            decoder_dim_feedforward=config.decoder_dim_feedforward,
             dropout=config.dropout,
             activation=config.activation,
             layer_norm_eps=config.layer_norm_eps,
