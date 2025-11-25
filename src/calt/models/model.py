@@ -3,14 +3,14 @@ A PyTorch Transformer model usable with the Hugging Face Trainer.
 Extends the existing Transformer class from transformer.py.
 """
 
+from typing import Any, Dict, Optional
+
 import torch
 import torch.nn as nn
 from torch.nn.functional import argmax
-from typing import Optional, Dict, Any
-from transformers import PreTrainedModel, PretrainedConfig
+from transformers import PretrainedConfig, PreTrainedModel
 from transformers.modeling_outputs import Seq2SeqLMOutput
 from transformers.utils import logging
-
 
 logger = logging.get_logger(__name__)
 
