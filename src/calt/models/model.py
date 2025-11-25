@@ -7,7 +7,6 @@ from typing import Any, Dict, Optional
 
 import torch
 import torch.nn as nn
-from torch.nn.functional import argmax
 from transformers import PretrainedConfig, PreTrainedModel
 from transformers.modeling_outputs import Seq2SeqLMOutput
 from transformers.utils import logging
@@ -270,7 +269,7 @@ class CaltModel(PreTrainedModel):
 
         return Seq2SeqLMOutput(
             loss=loss,
-            logits=argmax(logits, dim=-1),
+            logits=torch.argmax(logits, dim=-1),
             past_key_values=None,
             decoder_hidden_states=None,
             decoder_attentions=None,
