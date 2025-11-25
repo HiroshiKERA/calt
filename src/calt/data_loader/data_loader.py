@@ -7,11 +7,14 @@ polynomial expressions into the internal token representation expected by the
 Transformer models.
 """
 
-import yaml
 import logging
+
+import yaml
+from transformers import PreTrainedTokenizerFast as StandardTokenizer
+
 from .utils.data_collator import (
-    StandardDataset,
     StandardDataCollator,
+    StandardDataset,
     _read_data_from_file,
 )
 from .utils.preprocessor import (
@@ -20,8 +23,6 @@ from .utils.preprocessor import (
     PolynomialToInternalProcessor,
 )
 from .utils.tokenizer import VocabConfig, set_tokenizer
-from transformers import PreTrainedTokenizerFast as StandardTokenizer
-
 
 logger = logging.getLogger(__name__)
 

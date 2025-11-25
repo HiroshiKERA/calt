@@ -1,6 +1,7 @@
-import re
 import logging
-from sage.all import PolynomialRing, QQ, RR, ZZ
+import re
+
+from sage.all import QQ, RR, ZZ, PolynomialRing
 
 # Set up logger for this module
 logger = logging.getLogger(__name__)

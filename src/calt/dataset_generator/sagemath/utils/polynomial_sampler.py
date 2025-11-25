@@ -1,15 +1,16 @@
 from typing import Any
+
 from sage.all import (
-    PolynomialRing,
+    GF,
     QQ,
     RR,
     ZZ,
-    GF,
-    matrix,
-    binomial,
-    randint,
-    prod,
+    PolynomialRing,
     TermOrder,
+    binomial,
+    matrix,
+    prod,
+    randint,
 )
 from sage.rings.polynomial.multi_polynomial_libsingular import MPolynomial_libsingular
 

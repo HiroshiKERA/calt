@@ -1,10 +1,10 @@
-from typing import Mapping, Sequence
-import re
-from sympy import Expr, Poly, Symbol, latex, symbols, Integer
-from IPython.display import display, Math
 import json
-from sympy.parsing.sympy_parser import parse_expr
+import re
+from typing import Mapping, Sequence
 
+from IPython.display import Math, display
+from sympy import Expr, Integer, Poly, Symbol, latex, symbols
+from sympy.parsing.sympy_parser import parse_expr
 
 __all__ = ["display_with_diff", "load_eval_results", "parse_poly"]
 

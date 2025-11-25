@@ -1,7 +1,8 @@
 import pytest
+
 from calt.data_loader.utils.preprocessor import (
-    PolynomialToInternalProcessor,
     IntegerToInternalProcessor,
+    PolynomialToInternalProcessor,
 )
 
 
