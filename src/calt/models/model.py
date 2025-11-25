@@ -22,12 +22,10 @@ class CaltModelConfig(PretrainedConfig):
     def __init__(
         self,
         d_model: int = 512,
-        encoder_attention_heads: int = 8,
-        decoder_attention_heads: int = 8,
+        attention_heads: int = 8,
         num_encoder_layers: int = 6,
         num_decoder_layers: int = 6,
-        encoder_dim_feedforward: int = 2048,
-        decoder_dim_feedforward: int = 2048,
+        dim_feedforward: int = 2048,
         dropout: float = 0.1,
         activation: str = "relu",
         layer_norm_eps: float = 1e-5,
@@ -53,12 +51,10 @@ class CaltModelConfig(PretrainedConfig):
         )
 
         self.d_model = d_model
-        self.encoder_attention_heads = encoder_attention_heads
-        self.decoder_attention_heads = decoder_attention_heads
+        self.attention_heads = attention_heads
         self.num_encoder_layers = num_encoder_layers
         self.num_decoder_layers = num_decoder_layers
-        self.encoder_dim_feedforward = encoder_dim_feedforward
-        self.decoder_dim_feedforward = decoder_dim_feedforward
+        self.dim_feedforward = dim_feedforward
         self.dropout = dropout
         self.activation = activation
         self.layer_norm_eps = layer_norm_eps
@@ -101,12 +97,10 @@ class CaltModel(PreTrainedModel):
         # Transformer model (uses PyTorch's standard Transformer)
         self.transformer = nn.Transformer(
             d_model=config.d_model,
-            encoder_attention_heads=config.encoder_attention_heads,
-            decoder_attention_heads=config.decoder_attention_heads,
+            nhead=config.attention_heads,
             num_encoder_layers=config.num_encoder_layers,
             num_decoder_layers=config.num_decoder_layers,
-            encoder_dim_feedforward=config.encoder_dim_feedforward,
-            decoder_dim_feedforward=config.decoder_dim_feedforward,
+            dim_feedforward=config.dim_feedforward,
             dropout=config.dropout,
             activation=config.activation,
             layer_norm_eps=config.layer_norm_eps,
