@@ -1,12 +1,14 @@
 import math
 import random
+
+import numpy as np
+from sympy import GF, QQ, RR, ZZ
 from sympy.core.mul import prod
-from sympy import ZZ, QQ, RR, GF
-from sympy.polys.rings import PolyRing, PolyElement, ring
-from .single_polynomial_sampler import SinglePolynomialSampler
 from sympy.polys.domains.domain import Domain
 from sympy.polys.orderings import MonomialOrder
-import numpy as np
+from sympy.polys.rings import PolyElement, PolyRing, ring
+
+from .single_polynomial_sampler import SinglePolynomialSampler
 
 
 class PolynomialSampler:
