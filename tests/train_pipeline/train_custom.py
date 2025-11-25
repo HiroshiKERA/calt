@@ -9,11 +9,11 @@ from transformers import (
 )
 
 from calt import (
+    CaltModel,
+    CaltModelConfig,
     Trainer,
     count_cuda_devices,
     load_data,
-    CaltModel,
-    CaltModelConfig,
 )
 
 
