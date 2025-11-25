@@ -36,5 +36,5 @@ jobs:
 
       - name: Run train pipeline smoke tests
         run: |
-          uvx --with tox-uv tox -e train-test --dryrun --no_wandb
+          uvx --with tox-uv tox -e train-test
 
