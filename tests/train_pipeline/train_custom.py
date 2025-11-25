@@ -85,12 +85,10 @@ def main(config, dryrun, no_wandb):
     # Load model
     model_cfg = CaltModelConfig(
         d_model=cfg.model.d_model,
-        encoder_attention_heads=cfg.model.num_encoder_heads,
-        decoder_attention_heads=cfg.model.num_decoder_heads,
+        attention_heads=cfg.model.num_encoder_heads,
         num_encoder_layers=cfg.model.num_encoder_layers,
         num_decoder_layers=cfg.model.num_decoder_layers,
-        encoder_dim_feedforward=cfg.model.encoder_ffn_dim,
-        decoder_dim_feedforward=cfg.model.decoder_ffn_dim,
+        dim_feedforward=cfg.model.encoder_ffn_dim,
         vocab_size=len(tokenizer.vocab),
         max_input_len=cfg.model.max_sequence_length,
         pad_token_id=tokenizer.pad_token_id,
