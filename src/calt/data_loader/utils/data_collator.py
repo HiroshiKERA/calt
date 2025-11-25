@@ -1,9 +1,11 @@
-from transformers import PreTrainedTokenizerFast as Tokenizer
-from .preprocessor import AbstractPreprocessor
-from torch.utils.data import Dataset
-import torch
-import os
 import logging
+import os
+
+import torch
+from torch.utils.data import Dataset
+from transformers import PreTrainedTokenizerFast as Tokenizer
+
+from .preprocessor import AbstractPreprocessor
 
 # Set up logger for this module
 logger = logging.getLogger(__name__)
