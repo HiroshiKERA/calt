@@ -15,7 +15,11 @@ logger = logging.get_logger(__name__)
 
 
 class CaltModelConfig(PretrainedConfig):
-    """Configuration class for the Transformer model."""
+    """Configuration for the CALT Transformer model.
+
+    Attributes:
+        model_type (str): Identifier used by Hugging Face to register the model.
+    """
 
     model_type = "transformer"
 
@@ -43,6 +47,31 @@ class CaltModelConfig(PretrainedConfig):
         seed: int = 42,
         **kwargs,
     ):
+        """Configure layer sizes, embeddings, and tokenizer metadata.
+
+        Args:
+            d_model (int, optional): Hidden size used across embeddings and blocks.
+            attention_heads (int, optional): Number of attention heads per block.
+            num_encoder_layers (int, optional): Encoder block count.
+            num_decoder_layers (int, optional): Decoder block count.
+            dim_feedforward (int, optional): Width of the feed-forward layers.
+            dropout (float, optional): Dropout probability applied in transformer.
+            activation (str, optional): Activation used inside feed-forward blocks.
+            layer_norm_eps (float, optional): Epsilon for layer normalization.
+            batch_first (bool, optional): Whether tensors follow (batch, seq, dim).
+            norm_first (bool, optional): Whether to apply layer norm before attention.
+            bias (bool, optional): If linear layers include a bias term.
+            vocab_size (int, optional): Vocabulary size for embeddings and head.
+            max_input_len (int, optional): Maximum supported sequence length.
+            pad_token_id (int, optional): Padding token id.
+            eos_token_id (int, optional): End-of-sequence token id.
+            bos_token_id (int, optional): Beginning-of-sequence token id.
+            use_positional_embedding (str, optional): Positional embedding strategy.
+            init_std (float, optional): Standard deviation for weight init.
+            tie_word_embeddings (bool, optional): Whether to share embed/lm_head.
+            seed (int, optional): Seed used for deterministic initialization.
+            **kwargs: Extra options passed to `PretrainedConfig`.
+        """
         super().__init__(
             pad_token_id=pad_token_id,
             eos_token_id=eos_token_id,
@@ -75,14 +104,17 @@ class CaltModel(PreTrainedModel):
     config_class = CaltModelConfig
 
     def __init__(self, config: CaltModelConfig):
+        """Build embedding, transformer stack, and language modeling head.
+
+        Args:
+            config (CaltModelConfig): Model hyper-parameters and tokenizer metadata.
+        """
         super().__init__(config)
 
         self.config = config
 
-        # Embedding layer
         self.embedding = nn.Embedding(config.vocab_size, config.d_model)
 
-        # Positional embedding (controlled by config)
         if config.use_positional_embedding == "learned":
             self.positional_embedding = nn.Embedding(
                 config.max_input_len, config.d_model
@@ -94,7 +126,6 @@ class CaltModel(PreTrainedModel):
                 f"Unsupported positional embedding type: {config.use_positional_embedding}"
             )
 
-        # Transformer model (uses PyTorch's standard Transformer)
         self.transformer = nn.Transformer(
             d_model=config.d_model,
             nhead=config.attention_heads,
@@ -109,10 +140,8 @@ class CaltModel(PreTrainedModel):
             bias=config.bias,
         )
 
-        # Output layer
         self.lm_head = nn.Linear(config.d_model, config.vocab_size, bias=False)
 
-        # Initialize weights
         self.apply(self._init_weights)
         self.tie_weights()
         self.seed = config.seed
@@ -121,23 +150,32 @@ class CaltModel(PreTrainedModel):
             torch.cuda.manual_seed_all(self.seed)
 
     def _init_weights(self, module):
-        """Weight initialization method."""
+        """Apply CALT-specific initialization to supported modules.
+
+        Args:
+            module (nn.Module): Layer receiving the initialization routine.
+        """
         if isinstance(module, nn.Linear):
-            # Initialize linear layer weights with a normal distribution
             module.weight.data.normal_(mean=0.0, std=self.config.init_std)
             if module.bias is not None:
                 module.bias.data.zero_()
         elif isinstance(module, nn.Embedding):
-            # Initialize embedding weights with a normal distribution
             module.weight.data.normal_(mean=0.0, std=self.config.init_std)
         elif isinstance(module, nn.LayerNorm):
-            # Initialize LayerNorm with weight=1 and bias=0
             module.bias.data.zero_()
             module.weight.data.fill_(1.0)
 
     def _prepare_key_padding_mask(
         self, mask: Optional[torch.Tensor]
     ) -> Optional[torch.Tensor]:
+        """Convert an attention mask to the boolean form expected by PyTorch.
+
+        Args:
+            mask (torch.Tensor | None): Mask originating from the tokenizer.
+
+        Returns:
+            torch.Tensor | None: Boolean mask where True means the position is padded.
+        """
         if mask is None:
             return None
         if mask.dtype == torch.bool:
@@ -147,6 +185,15 @@ class CaltModel(PreTrainedModel):
         return key_padding_mask.to(dtype=torch.bool, device=mask.device)
 
     def _generate_causal_mask(self, size: int, device: torch.device) -> torch.Tensor:
+        """Create an upper-triangular, causal decoder mask.
+
+        Args:
+            size (int): Target sequence length.
+            device (torch.device): Device on which to allocate the mask.
+
+        Returns:
+            torch.Tensor: Boolean mask preventing attending to future tokens.
+        """
         return torch.triu(
             torch.ones(size, size, device=device, dtype=torch.bool), diagonal=1
         )
@@ -163,37 +210,37 @@ class CaltModel(PreTrainedModel):
         return_dict: Optional[bool] = None,
         **kwargs,
     ) -> Dict[str, Any]:
-        """
-        Forward pass for the transformer model.
+        """Execute the encoder-decoder forward pass.
 
         Args:
-            input_ids: Token IDs for the encoder input.
-            attention_mask: Attention mask for the encoder.
-            decoder_input_ids: Token IDs for the decoder input.
-            decoder_attention_mask: Attention mask for the decoder.
-            labels: Teacher labels for loss computation.
-            output_attentions: Whether to return attention weights.
-            output_hidden_states: Whether to return hidden states.
-            return_dict: Whether to return outputs as a dictionary.
+            input_ids (torch.LongTensor | None): Encoder token ids.
+            attention_mask (torch.Tensor | None): Encoder attention mask.
+            decoder_input_ids (torch.LongTensor | None): Decoder inputs.
+            decoder_attention_mask (torch.Tensor | None): Decoder attention mask.
+            labels (torch.LongTensor | None): Target labels for loss computation.
+            output_attentions (bool | None): Flag to surface attention tensors.
+            output_hidden_states (bool | None): Flag to surface hidden states.
+            return_dict (bool | None): Whether to return a dataclass output.
+            **kwargs: Extra arguments kept for HF Trainer compatibility.
 
         Returns:
-            Model outputs (loss, logits, hidden states, etc.).
+            Seq2SeqLMOutput | tuple: Loss and logits packaged per HF conventions.
+
+        Raises:
+            ValueError: If neither encoder nor decoder inputs are provided.
         """
 
         return_dict = (
             return_dict if return_dict is not None else self.config.use_return_dict
         )
 
-        # Validate inputs
         if input_ids is None and decoder_input_ids is None:
             raise ValueError("input_ids または decoder_input_ids のいずれかが必要です")
 
-        # Process encoder inputs
         if input_ids is not None:
             batch_size, seq_len = input_ids.shape
             encoder_embeddings = self.embedding(input_ids)
 
-            # Add positional embeddings (if enabled)
             if self.positional_embedding is not None:
                 position_ids = (
                     torch.arange(seq_len, device=input_ids.device)
@@ -206,12 +253,10 @@ class CaltModel(PreTrainedModel):
         else:
             encoder_embeddings = None
 
-        # Process decoder inputs
         if decoder_input_ids is not None:
             batch_size, seq_len = decoder_input_ids.shape
             decoder_embeddings = self.embedding(decoder_input_ids)
 
-            # Add positional embeddings (if enabled)
             if self.positional_embedding is not None:
                 position_ids = (
                     torch.arange(seq_len, device=decoder_input_ids.device)
@@ -231,13 +276,11 @@ class CaltModel(PreTrainedModel):
                 tgt_seq_len, decoder_embeddings.device
             )
 
-        # Transformer forward pass
         encoder_key_padding_mask = self._prepare_key_padding_mask(attention_mask)
         decoder_key_padding_mask = self._prepare_key_padding_mask(
             decoder_attention_mask
         )
         if encoder_embeddings is not None and decoder_embeddings is not None:
-            # Encoder-decoder mode
             transformer_output = self.transformer(
                 src=encoder_embeddings,
                 tgt=decoder_embeddings,
@@ -248,9 +291,7 @@ class CaltModel(PreTrainedModel):
         else:
             print("encoder_embeddings or decoder_embeddings is None")
 
-        # Process outputs
         logits = self.lm_head(transformer_output)
-        # Compute loss
         loss = None
         if labels is not None:
             loss_fct = nn.CrossEntropyLoss()
@@ -285,8 +326,21 @@ class CaltModel(PreTrainedModel):
         eos_token_id: Optional[int] = None,
         **kwargs,
     ) -> torch.LongTensor:
-        """
-        Method for text generation.
+        """Autoregressively generate tokens from encoder context.
+
+        Args:
+            input_ids (torch.LongTensor): Encoder inputs.
+            attention_mask (torch.Tensor | None): Mask aligned with `input_ids`.
+            max_length (int, optional): Maximum generated length.
+            num_beams (int, optional): Reserved for HF parity (unused).
+            temperature (float, optional): Sampling temperature.
+            do_sample (bool, optional): Whether to sample instead of argmax.
+            pad_token_id (int | None): Override for padding id.
+            eos_token_id (int | None): Override for end-of-sequence id.
+            **kwargs: Extra keyword arguments for API compatibility.
+
+        Returns:
+            torch.LongTensor: Completed decoder sequences including BOS/EOS.
         """
         if pad_token_id is None:
             pad_token_id = self.config.pad_token_id
@@ -296,10 +350,8 @@ class CaltModel(PreTrainedModel):
         batch_size = input_ids.shape[0]
         device = input_ids.device
 
-        # Compute encoder outputs
         encoder_embeddings = self.embedding(input_ids)
 
-        # Add positional embeddings (if enabled)
         if self.positional_embedding is not None:
             seq_len = input_ids.shape[1]
             position_ids = (
@@ -319,16 +371,13 @@ class CaltModel(PreTrainedModel):
         else:
             encoder_output = self.transformer.encoder(encoder_embeddings)
 
-        # Initialize decoder inputs
         decoder_input_ids = torch.full(
             (batch_size, 1), self.config.bos_token_id, device=device
         )
 
         for _ in range(max_length):
-            # Decoder embeddings
             decoder_embeddings = self.embedding(decoder_input_ids)
 
-            # Add positional embeddings (if enabled)
             if self.positional_embedding is not None:
                 seq_len = decoder_input_ids.shape[1]
                 position_ids = (
@@ -340,7 +389,6 @@ class CaltModel(PreTrainedModel):
                     position_ids
                 )
 
-            # Decoder forward pass
             tgt_mask = self._generate_causal_mask(decoder_embeddings.size(1), device)
             decoder_output = self.transformer.decoder(
                 decoder_embeddings,
@@ -348,7 +396,6 @@ class CaltModel(PreTrainedModel):
                 tgt_mask=tgt_mask,
             )
 
-            # Predict next token
             next_token_logits = self.lm_head(decoder_output[:, -1, :])
 
             if do_sample:
@@ -359,10 +406,8 @@ class CaltModel(PreTrainedModel):
             else:
                 next_token = torch.argmax(next_token_logits, dim=-1, keepdim=True)
 
-            # Append to decoder inputs
             decoder_input_ids = torch.cat([decoder_input_ids, next_token], dim=1)
 
-            # Stop if EOS token is generated
             if (next_token == eos_token_id).all():
                 break
 
