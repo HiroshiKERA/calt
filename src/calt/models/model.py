@@ -165,6 +165,21 @@ class CaltModel(PreTrainedModel):
             module.bias.data.zero_()
             module.weight.data.fill_(1.0)
 
+    def _compute_embeddings(self, input_ids: torch.LongTensor) -> torch.Tensor:
+        """Compute token embeddings combined with positional embeddings."""
+        embeddings = self.embedding(input_ids)
+
+        if self.positional_embedding is not None:
+            batch_size, seq_len = input_ids.shape
+            position_ids = (
+                torch.arange(seq_len, device=input_ids.device)
+                .unsqueeze(0)
+                .expand(batch_size, -1)
+            )
+            embeddings = embeddings + self.positional_embedding(position_ids)
+
+        return embeddings
+
     def _prepare_key_padding_mask(
         self, mask: Optional[torch.Tensor]
     ) -> Optional[torch.Tensor]:
@@ -238,34 +253,12 @@ class CaltModel(PreTrainedModel):
             raise ValueError("Either input_ids or decoder_input_ids must be provided")
 
         if input_ids is not None:
-            batch_size, seq_len = input_ids.shape
-            encoder_embeddings = self.embedding(input_ids)
-
-            if self.positional_embedding is not None:
-                position_ids = (
-                    torch.arange(seq_len, device=input_ids.device)
-                    .unsqueeze(0)
-                    .expand(batch_size, -1)
-                )
-                encoder_embeddings = encoder_embeddings + self.positional_embedding(
-                    position_ids
-                )
+            encoder_embeddings = self._compute_embeddings(input_ids)
         else:
             encoder_embeddings = None
 
         if decoder_input_ids is not None:
-            batch_size, seq_len = decoder_input_ids.shape
-            decoder_embeddings = self.embedding(decoder_input_ids)
-
-            if self.positional_embedding is not None:
-                position_ids = (
-                    torch.arange(seq_len, device=decoder_input_ids.device)
-                    .unsqueeze(0)
-                    .expand(batch_size, -1)
-                )
-                decoder_embeddings = decoder_embeddings + self.positional_embedding(
-                    position_ids
-                )
+            decoder_embeddings = self._compute_embeddings(decoder_input_ids)
         else:
             decoder_embeddings = None
 
@@ -352,16 +345,7 @@ class CaltModel(PreTrainedModel):
         batch_size = input_ids.shape[0]
         device = input_ids.device
 
-        encoder_embeddings = self.embedding(input_ids)
-
-        if self.positional_embedding is not None:
-            seq_len = input_ids.shape[1]
-            position_ids = (
-                torch.arange(seq_len, device=device).unsqueeze(0).expand(batch_size, -1)
-            )
-            encoder_embeddings = encoder_embeddings + self.positional_embedding(
-                position_ids
-            )
+        encoder_embeddings = self._compute_embeddings(input_ids)
 
         encoder_key_padding_mask = self._prepare_key_padding_mask(attention_mask)
 
@@ -378,18 +362,7 @@ class CaltModel(PreTrainedModel):
         )
 
         for _ in range(max_length):
-            decoder_embeddings = self.embedding(decoder_input_ids)
-
-            if self.positional_embedding is not None:
-                seq_len = decoder_input_ids.shape[1]
-                position_ids = (
-                    torch.arange(seq_len, device=device)
-                    .unsqueeze(0)
-                    .expand(batch_size, -1)
-                )
-                decoder_embeddings = decoder_embeddings + self.positional_embedding(
-                    position_ids
-                )
+            decoder_embeddings = self._compute_embeddings(decoder_input_ids)
 
             tgt_mask = self._generate_causal_mask(decoder_embeddings.size(1), device)
             decoder_output = self.transformer.decoder(
