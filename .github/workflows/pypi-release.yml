@@ -10,6 +10,9 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
+    permissions:
+      id-token: write
+      contents: read
     steps:
       - name: Check out repository
         uses: actions/checkout@v4
@@ -26,13 +29,7 @@ jobs:
         run: |
           uv venv
           uv pip install -e ".[dev]"
-          uv pip install --upgrade build twine
-
-      - name: Extract project version
-        id: project_version
-        run: |
-          VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          uv pip install --upgrade build
 
       - name: Clean dist directory
         run: rm -rf dist
@@ -41,7 +38,4 @@ jobs:
         run: uv run python -m build
 
       - name: Publish to PyPI
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
-        run: uv run twine upload --non-interactive dist/*
+        uses: pypa/gh-action-pypi-publish@release/v1
