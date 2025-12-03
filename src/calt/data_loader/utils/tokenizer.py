@@ -1,9 +1,10 @@
-from transformers import PreTrainedTokenizerFast
+from typing import Optional, TypedDict
+
 from tokenizers import Tokenizer
 from tokenizers.models import WordLevel
-from tokenizers.processors import TemplateProcessing
 from tokenizers.pre_tokenizers import CharDelimiterSplit
-from typing import Optional, TypedDict
+from tokenizers.processors import TemplateProcessing
+from transformers import PreTrainedTokenizerFast
 
 
 class VocabConfig(TypedDict):

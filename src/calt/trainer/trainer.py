@@ -9,11 +9,12 @@ This module introduces `Trainer`, an extension of
   :pymeth:`Trainer.evaluate_and_save_generation`.
 """
 
-from transformers import Trainer as HTrainer
-import torch
-import os
 import json
+import os
+
 import numpy as np
+import torch
+from transformers import Trainer as HTrainer
 
 
 class Trainer(HTrainer):
