@@ -235,7 +235,7 @@ class CaltModel(PreTrainedModel):
         )
 
         if input_ids is None and decoder_input_ids is None:
-            raise ValueError("input_ids または decoder_input_ids のいずれかが必要です")
+            raise ValueError("Either input_ids or decoder_input_ids must be provided")
 
         if input_ids is not None:
             batch_size, seq_len = input_ids.shape
@@ -280,16 +280,18 @@ class CaltModel(PreTrainedModel):
         decoder_key_padding_mask = self._prepare_key_padding_mask(
             decoder_attention_mask
         )
-        if encoder_embeddings is not None and decoder_embeddings is not None:
-            transformer_output = self.transformer(
-                src=encoder_embeddings,
-                tgt=decoder_embeddings,
-                src_key_padding_mask=encoder_key_padding_mask,
-                tgt_key_padding_mask=decoder_key_padding_mask,
-                tgt_mask=tgt_mask,
+        if encoder_embeddings is None or decoder_embeddings is None:
+            raise ValueError(
+                "Both encoder_embeddings and decoder_embeddings must be provided"
             )
-        else:
-            print("encoder_embeddings or decoder_embeddings is None")
+
+        transformer_output = self.transformer(
+            src=encoder_embeddings,
+            tgt=decoder_embeddings,
+            src_key_padding_mask=encoder_key_padding_mask,
+            tgt_key_padding_mask=decoder_key_padding_mask,
+            tgt_mask=tgt_mask,
+        )
 
         logits = self.lm_head(transformer_output)
         loss = None
