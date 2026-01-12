@@ -10,6 +10,7 @@ Transformer models.
 import logging
 
 import yaml
+from omegaconf import OmegaConf
 from transformers import PreTrainedTokenizerFast as StandardTokenizer
 
 from .utils.data_collator import (
@@ -26,18 +27,120 @@ from .utils.tokenizer import VocabConfig, set_tokenizer
 
 logger = logging.getLogger(__name__)
 
+class DataPipeline():
+    def __init__(self, 
+                 train_dataset_path: str | None = None,
+                 test_dataset_path: str | None = None,
+                 num_train_samples: int | None = None,
+                 num_test_samples: int | None = None,
+                 max_sequence_length: int = 1024,
+                 vocab_config: VocabConfig | None = None,
+                 config: OmegaConf | None = None, 
+                 preprocessor: AbstractPreprocessor | None = None):
+        
+        self.config = self.set_config(train_dataset_path, 
+                                      test_dataset_path, 
+                                      num_train_samples, 
+                                      num_test_samples, 
+                                      max_sequence_length,
+                                      vocab_config,
+                                      config) if config is None else config
+        
+        self.preprocessor = preprocessor
+    
+    def set_config(self, train_dataset_path: str | None = None,
+                 test_dataset_path: str | None = None,
+                 num_train_samples: int | None = None,
+                 num_test_samples: int | None = None,
+                 vocab_config: VocabConfig | None = None,
+                 max_sequence_length: int | None = None,
+                 config: OmegaConf | None = None):
+
+        config = OmegaConf.create()
+        config.train_dataset_path = train_dataset_path
+        config.test_dataset_path = test_dataset_path
+        config.num_train_samples = num_train_samples
+        config.num_test_samples = num_test_samples
+        config.max_sequence_length = max_sequence_length
+        config.vocab_config = vocab_config
+        
+        return config
+    
+    def set_tokenizer(self, vocab_config: VocabConfig | None = None, max_length: int = 512):
+        self.tokenizer = set_tokenizer(vocab_config=vocab_config, max_length=max_length)
+        return self.tokenizer
+    
+    def load_dataset(self, path: str, num_samples: int | None = None, preprocessor: AbstractPreprocessor | None = None):
+        '''
+        Load data from a file and create a StandardDataset instance.
+        
+        Args:
+            path (str): Path to the data file.
+            num_samples (int | None, optional): Maximum number of samples to load.
+                Use -1 or None to load all samples. Defaults to None.
+            preprocessor (AbstractPreprocessor | None, optional): Preprocessor instance.
+                Defaults to None.
+                
+        Returns:
+            StandardDataset: Loaded dataset instance.
+        '''
+        
+        input_texts, target_texts = _read_data_from_file(path, num_samples)
+        
+        dataset = StandardDataset(
+            input_texts=input_texts,
+            target_texts=target_texts,
+            preprocessor=preprocessor,
+        )
+        
+        return dataset
+    
+    def build(self):
+        '''
+        Build the data pipeline by loading the raw text data, applying the preprocessor, and setting the collator.
+        '''
+        config = self.config
+        
+        # Step 1: Load raw text data and apply preprocessor
+        # e.g., 
+        # raw data: "2*x1^2*x0 + 5*x0 - 3"
+        # processed data (by InfixPolynomialProcessor): "C2 E1 E2 + C5 E1 E0 + C-3 E0 E0"
+        train_dataset = self.load_dataset(config.train_dataset_path, 
+                                          num_samples=config.num_train_samples, 
+                                          preprocessor=self.preprocessor)
+        test_dataset = self.load_dataset(config.test_dataset_path, 
+                                         num_samples=config.num_test_samples, 
+                                         preprocessor=self.preprocessor)
+
+        # Step 2: Set collator that will transform the processed data into tokens (or token ids)
+        #         This will be called every time at the beginning of each epoch
+        # e.g., 
+        # processed data: "C2 E1 E2 + C5 E1 E0 + C-3 E0 E0"
+        # tokens: ["C2", "E1", "E2", "C5", "E1", "E0", "C-3", "E0", "E0"]
+        tokenizer = self.set_tokenizer(vocab_config=config.vocab_config, max_length=config.max_sequence_length)
+        collator = StandardDataCollator(tokenizer=tokenizer)
+
+        self.train_dataset = train_dataset
+        self.test_dataset = test_dataset
+        self.tokenizer = tokenizer
+        self.data_collator = collator
+        
+        return self
+    
+
+
+def load_data(data_path: str, num_samples: int):
+    return _read_data_from_file(data_path, num_samples)
+
 
 def load_data(
     train_dataset_path: str,
     test_dataset_path: str,
-    field: str,
-    num_variables: int,
-    max_degree: int,
-    max_coeff: int,
     max_length: int = 512,
     processor_name: str | None = "polynomial",
     processor: AbstractPreprocessor | None = None,
     vocab_path: str | None = None,
+    vocab: dict[str, int] | None = None,
     num_train_samples: int | None = None,
     num_test_samples: int | None = None,
     digit_group_size: int | None = None,
