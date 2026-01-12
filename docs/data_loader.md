@@ -4,23 +4,23 @@ Utilities to prepare training/evaluation datasets, tokenizers, and data collator
 
 ### Entry point
 
-::: calt.data_loader.data_loader.load_data
+::: calt.io.pipeline.load_data
 
 - `load_data` accepts either a legacy ``processor_name`` or a fully-configured
-  ``processor`` (an :class:`~calt.data_loader.utils.preprocessor.AbstractPreprocessor`
+  ``processor`` (an :class:`~calt.io.utils.preprocessor.AbstractPreprocessor`
   instance). When both are supplied, the explicit ``processor`` wins, enabling
   advanced pipelines without breaking backward compatibility.
 
 ### Dataset and collator
-::: calt.data_loader.utils.data_collator.StandardDataset
-::: calt.data_loader.utils.data_collator.StandardDataCollator
+::: calt.io.utils.data_collator.StandardDataset
+::: calt.io.utils.data_collator.StandardDataCollator
 
 ### Preprocessing (expression → internal tokens)
-::: calt.data_loader.utils.preprocessor.AbstractPreprocessor
-::: calt.data_loader.utils.preprocessor.ProcessorChain
-::: calt.data_loader.utils.preprocessor.CoefficientPostfixProcessor
-::: calt.data_loader.utils.preprocessor.PolynomialToInternalProcessor
-::: calt.data_loader.utils.preprocessor.IntegerToInternalProcessor
+::: calt.io.utils.preprocessor.AbstractPreprocessor
+::: calt.io.utils.preprocessor.ProcessorChain
+::: calt.io.utils.preprocessor.CoefficientPostfixProcessor
+::: calt.io.utils.preprocessor.PolynomialToInternalProcessor
+::: calt.io.utils.preprocessor.IntegerToInternalProcessor
 
 #### Internal token layout
 `PolynomialToInternalProcessor` emits coefficient/exponent tokens (`C…` / `E…`) and is the
@@ -56,12 +56,12 @@ single implementation used for both polynomial and integer preprocessing
 #### Processor chaining example
 
 ```python
-from calt.data_loader.utils.preprocessor import (
+from calt.io.utils.preprocessor import (
     PolynomialToInternalProcessor,
     CoefficientPostfixProcessor,
     ProcessorChain,
 )
-from calt.data_loader.data_loader import load_data
+from calt.io.pipeline import load_data
 
 poly = PolynomialToInternalProcessor(num_variables=2, max_degree=3, max_coeff=200)
 postfix = CoefficientPostfixProcessor()
@@ -85,14 +85,14 @@ data augmentation, or token-level rewrites that should run before batching.
 
 ### Tokenizer
 Build or load a tokenizer for polynomial expressions and configure the vocabulary.
-::: calt.data_loader.utils.tokenizer.set_tokenizer
-::: calt.data_loader.utils.tokenizer.VocabConfig
+::: calt.io.utils.tokenizer.set_tokenizer
+::: calt.io.utils.tokenizer.VocabConfig
 
 ### Visualization utilities (optional)
 Quickly render visual diffs between predictions and references.
-::: calt.data_loader.utils.comparison_vis.display_with_diff
-::: calt.data_loader.utils.comparison_vis.load_eval_results
-::: calt.data_loader.utils.comparison_vis.parse_poly
+::: calt.io.utils.comparison_vis.display_with_diff
+::: calt.io.utils.comparison_vis.load_eval_results
+::: calt.io.utils.comparison_vis.parse_poly
 
 ### Changelog
 
