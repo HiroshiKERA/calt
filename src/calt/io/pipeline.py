@@ -27,7 +27,7 @@ from .utils.tokenizer import VocabConfig, set_tokenizer
 
 logger = logging.getLogger(__name__)
 
-class DataPipeline():
+class IOPipeline():
     def __init__(self, 
                  train_dataset_path: str | None = None,
                  test_dataset_path: str | None = None,
