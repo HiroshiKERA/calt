@@ -13,11 +13,8 @@ class VocabConfig(TypedDict):
 
 
 def set_tokenizer(
-    field: str = "GF",
-    max_coeff: int = 100,
-    max_degree: int = 10,
-    max_length: int = 512,
     vocab_config: Optional[VocabConfig] = None,
+    max_length: int = 512,
 ) -> PreTrainedTokenizerFast:
     """Create or load a tokenizer for polynomial expressions.
 
