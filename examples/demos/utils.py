@@ -1,5 +1,4 @@
-from calt.utils.display import display_with_diff
-from calt.utils.data_loader import load_eval_results
+from calt.io.utils.comparison_vis import display_with_diff, load_eval_results
 
 def showcase(dataset, 
              success_cases=True,
