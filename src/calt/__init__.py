@@ -1,6 +1,6 @@
 from .io.pipeline import load_data
 from .io.utils.data_collator import StandardDataCollator, StandardDataset
-from .io.utils.preprocessor import (
+from .io.processors import (
     AbstractPreprocessor,
     CoefficientPostfixProcessor,
     IntegerToInternalProcessor,

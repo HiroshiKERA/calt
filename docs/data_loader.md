@@ -56,7 +56,7 @@ single implementation used for both polynomial and integer preprocessing
 #### Processor chaining example
 
 ```python
-from calt.io.utils.preprocessor import (
+from calt.io.processors import (
     PolynomialToInternalProcessor,
     CoefficientPostfixProcessor,
     ProcessorChain,
