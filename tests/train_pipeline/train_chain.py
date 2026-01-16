@@ -13,7 +13,7 @@ from transformers import (
 )
 
 from calt import Trainer, count_cuda_devices, load_data
-from calt.io.utils.preprocessor import (
+from calt.io.processors import (
     CoefficientPostfixProcessor,
     PolynomialToInternalProcessor,
     ProcessorChain,

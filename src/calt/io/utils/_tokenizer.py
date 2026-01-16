@@ -14,7 +14,6 @@ class VocabConfig(TypedDict):
 
 def set_tokenizer(
     vocab_config: Optional[VocabConfig] = None,
-    max_length: int = 512,
 ) -> PreTrainedTokenizerFast:
     """Create or load a tokenizer for polynomial expressions.
 
@@ -87,7 +86,6 @@ def set_tokenizer(
 
     tokenizer = PreTrainedTokenizerFast(
         tokenizer_object=tok,
-        model_max_length=max_length,
         **special_token_map,
     )
     return tokenizer
