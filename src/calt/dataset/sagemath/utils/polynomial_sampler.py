@@ -12,6 +12,7 @@ from sage.all import (
     prod,
     randint,
 )
+from sage.misc.prandom import sample
 from sage.rings.polynomial.multi_polynomial_libsingular import MPolynomial_libsingular
 
 
@@ -177,20 +178,23 @@ class PolynomialSampler:
             num_terms = max_terms
 
         # Generate polynomial with retry logic
+        is_univariate = R.ngens() == 1
         for attempt in range(self.max_attempts):
-            p = self._generate_random_polynomial(degree, num_terms)
+            p = self._generate_random_polynomial(degree, num_terms, is_univariate)
 
             # Check conditions
             if p == 0 and self.nonzero_instance:
                 continue
 
-            if p.total_degree() < self.min_degree:
+            # Univariate polynomials use degree(), multivariate use total_degree()
+            poly_degree = p.degree() if is_univariate else p.total_degree()
+            if poly_degree < self.min_degree:
                 continue
 
             if not self.strictly_conditioned:
                 break
 
-            if p.total_degree() == degree and len(p.monomials()) == num_terms:
+            if poly_degree == degree and len(p.monomials()) == num_terms:
                 break
 
             if attempt == self.max_attempts - 1:
@@ -200,8 +204,36 @@ class PolynomialSampler:
 
         return p
 
+    def _generate_univariate_polynomial_dict(
+        self, R: PolynomialRing, ZZ_R: PolynomialRing, degree: int, num_terms: int
+    ) -> dict:
+        """
+        Generate a dictionary representation of a univariate polynomial
+        with specified degree and number of terms.
+
+        Args:
+            R: Original polynomial ring
+            ZZ_R: Integer polynomial ring for generating structure
+            degree: Maximum degree of the polynomial
+            num_terms: Number of terms in the polynomial (already validated to be <= degree + 1)
+
+        Returns:
+            Dictionary representation of the polynomial (monomial -> coefficient)
+        """
+        var = R.gen(0)
+        # Select random degrees for the terms (num_terms is already <= degree + 1)
+        possible_degrees = list(range(degree + 1))
+        selected_degrees = sample(possible_degrees, num_terms)
+
+        # Create polynomial with coefficient 1 for selected terms
+        p = ZZ_R(0)
+        for d in selected_degrees:
+            p += var**d
+
+        return p.dict()
+
     def _generate_random_polynomial(
-        self, degree: int, num_terms: int
+        self, degree: int, num_terms: int, is_univariate: bool
     ) -> MPolynomial_libsingular:
         """Generate a random polynomial with given degree and number of terms"""
         choose_degree = self.degree_sampling == "uniform"
@@ -210,13 +242,23 @@ class PolynomialSampler:
         field = R.base_ring()
 
         # First, create a polynomial with all coefficients equal to 1
-        ZZ_R = PolynomialRing(ZZ, R.gens(), order=R.term_order())
-        p = ZZ_R.random_element(
-            degree=degree, terms=num_terms, choose_degree=choose_degree, x=1, y=2
-        )
-
-        # Get the dictionary representation of the polynomial
-        p_dict = p.dict()
+        # For univariate rings, term_order() is not available
+        if is_univariate:
+            # Univariate case: order doesn't matter
+            ZZ_R = PolynomialRing(ZZ, R.gens())
+            # Univariate random_element doesn't support 'terms' parameter
+            # Manually construct polynomial with specified number of terms
+            p_dict = self._generate_univariate_polynomial_dict(
+                R, ZZ_R, degree, num_terms
+            )
+        else:
+            # Multivariate case: use term_order
+            ZZ_R = PolynomialRing(ZZ, R.gens(), order=R.term_order())
+            p = ZZ_R.random_element(
+                degree=degree, terms=num_terms, choose_degree=choose_degree, x=1, y=2
+            )
+            # Get the dictionary representation of the polynomial
+            p_dict = p.dict()
 
         # Randomly sample coefficients for each term based on the appropriate field
         for k, v in p_dict.items():
@@ -271,7 +313,6 @@ class PolynomialSampler:
             else:
                 raise ValueError(f"Unsupported field: {field}")
 
-        # breakpoint()
         # Convert to the original polynomial ring R
         return R(p_dict)
 
