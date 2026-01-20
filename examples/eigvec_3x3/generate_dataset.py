@@ -1,7 +1,6 @@
 import numpy as np
-
-from calt.dataset.sagemath.dataset_generator import DatasetGenerator
-from calt.dataset.sagemath.utils.dataset_writer import DatasetWriter
+from omegaconf import OmegaConf
+from calt.dataset.pipeline import DatasetPipeline
 
 
 def eigvec_generator(seed: int):
@@ -27,12 +26,11 @@ def eigvec_generator(seed: int):
 
 
 if __name__ == "__main__":
-    generator = DatasetGenerator(n_jobs=1, root_seed=321)
-    writer = DatasetWriter(save_dir="./data", save_text=True, save_json=False)
-
-    generator.run(
-        dataset_sizes={"train": 100000, "test": 1000},
+    cfg = OmegaConf.load("configs/data.yaml")
+    pipeline = DatasetPipeline.from_config(
+        cfg.dataset,
         problem_generator=eigvec_generator,
-        dataset_writer=writer,
+        statistics_calculator=None,
     )
+    pipeline.run()
     print("Dataset generation completed")

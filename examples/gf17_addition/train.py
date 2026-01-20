@@ -5,9 +5,9 @@ from calt.trainer import TrainerPipeline
 
 cfg = OmegaConf.load("configs/train.yaml")
 
-io_settings = IOPipeline.from_config(cfg.data).build()
-model = ModelPipeline.from_io_settings(cfg.model, io_settings).build()
-trainer = TrainerPipeline.from_io_settings(cfg.train, model, io_settings, cfg.wandb).build()
+io_dict = IOPipeline.from_config(cfg.data).build()
+model = ModelPipeline.from_io_dict(cfg.model, io_dict).build()
+trainer = TrainerPipeline.from_io_dict(cfg.train, model, io_dict, cfg.wandb).build()
 
 trainer.train()
 success_rate = trainer.evaluate_and_save_generation()
