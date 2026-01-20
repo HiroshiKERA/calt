@@ -9,8 +9,6 @@ import os
 
 import torch
 
-# from utils.logger import create_logger  # Optional custom logger import
-
 
 def count_cuda_devices() -> int:
     """Count the number of CUDA devices visible to the current process.
@@ -35,32 +33,3 @@ def count_cuda_devices() -> int:
 
     # Variable not set – fall back to the total number detected by PyTorch.
     return torch.cuda.device_count()
-
-
-def setup_wandb(
-    project: str = "transformer-algebra",
-    entity: str | None = None,
-    **extra_config,
-) -> None:
-    """Initialise a Weights & Biases tracking session.
-
-    Args:
-        project (str, optional): Project name under which runs will appear in the WandB dashboard.
-            Defaults to ``"transformer-algebra"``.
-        entity (str | None, optional): WandB entity (user or team) that owns the project.
-            When ``None``, the default entity configured in local WandB settings is used.
-        **extra_config: Additional key-value pairs inserted into the run configuration.
-            Useful for hyper-parameter sweeps or ad-hoc experiments.
-    """
-    # Initialize wandb
-    import wandb
-
-    wandb.init(
-        project=project,
-        entity=entity,
-        config={
-            "learning_rate": 0.001,
-            "batch_size": 32,
-            "epochs": 10,
-        },
-    )

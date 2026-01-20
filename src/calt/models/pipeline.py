@@ -46,6 +46,22 @@ class ModelPipeline:
         self.tokenizer = tokenizer
         self.model: Optional[PreTrainedModel] = None
         self._registry = ModelRegistry()
+
+    @classmethod
+    def from_io_settings(
+        cls,    
+        calt_config: DictConfig,
+        io_settings: dict,
+    ) -> "ModelPipeline":
+        """Create a ModelPipeline using the result dict from IOPipeline.build().
+
+        Args:
+            calt_config: Model configuration (cfg.model).
+            io_result: Result dict from ``IOPipeline.build()``, expected to contain
+                at least the ``\"tokenizer\"`` entry.
+        """
+        return cls(calt_config=calt_config, 
+                   tokenizer=io_settings["tokenizer"])
     
     def build(self) -> PreTrainedModel:
         """Build the model from configuration using ModelRegistry.
