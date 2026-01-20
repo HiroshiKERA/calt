@@ -7,3 +7,5 @@ dataset:
   root_seed: 123
   verbose: true
   backend: "sagemath"
+  save_text: true
+  save_json: false
