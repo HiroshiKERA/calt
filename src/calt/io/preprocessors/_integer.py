@@ -2,11 +2,11 @@
 
 import warnings
 
-from .base import AbstractPreprocessor
+from .base import AbstractPostProcessor
 from ._polynomial import PolynomialToInternalProcessor
 
 
-class IntegerToInternalProcessor(AbstractPreprocessor):
+class IntegerToInternalProcessor(AbstractPostProcessor):
     """Deprecated wrapper around :class:`PolynomialToInternalProcessor` for integer strings."""
 
     def __init__(
@@ -22,7 +22,9 @@ class IntegerToInternalProcessor(AbstractPreprocessor):
             DeprecationWarning,
             stacklevel=2,
         )
-        super().__init__(num_variables=0, max_degree=0, max_coeff=max_coeff)
+        # Note: This class is deprecated and uses dummy values for AbstractPostProcessor
+        # since it doesn't need num_variables, max_degree, max_coeff anymore
+        super().__init__()
         self._delegate = PolynomialToInternalProcessor(
             num_variables=0,
             max_degree=0,

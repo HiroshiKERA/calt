@@ -11,7 +11,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 from ..vocabs.base import VocabConfig, BASE_VOCAB, BASE_SPECIAL_TOKENS
-from .base import AbstractPreprocessor
+from .base import AbstractPostProcessor
 
 
 # Base vocabulary as per specification
@@ -116,7 +116,7 @@ class NumberPolicy:
         return groups
 
 
-class UnifiedLexer(AbstractPreprocessor):
+class UnifiedLexer(AbstractPostProcessor):
     """Unified regex-based lexer for tokenizing input strings.
     
     This lexer converts raw input strings into token sequences based on
@@ -150,9 +150,8 @@ class UnifiedLexer(AbstractPreprocessor):
             strict: If True, raise error on unknown characters. If False, emit <unk>.
             include_base_vocab: Whether to include base vocabulary tokens.
         """
-        # For AbstractPreprocessor compatibility, we need num_variables, max_degree, max_coeff
-        # These are not used by the lexer, so we use dummy values
-        super().__init__(num_variables=0, max_degree=0, max_coeff=1)
+        # Initialize post-processor base class
+        super().__init__()
         
         self.vocab_config = vocab_config
         self.number_policy = number_policy or NumberPolicy()
@@ -313,9 +312,9 @@ class UnifiedLexer(AbstractPreprocessor):
         tokens = self.tokenize(text)
         return " ".join(tokens)
     
-    # AbstractPreprocessor interface
+    # AbstractPostProcessor interface
     def encode(self, text: str) -> str:
-        """Encode text to token text (implements AbstractPreprocessor).
+        """Encode text to token text (implements AbstractPostProcessor).
         
         Args:
             text: Input text string.
