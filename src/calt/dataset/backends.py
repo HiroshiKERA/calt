@@ -8,11 +8,13 @@ class BackendSpec:
     load: Callable[[], tuple[type, type]]  # (DatasetGenerator, DatasetWriter)
 
 def _load_sagemath():
-    from calt.dataset_generator.sagemath import DatasetGenerator, DatasetWriter
+    from calt.dataset.sagemath.dataset_generator import DatasetGenerator
+    from calt.dataset.sagemath.utils.dataset_writer import DatasetWriter
     return DatasetGenerator, DatasetWriter
 
 def _load_sympy():
-    from calt.dataset_generator.sympy import DatasetGenerator, DatasetWriter
+    from calt.dataset.sympy.dataset_generator import DatasetGenerator
+    from calt.dataset.sympy.utils.dataset_writer import DatasetWriter
     return DatasetGenerator, DatasetWriter
 
 BACKENDS: dict[str, BackendSpec] = {

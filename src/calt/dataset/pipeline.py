@@ -1,17 +1,73 @@
+from __future__ import annotations
+
+from omegaconf import DictConfig
+
 from .backends import get_backend_classes
 
+
 class DatasetPipeline:
-    def __init__(self, problem_generator, statistics_calculator, save_dir, n_jobs, root_seed, verbose, backend="sagemath"):
+    """Pipeline for generating datasets.
+
+    Example:
+        >>> from omegaconf import OmegaConf
+        >>> from calt.dataset.pipeline import DatasetPipeline
+        >>> cfg = OmegaConf.load("configs/dataset.yaml")
+        >>> pipeline = DatasetPipeline.from_config(
+        ...     cfg.dataset,
+        ...     problem_generator=my_problem_generator,
+        ...     statistics_calculator=my_stats_fn,
+        ... )
+        >>> pipeline.run()
+    """
+
+    def __init__(
+        self,
+        problem_generator,
+        statistics_calculator,
+        save_dir: str,
+        num_train_samples: int,
+        num_test_samples: int,
+        batch_size: int,
+        n_jobs: int,
+        root_seed: int,
+        verbose: bool,
+        backend: str = "sagemath",
+    ) -> None:
         self.problem_generator = problem_generator
         self.statistics_calculator = statistics_calculator
         self.save_dir = save_dir
+        self.num_train_samples = num_train_samples
+        self.num_test_samples = num_test_samples
+        self.batch_size = batch_size
         self.n_jobs = n_jobs
         self.root_seed = root_seed
         self.verbose = verbose
+        self.backend = backend
 
-    def run(self, backend="sagemath"):
-        DatasetGenerator, DatasetWriter = get_backend_classes(backend)
-        
+    @classmethod
+    def from_config(
+        cls,
+        config: DictConfig,
+        problem_generator,
+        statistics_calculator,
+    ) -> "DatasetPipeline":
+        """Create a DatasetPipeline from a DictConfig."""
+        return cls(
+            problem_generator=problem_generator,
+            statistics_calculator=statistics_calculator,
+            save_dir=config.save_dir,
+            num_train_samples=config.num_train_samples,
+            num_test_samples=config.num_test_samples,
+            batch_size=config.batch_size,
+            n_jobs=config.n_jobs,
+            root_seed=config.root_seed,
+            verbose=getattr(config, "verbose", True),
+            backend=getattr(config, "backend", "sagemath"),
+        )
+
+    def run(self) -> None:
+        DatasetGenerator, DatasetWriter = get_backend_classes(self.backend)
+
         # Initialize dataset generator
         dataset_generator = DatasetGenerator(
             backend="multiprocessing",

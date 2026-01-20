@@ -12,7 +12,7 @@ from omegaconf import DictConfig
 from transformers import PreTrainedModel, PreTrainedTokenizerFast
 from torch.utils.data import Dataset
 
-from ..io.base import StandardDataCollator, IOPipeline
+from ..io.base import StandardDataCollator
 from .loaders.base import get_trainer_loader
 from .trainer import Trainer
 
@@ -55,7 +55,7 @@ class TrainerPipeline:
         eval_dataset: Optional[Dataset] = None,
         data_collator: Optional[StandardDataCollator] = None,
         wandb_config: Optional[DictConfig] = None,
-        io_pipeline: Optional[dict] = None,
+        io_dict: Optional[dict] = None,
     ):
         """Initialize the trainer pipeline.
         
@@ -69,12 +69,12 @@ class TrainerPipeline:
         """
         self.config = config
         self.model = model
-        # Prefer explicit arguments, but allow filling from io_pipeline when provided
-        if io_pipeline is not None:
-            tokenizer = tokenizer or io_pipeline.get("tokenizer")
-            train_dataset = train_dataset or io_pipeline.get("train_dataset")
-            eval_dataset = eval_dataset or io_pipeline.get("test_dataset")
-            data_collator = data_collator or io_pipeline.get("data_collator")
+        # Prefer explicit arguments, but allow filling from io_dict when provided
+        if io_dict is not None:
+            tokenizer = tokenizer or io_dict.get("tokenizer")
+            train_dataset = train_dataset or io_dict.get("train_dataset")
+            eval_dataset = eval_dataset or io_dict.get("test_dataset")
+            data_collator = data_collator or io_dict.get("data_collator")
 
         self.tokenizer = tokenizer
         self.train_dataset = train_dataset
@@ -144,27 +144,27 @@ class TrainerPipeline:
         return self.trainer
 
     @classmethod
-    def from_io_settings(
+    def from_io_dict(
         cls,
         config: DictConfig,
         model: PreTrainedModel,
-        io_settings: dict,
+        io_dict: dict,
         wandb_config: Optional[DictConfig] = None,
     ) -> "TrainerPipeline":
-        """Create a TrainerPipeline from io_settings.
+        """Create a TrainerPipeline from a dict returned by IOPipeline.build().
         
         Args:
             config: Training configuration (cfg.train).
             model: Model instance from ModelPipeline.
-            io_settings: IOPipeline.build() result.
+            io_dict: IOPipeline.build() result.
             wandb_config: Optional wandb configuration block (cfg.wandb).
         """
         return cls(
             config=config,
             model=model,
-            tokenizer=io_settings["tokenizer"],
-            train_dataset=io_settings["train_dataset"],
-            eval_dataset=io_settings["test_dataset"],
-            data_collator=io_settings["data_collator"],
+            tokenizer=io_dict["tokenizer"],
+            train_dataset=io_dict["train_dataset"],
+            eval_dataset=io_dict["test_dataset"],
+            data_collator=io_dict["data_collator"],
             wandb_config=wandb_config,
         )
