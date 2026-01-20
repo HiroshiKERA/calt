@@ -37,7 +37,6 @@ def load_data(
     num_variables: int | None = None,
     max_degree: int | None = None,
     max_coeff: int | None = None,
-    max_length: int = 512,
     processor: AbstractPreProcessor | None = None,
     num_train_samples: int | None = None,
     num_test_samples: int | None = None,
@@ -240,8 +239,10 @@ class IOPipeline():
         self.tokenizer = tokenizer
         self.data_collator = data_collator
         
-        return {"train_dataset": train_dataset, 
-                "test_dataset": test_dataset, 
-                "data_collator": data_collator, 
-                "tokenizer": tokenizer}
+        return {
+            "train_dataset": train_dataset,
+            "test_dataset": test_dataset,
+            "tokenizer": tokenizer,
+            "data_collator": data_collator,
+        }
     

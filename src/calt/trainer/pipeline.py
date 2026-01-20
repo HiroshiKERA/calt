@@ -12,7 +12,7 @@ from omegaconf import DictConfig
 from transformers import PreTrainedModel, PreTrainedTokenizerFast
 from torch.utils.data import Dataset
 
-from ..io.base import StandardDataCollator
+from ..io.base import StandardDataCollator, IOPipeline
 from .loaders.base import get_trainer_loader
 from .trainer import Trainer
 
@@ -48,26 +48,34 @@ class TrainerPipeline:
     
     def __init__(
         self,
-        calt_config: DictConfig,
+        config: DictConfig,
         model: Optional[PreTrainedModel] = None,
         tokenizer: Optional[PreTrainedTokenizerFast] = None,
         train_dataset: Optional[Dataset] = None,
         eval_dataset: Optional[Dataset] = None,
         data_collator: Optional[StandardDataCollator] = None,
         wandb_config: Optional[DictConfig] = None,
+        io_pipeline: Optional[dict] = None,
     ):
         """Initialize the trainer pipeline.
         
         Args:
-            calt_config (DictConfig): Training configuration from cfg.train (OmegaConf).
+            config (DictConfig): Training configuration from cfg.train (OmegaConf).
             model (PreTrainedModel | None): Model instance.
             tokenizer (PreTrainedTokenizerFast | None): Tokenizer instance.
             train_dataset (Dataset | None): Training dataset.
             eval_dataset (Dataset | None): Evaluation dataset.
             data_collator (StandardDataCollator | None): Data collator.
         """
-        self.calt_config = calt_config
+        self.config = config
         self.model = model
+        # Prefer explicit arguments, but allow filling from io_pipeline when provided
+        if io_pipeline is not None:
+            tokenizer = tokenizer or io_pipeline.get("tokenizer")
+            train_dataset = train_dataset or io_pipeline.get("train_dataset")
+            eval_dataset = eval_dataset or io_pipeline.get("test_dataset")
+            data_collator = data_collator or io_pipeline.get("data_collator")
+
         self.tokenizer = tokenizer
         self.train_dataset = train_dataset
         self.eval_dataset = eval_dataset
@@ -87,7 +95,7 @@ class TrainerPipeline:
         if no_wandb:
             os.environ["WANDB_DISABLED"] = "true"
             # Explicitly disable reporting
-            setattr(self.calt_config, "report_to", None)
+            setattr(self.config, "report_to", None)
             return
 
         # Enable wandb
@@ -105,12 +113,12 @@ class TrainerPipeline:
             os.environ["WANDB_NAME"] = str(name)
 
         # Attach wandb config to training config so TrainerLoader can inspect it
-        setattr(self.calt_config, "wandb", wb)
+        setattr(self.config, "wandb", wb)
 
         # Make sure Trainer sees wandb settings
-        setattr(self.calt_config, "report_to", getattr(self.calt_config, "report_to", "wandb"))
-        if name is not None and not hasattr(self.calt_config, "run_name"):
-            setattr(self.calt_config, "run_name", str(name))
+        setattr(self.config, "report_to", getattr(self.config, "report_to", "wandb"))
+        if name is not None and not hasattr(self.config, "run_name"):
+            setattr(self.config, "run_name", str(name))
 
     def build(self) -> Trainer:
         """Build the trainer from configuration.
@@ -123,7 +131,7 @@ class TrainerPipeline:
 
         # Get the appropriate loader
         self._loader = get_trainer_loader(
-            calt_config=self.calt_config,
+            config=self.config,
             model=self.model,
             tokenizer=self.tokenizer,
             train_dataset=self.train_dataset,
@@ -134,3 +142,29 @@ class TrainerPipeline:
         # Load the trainer
         self.trainer = self._loader.load()
         return self.trainer
+
+    @classmethod
+    def from_io_settings(
+        cls,
+        config: DictConfig,
+        model: PreTrainedModel,
+        io_settings: dict,
+        wandb_config: Optional[DictConfig] = None,
+    ) -> "TrainerPipeline":
+        """Create a TrainerPipeline from io_settings.
+        
+        Args:
+            config: Training configuration (cfg.train).
+            model: Model instance from ModelPipeline.
+            io_settings: IOPipeline.build() result.
+            wandb_config: Optional wandb configuration block (cfg.wandb).
+        """
+        return cls(
+            config=config,
+            model=model,
+            tokenizer=io_settings["tokenizer"],
+            train_dataset=io_settings["train_dataset"],
+            eval_dataset=io_settings["test_dataset"],
+            data_collator=io_settings["data_collator"],
+            wandb_config=wandb_config,
+        )
