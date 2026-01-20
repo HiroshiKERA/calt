@@ -10,7 +10,6 @@ logging.basicConfig(level=logging.WARNING, format="%(levelname)s: %(message)s")
 
 class TermParseException(Exception):
     """Custom exception raised during term parsing errors."""
-
     pass
 
 class AbstractPreprocessor(ABC):

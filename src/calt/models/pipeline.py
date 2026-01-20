@@ -1,48 +1,64 @@
-from omegaconf import OmegaConf
-import torch.nn as nn
-from transformers import BartConfig, BartForConditionalGeneration as BartModel
+"""
+Model pipeline for creating models from config.
 
-class Abstracta
-ModelPipeline:
-    def __init__(self, model: nn.Module, config: OmegaConf):
-        self.model = model
-        self.config = config
-    
-    def set_config(self, config: OmegaConf):
-        self.config = config
-        return self
-    
-    def build(self):
-        self.model = self.model.to(self.config.device)
-        return self
-    
+This module provides a class-based interface similar to IOPipeline for creating
+model instances from configuration files.
+"""
 
-class BartModelPipeline(AbstractModelPipeline):
-    def __init__(self, model: nn.Module, config: OmegaConf):
-        super().__init__(model, config)
-        
-        self.config = self.set_config(config)
-        
-    def build(self):
-        self.model = BartforModel(self.translate_config(self.config))
-        return self
+from typing import Optional
+
+from omegaconf import DictConfig
+from transformers import PreTrainedModel, PreTrainedTokenizerFast
+
+from .loaders.base import get_model_loader
+
+
+class ModelPipeline:
+    """Pipeline for creating models from configuration.
     
-    def translate_config(self, config: OmegaConf):
-        model_cfg = BartConfig(
-                encoder_layers=config.model.num_encoder_layers,
-                encoder_attention_heads=config.model.num_encoder_heads,
-                decoder_layers=config.model.num_decoder_layers,
-                decoder_attention_heads=config.model.num_decoder_heads,
-                vocab_size=len(tokenizer.vocab),
-                d_model=config.model.d_model,
-                encoder_ffn_dim=config.model.encoder_ffn_dim,
-                decoder_ffn_dim=config.model.decoder_ffn_dim,
-                pad_token_id=tokenizer.pad_token_id,
-                bos_token_id=tokenizer.bos_token_id,
-                eos_token_id=tokenizer.eos_token_id,
-                cls_token_id=tokenizer.cls_token_id,
-                sep_token_id=tokenizer.sep_token_id,
-                unk_token_id=tokenizer.unk_token_id,
-                max_position_embeddings=config.model.max_sequence_length,
-                decoder_start_token_id=tokenizer.bos_token_id,
-            )
+    Similar to IOPipeline, this class provides a simple interface for creating
+    model instances from config files. It automatically selects the appropriate
+    ModelLoader based on the config.
+    
+    Example:
+        >>> from omegaconf import OmegaConf
+        >>> from calt.models import ModelPipeline
+        >>> 
+        >>> cfg = OmegaConf.load("config/train.yaml")
+        >>> tokenizer = ...  # Get tokenizer from IOPipeline
+        >>> 
+        >>> model_pipeline = ModelPipeline(cfg.model, tokenizer)
+        >>> model = model_pipeline.build()
+    """
+    
+    def __init__(
+        self,
+        calt_config: DictConfig,
+        tokenizer: Optional[PreTrainedTokenizerFast] = None,
+    ):
+        """Initialize the model pipeline.
+        
+        Args:
+            calt_config (DictConfig): Model configuration from cfg.model (OmegaConf).
+            tokenizer (PreTrainedTokenizerFast | None): Tokenizer instance (required for some models).
+        """
+        self.calt_config = calt_config
+        self.tokenizer = tokenizer
+        self.model: Optional[PreTrainedModel] = None
+        self._loader = None
+    
+    def build(self) -> PreTrainedModel:
+        """Build the model from configuration.
+        
+        Returns:
+            PreTrainedModel: Model instance.
+        """
+        # Get the appropriate loader
+        self._loader = get_model_loader(
+            calt_config=self.calt_config,
+            tokenizer=self.tokenizer,
+        )
+        
+        # Load the model
+        self.model = self._loader.load()
+        return self.model

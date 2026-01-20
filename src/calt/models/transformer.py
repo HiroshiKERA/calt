@@ -1,6 +1,5 @@
 """
 A PyTorch Transformer model usable with the Hugging Face Trainer.
-Extends the existing Transformer class from transformer.py.
 """
 
 from typing import Any, Dict, Optional
@@ -11,11 +10,13 @@ from transformers import PretrainedConfig, PreTrainedModel
 from transformers.modeling_outputs import Seq2SeqLMOutput
 from transformers.utils import logging
 
+from .positional_embeddings import get_positional_embedding
+
 logger = logging.get_logger(__name__)
 
 
-class CaltModelConfig(PretrainedConfig):
-    """Configuration for the CALT Transformer model.
+class TransformerConfig(PretrainedConfig):
+    """Configuration for the Transformer model.
 
     Attributes:
         model_type (str): Identifier used by Hugging Face to register the model.
@@ -98,16 +99,16 @@ class CaltModelConfig(PretrainedConfig):
         self.seed = seed
 
 
-class CaltModel(PreTrainedModel):
+class Transformer(PreTrainedModel):
     """Transformer model compatible with the Hugging Face Trainer."""
 
-    config_class = CaltModelConfig
+    config_class = TransformerConfig
 
-    def __init__(self, config: CaltModelConfig):
+    def __init__(self, config: TransformerConfig):
         """Build embedding, transformer stack, and language modeling head.
 
         Args:
-            config (CaltModelConfig): Model hyper-parameters and tokenizer metadata.
+            config (TransformerConfig): Model hyper-parameters and tokenizer metadata.
         """
         super().__init__(config)
 
@@ -115,16 +116,12 @@ class CaltModel(PreTrainedModel):
 
         self.embedding = nn.Embedding(config.vocab_size, config.d_model)
 
-        if config.use_positional_embedding == "learned":
-            self.positional_embedding = nn.Embedding(
-                config.max_input_len, config.d_model
-            )
-        elif config.use_positional_embedding == "none":
-            self.positional_embedding = None
-        else:
-            raise ValueError(
-                f"Unsupported positional embedding type: {config.use_positional_embedding}"
-            )
+        # Initialize positional embedding using factory
+        self.positional_embedding = get_positional_embedding(
+            pe_type=config.use_positional_embedding,
+            d_model=config.d_model,
+            max_len=config.max_input_len,
+        )
 
         self.transformer = nn.Transformer(
             d_model=config.d_model,
@@ -170,13 +167,8 @@ class CaltModel(PreTrainedModel):
         embeddings = self.embedding(input_ids)
 
         if self.positional_embedding is not None:
-            batch_size, seq_len = input_ids.shape
-            position_ids = (
-                torch.arange(seq_len, device=input_ids.device)
-                .unsqueeze(0)
-                .expand(batch_size, -1)
-            )
-            embeddings = embeddings + self.positional_embedding(position_ids)
+            # Apply positional embedding (position_ids can be None, will be auto-generated from embeddings)
+            embeddings = self.positional_embedding(embeddings)
 
         return embeddings
 

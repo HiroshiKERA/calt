@@ -2,7 +2,7 @@ import pytest
 import yaml
 from transformers import PreTrainedTokenizerFast
 
-from calt.io.utils.tokenizer import set_tokenizer
+from calt.io.tokenizer import get_tokenizer
 
 
 def test_set_tokenizer_dynamic_creation_gf():

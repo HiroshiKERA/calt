@@ -1,0 +1,30 @@
+Test: non_strict_mode_emits_unk
+================================================================================
+
+Configuration:
+--------------------------------------------------------------------------------
+  Number Policy:
+    sign: separate
+    digit_group: 0
+    allow_float: False
+  strict: False
+  include_base_vocab: True
+
+Input:
+--------------------------------------------------------------------------------
+  x0 + x1 @ invalid
+
+Output (Tokens):
+--------------------------------------------------------------------------------
+  ['x0', '+', 'x1', '<unk>', 'invalid']
+  (5 tokens)
+
+Output (Token Text):
+--------------------------------------------------------------------------------
+  x0 + x1 <unk> invalid
+
+Comparison:
+--------------------------------------------------------------------------------
+  Input length:  17 characters
+  Output length: 21 characters
+  Token count:   5 tokens

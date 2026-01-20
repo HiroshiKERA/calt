@@ -12,15 +12,15 @@ Utilities to prepare training/evaluation datasets, tokenizers, and data collator
   advanced pipelines without breaking backward compatibility.
 
 ### Dataset and collator
-::: calt.io.utils.data_collator.StandardDataset
-::: calt.io.utils.data_collator.StandardDataCollator
+::: calt.io.base.StandardDataset
+::: calt.io.base.StandardDataCollator
 
 ### Preprocessing (expression → internal tokens)
-::: calt.io.utils.preprocessor.AbstractPreprocessor
-::: calt.io.utils.preprocessor.ProcessorChain
-::: calt.io.utils.preprocessor.CoefficientPostfixProcessor
-::: calt.io.utils.preprocessor.PolynomialToInternalProcessor
-::: calt.io.utils.preprocessor.IntegerToInternalProcessor
+::: calt.io.preprocessors.AbstractPreprocessor
+::: calt.io.preprocessors.ProcessorChain
+::: calt.io.preprocessors.CoefficientPostfixProcessor
+::: calt.io.preprocessors.PolynomialToInternalProcessor
+::: calt.io.preprocessors.IntegerToInternalProcessor
 
 #### Internal token layout
 `PolynomialToInternalProcessor` emits coefficient/exponent tokens (`C…` / `E…`) and is the
@@ -56,12 +56,12 @@ single implementation used for both polynomial and integer preprocessing
 #### Processor chaining example
 
 ```python
-from calt.io.processors import (
+from calt.io.preprocessors import (
     PolynomialToInternalProcessor,
     CoefficientPostfixProcessor,
     ProcessorChain,
 )
-from calt.io.pipeline import load_data
+from calt.io.pipeline import IOPipeline
 
 poly = PolynomialToInternalProcessor(num_variables=2, max_degree=3, max_coeff=200)
 postfix = CoefficientPostfixProcessor()
@@ -69,7 +69,7 @@ chain = ProcessorChain([poly, postfix])
 
 assert chain.encode("123*x0*x1^2") == "E1 E2 C123"
 
-dataset, tokenizer, collator = load_data(
+dataset_dict, tokenizer, collator = load_data(
     train_dataset_path="dataset/train.txt",
     test_dataset_path="dataset/test.txt",
     field="ZZ",
@@ -85,8 +85,8 @@ data augmentation, or token-level rewrites that should run before batching.
 
 ### Tokenizer
 Build or load a tokenizer for polynomial expressions and configure the vocabulary.
-::: calt.io.utils.tokenizer.set_tokenizer
-::: calt.io.utils.tokenizer.VocabConfig
+::: calt.io.tokenizer.get_tokenizer
+::: calt.io.vocabs.base.VocabConfig
 
 ### Visualization utilities (optional)
 Quickly render visual diffs between predictions and references.
