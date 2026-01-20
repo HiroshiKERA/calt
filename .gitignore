@@ -189,3 +189,7 @@ site/
 __pycache__
 .venv
 .idea
+
+# custom: ignore all files and folders starting with _ but keep __init__.py
+**/_*
+!**/__init__.py

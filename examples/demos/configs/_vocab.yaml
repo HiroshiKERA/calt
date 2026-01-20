@@ -1,9 +1,0 @@
-range:  
-  coefficients: ["C", -50, 50]  # (prefix, min, max_inclusive)
-  exponents: ["E", 0, 20]
-  variables: ["x", 0, 2]
-misc: ["+", "*", "^", "(", ")"]
-special_tokens: {}
-flags:
-  include_base_vocab: true
-  include_base_special_tokens: true
