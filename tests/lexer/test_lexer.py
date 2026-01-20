@@ -5,8 +5,8 @@ from pathlib import Path
 
 import pytest
 
-from calt.io.vocabs.base import VocabConfig
-from calt.io.preprocessors.lexer import UnifiedLexer, NumberPolicy
+from calt.io.vocabulary import VocabConfig
+from calt.io.preprocessor import UnifiedLexer, NumberPolicy
 
 # Output directory for test results
 OUTPUT_DIR = Path(__file__).parent / "test_outputs"

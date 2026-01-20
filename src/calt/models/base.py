@@ -18,7 +18,7 @@ class ModelRegistry:
     
     Examples:
         >>> # Create model with explicit name and config
-        >>> from calt.models.transformer import TransformerConfig
+        >>> from calt.models.generic import TransformerConfig
         >>> registry = ModelRegistry()
         >>> config = TransformerConfig(vocab_size=1000, d_model=128)
         >>> model = registry.create("transformer", config)
@@ -39,16 +39,18 @@ class ModelRegistry:
     def _register_defaults(self):
         """Register default model types."""
         # Import here to avoid circular import
-        from .transformer import Transformer, TransformerConfig
-        from .config_mappings.bart import create_bart_config
-        from .config_mappings.transformer import create_transformer_config
+        from .generic.model import Transformer, TransformerConfig
+        from .bart.config_mapping import create_bart_config
+        from .generic.config_mapping import create_transformer_config
         from transformers import BartForConditionalGeneration, BartConfig
         
-        # Register transformer/calt model
+        # Register generic transformer model (aliases: transformer, calt, generic)
         self.register("transformer", Transformer, TransformerConfig)
         self.register("calt", Transformer, TransformerConfig)
+        self.register("generic", Transformer, TransformerConfig)
         self.register_config_mapping("transformer", create_transformer_config)
         self.register_config_mapping("calt", create_transformer_config)
+        self.register_config_mapping("generic", create_transformer_config)
         
         # Register BART model
         self.register("bart", BartForConditionalGeneration, BartConfig)
@@ -103,7 +105,7 @@ class ModelRegistry:
         
         Examples:
             >>> # Create model with explicit name and config
-            >>> from calt.models.transformer import TransformerConfig
+            >>> from calt.models.generic import TransformerConfig
             >>> registry = ModelRegistry()
             >>> config = TransformerConfig(vocab_size=1000, d_model=128)
             >>> model = registry.create("transformer", config)
@@ -245,7 +247,7 @@ def get_model(
     
     Examples:
         >>> # Create model with explicit name and config
-        >>> from calt.models.transformer import TransformerConfig
+        >>> from calt.models.generic import TransformerConfig
         >>> config = TransformerConfig(vocab_size=1000, d_model=128)
         >>> model = get_model("transformer", config)
         >>> 
@@ -278,7 +280,7 @@ def get_model_from_config(
         >>> cfg = OmegaConf.load("config/train.yaml")
         >>> model = get_model_from_config(cfg.model, tokenizer)
     """
-    from .loaders.base import get_model_loader
+    from .loaders import get_model_loader
     
     loader = get_model_loader(
         model_name=model_name,

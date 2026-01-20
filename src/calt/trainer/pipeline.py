@@ -6,6 +6,7 @@ trainer instances from configuration files.
 """
 
 from typing import Optional
+import os
 
 from omegaconf import DictConfig
 from transformers import PreTrainedModel, PreTrainedTokenizerFast
@@ -53,6 +54,7 @@ class TrainerPipeline:
         train_dataset: Optional[Dataset] = None,
         eval_dataset: Optional[Dataset] = None,
         data_collator: Optional[StandardDataCollator] = None,
+        wandb_config: Optional[DictConfig] = None,
     ):
         """Initialize the trainer pipeline.
         
@@ -70,15 +72,55 @@ class TrainerPipeline:
         self.train_dataset = train_dataset
         self.eval_dataset = eval_dataset
         self.data_collator = data_collator
+        self.wandb_config = wandb_config
         self.trainer: Optional[Trainer] = None
         self._loader = None
-    
+
+    def _configure_wandb(self) -> None:
+        """Configure wandb-related settings (env vars and training config)."""
+        if self.wandb_config is None:
+            return
+
+        wb = self.wandb_config
+        no_wandb = getattr(wb, "no_wandb", False)
+
+        if no_wandb:
+            os.environ["WANDB_DISABLED"] = "true"
+            # Explicitly disable reporting
+            setattr(self.calt_config, "report_to", None)
+            return
+
+        # Enable wandb
+        os.environ.pop("WANDB_DISABLED", None)
+
+        project = getattr(wb, "project", None)
+        group = getattr(wb, "group", None)
+        name = getattr(wb, "name", None)
+
+        if project is not None:
+            os.environ["WANDB_PROJECT"] = str(project)
+        if group is not None:
+            os.environ["WANDB_RUN_GROUP"] = str(group)
+        if name is not None:
+            os.environ["WANDB_NAME"] = str(name)
+
+        # Attach wandb config to training config so TrainerLoader can inspect it
+        setattr(self.calt_config, "wandb", wb)
+
+        # Make sure Trainer sees wandb settings
+        setattr(self.calt_config, "report_to", getattr(self.calt_config, "report_to", "wandb"))
+        if name is not None and not hasattr(self.calt_config, "run_name"):
+            setattr(self.calt_config, "run_name", str(name))
+
     def build(self) -> Trainer:
         """Build the trainer from configuration.
         
         Returns:
             Trainer: Trainer instance.
         """
+        # Configure wandb before building TrainingArguments / Trainer
+        self._configure_wandb()
+
         # Get the appropriate loader
         self._loader = get_trainer_loader(
             calt_config=self.calt_config,

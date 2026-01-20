@@ -19,7 +19,7 @@ def get_positional_embedding(
     
     Args:
         pe_type (str): Type of positional embedding. Supported types:
-            - "learned" or "generic": Learnable embeddings using nn.Embedding
+            - "generic": Learnable embeddings using nn.Embedding
             - "sinusoidal": Fixed sin/cos embeddings (original Transformer)
             - "rope": Rotary Position Embedding (RoFormer)
             - "none": No positional embedding (returns None)
@@ -52,11 +52,11 @@ def get_positional_embedding(
     # Import here to avoid circular import
     from .sinusoidal import SinusoidalPositionalEmbedding
     from .generic import GenericPositionalEmbedding
-    from .rope import RoPEPositionalEmbedding
+    from .rope import RotaryPositionalEmbedding
     
     pe_type = pe_type.lower() if isinstance(pe_type, str) else pe_type
     
-    if pe_type in ["learned", "generic"]:
+    if pe_type == "generic":
         return GenericPositionalEmbedding(
             d_model=d_model,
             max_len=max_len,
@@ -68,7 +68,7 @@ def get_positional_embedding(
         )
     elif pe_type == "rope":
         base = kwargs.get("base", 10000.0)
-        return RoPEPositionalEmbedding(
+        return RotaryPositionalEmbedding(
             d_model=d_model,
             max_len=max_len,
             base=base,

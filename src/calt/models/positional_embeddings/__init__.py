@@ -10,7 +10,7 @@ This module provides various positional embedding strategies:
 from .base import get_positional_embedding
 from .sinusoidal import SinusoidalPositionalEmbedding
 from .generic import GenericPositionalEmbedding
-from .rope import RoPEPositionalEmbedding
+from .rope import RotaryPositionalEmbedding
 
 # Alias for backward compatibility
 LearnedPositionalEmbedding = GenericPositionalEmbedding
@@ -19,6 +19,6 @@ __all__ = [
     "SinusoidalPositionalEmbedding",
     "GenericPositionalEmbedding",
     "LearnedPositionalEmbedding",
-    "RoPEPositionalEmbedding",
+    "RotaryPositionalEmbedding",
     "get_positional_embedding",
 ]

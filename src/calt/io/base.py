@@ -5,7 +5,7 @@ import torch
 from torch.utils.data import Dataset
 from transformers import PreTrainedTokenizerFast as Tokenizer
 
-from .preprocessors import AbstractPostProcessor
+from .preprocessor import AbstractPreProcessor
 from .utils.read import read_data_from_file
 
 # Set up logger for this module
@@ -17,7 +17,7 @@ class StandardDataset(Dataset):
     def load_file(
         cls,
         data_path: str,
-        preprocessor: AbstractPostProcessor | None = None,
+        preprocessor: AbstractPreProcessor | None = None,
         max_samples: int | None = None,
     ) -> "StandardDataset":
         """Load data from a file and create a ``StandardDataset`` instance.
@@ -26,7 +26,7 @@ class StandardDataset(Dataset):
 
         Args:
             data_path (str): Path to the data file.
-            preprocessor (AbstractPostProcessor | None): Post-processor instance. If None, text is returned as-is.
+            preprocessor (AbstractPreProcessor | None): Pre-processor instance. If None, text is returned as-is.
             max_samples (int | None, optional): Maximum number of samples to load.
                 Use -1 or None to load all samples. Defaults to None.
 
@@ -44,7 +44,7 @@ class StandardDataset(Dataset):
         self,
         input_texts: list[str],
         target_texts: list[str],
-        preprocessor: AbstractPostProcessor | None = None,
+        preprocessor: AbstractPreProcessor | None = None,
         **extra_fields,
     ) -> None:
         self.input_texts = input_texts
