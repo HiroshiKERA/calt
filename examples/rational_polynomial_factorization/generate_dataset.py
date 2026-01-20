@@ -18,12 +18,11 @@ def rational_factor_generator(seed: int):
         min_degree=1,
         num_bound=10,
     )
-
     p = sampler.sample(1)[0]
-    expanded = p.expand()
+    # expanded = p.expand()
     factored = p.factor()
 
-    return str(expanded), str(factored)
+    return str(p), str(factored)
 
 
 if __name__ == "__main__":
