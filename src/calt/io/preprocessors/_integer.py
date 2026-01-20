@@ -3,7 +3,7 @@
 import warnings
 
 from .base import AbstractPreprocessor
-from .polynomial import PolynomialToInternalProcessor
+from ._polynomial import PolynomialToInternalProcessor
 
 
 class IntegerToInternalProcessor(AbstractPreprocessor):
