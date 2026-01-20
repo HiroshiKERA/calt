@@ -1,10 +1,10 @@
 from .io.pipeline import load_data
 from .io.base import StandardDataCollator, StandardDataset
-from .io.preprocessors import (
-    AbstractPostProcessor,
+from .io.preprocessor import (
+    AbstractPreProcessor,
     UnifiedLexer,
     NumberPolicy,
-    PostProcessorChain,
+    PreProcessorChain,
 )
 from .io.tokenizer import get_tokenizer
 from .dataset.sympy.dataset_generator import DatasetGenerator

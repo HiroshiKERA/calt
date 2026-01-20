@@ -12,7 +12,7 @@ import torch.nn as nn
 import math
 
 
-class RoPEPositionalEmbedding(nn.Module):
+class RotaryPositionalEmbedding(nn.Module):
     """Rotary Position Embedding (RoPE).
     
     RoPE applies rotations to embeddings based on their positions. Unlike

@@ -6,7 +6,7 @@ from tokenizers.pre_tokenizers import CharDelimiterSplit
 from tokenizers.processors import TemplateProcessing
 from transformers import PreTrainedTokenizerFast
 
-from .vocabs.base import VocabConfig
+from .vocabulary.config import VocabConfig
 
 def get_tokenizer(
     vocab_config: VocabConfig,

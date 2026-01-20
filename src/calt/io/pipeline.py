@@ -18,15 +18,14 @@ from .base import (
     StandardDataCollator,
     StandardDataset,
 )
-from .preprocessors import (
-    AbstractPostProcessor,
+from .preprocessor import (
+    AbstractPreProcessor,
     UnifiedLexer,
     NumberPolicy,
 )
 from .tokenizer import get_tokenizer
-from .vocabs.base import VocabConfig
-
-from .vocabs import get_generic_vocab, get_monomial_vocab
+from .vocabulary.config import VocabConfig
+from .vocabulary.polynomial import get_generic_vocab, get_monomial_vocab
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +38,7 @@ def load_data(
     max_degree: int | None = None,
     max_coeff: int | None = None,
     max_length: int = 512,
-    processor: AbstractPostProcessor | None = None,
+    processor: AbstractPreProcessor | None = None,
     num_train_samples: int | None = None,
     num_test_samples: int | None = None,
     vocab_config: VocabConfig | dict | str | None = None,
@@ -99,7 +98,7 @@ class IOPipeline():
                  num_train_samples: int | None = None,
                  num_test_samples: int | None = None,
                  vocab_config: VocabConfig | dict | str | None = None,
-                 preprocessor: AbstractPostProcessor | None = None):
+                 preprocessor: AbstractPreProcessor | None = None):
         """Initialize IOPipeline.
         
         Args:

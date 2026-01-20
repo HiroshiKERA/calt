@@ -85,6 +85,7 @@ class StandardTrainerLoader(TrainerLoader):
             logging_strategy=getattr(self.calt_config, 'logging_strategy', 'steps'),
             logging_steps=getattr(self.calt_config, 'logging_steps', 50),
             report_to=report_to,
+            run_name=getattr(self.calt_config, 'run_name', None),
             # Others
             remove_unused_columns=getattr(self.calt_config, 'remove_unused_columns', False),
             seed=getattr(self.calt_config, 'seed', _DEFAULT_TRAINING_ARGS.seed),

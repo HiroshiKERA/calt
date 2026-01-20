@@ -2,7 +2,7 @@
 Model pipeline for creating models from config.
 
 This module provides a class-based interface similar to IOPipeline for creating
-model instances from configuration files.
+model instances from configuration files using ModelRegistry.
 """
 
 from typing import Optional
@@ -10,15 +10,15 @@ from typing import Optional
 from omegaconf import DictConfig
 from transformers import PreTrainedModel, PreTrainedTokenizerFast
 
-from .loaders.base import get_model_loader
+from .base import ModelRegistry
 
 
 class ModelPipeline:
-    """Pipeline for creating models from configuration.
+    """Pipeline for creating models from configuration using ModelRegistry.
     
     Similar to IOPipeline, this class provides a simple interface for creating
-    model instances from config files. It automatically selects the appropriate
-    ModelLoader based on the config.
+    model instances from config files. It uses ModelRegistry internally to handle
+    model creation.
     
     Example:
         >>> from omegaconf import OmegaConf
@@ -45,20 +45,17 @@ class ModelPipeline:
         self.calt_config = calt_config
         self.tokenizer = tokenizer
         self.model: Optional[PreTrainedModel] = None
-        self._loader = None
+        self._registry = ModelRegistry()
     
     def build(self) -> PreTrainedModel:
-        """Build the model from configuration.
+        """Build the model from configuration using ModelRegistry.
         
         Returns:
             PreTrainedModel: Model instance.
         """
-        # Get the appropriate loader
-        self._loader = get_model_loader(
-            calt_config=self.calt_config,
+        # Use ModelRegistry to create the model
+        self.model = self._registry.create_from_config(
+            model_config=self.calt_config,
             tokenizer=self.tokenizer,
         )
-        
-        # Load the model
-        self.model = self._loader.load()
         return self.model

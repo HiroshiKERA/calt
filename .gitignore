@@ -177,7 +177,7 @@ cython_debug/
 wandb/
 
 # dataset & resluts
-dataset/
+data/
 results/
 
 *.DS_Store

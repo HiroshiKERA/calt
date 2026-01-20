@@ -1,14 +1,26 @@
 import pytest
 import os
 
-from calt.io.vocabs.base import VocabConfig
+from calt.io.vocabulary import VocabConfig
 from calt.io.tokenizer import get_tokenizer
 
 
 def test_vocab_config_from_examples_config():
-    """Test loading VocabConfig from examples/configs/vocab.yaml."""
+    """Test loading VocabConfig from examples/demos/configs/lexer.yaml."""
+    import yaml
+    from pathlib import Path
+    
+    # Load lexer.yaml and extract vocab section
+    lexer_config_path = Path("examples/demos/configs/lexer.yaml")
+    if not lexer_config_path.exists():
+        pytest.skip(f"Config file not found: {lexer_config_path}")
+    
+    with open(lexer_config_path, 'r') as f:
+        lexer_config = yaml.safe_load(f)
+    
+    vocab_config_dict = lexer_config.get("vocab", {})
     vocab_config = VocabConfig([], {})
-    vocab_config = vocab_config.from_config("examples/configs/vocab.yaml")
+    vocab_config = vocab_config.from_config(vocab_config_dict)
     
     vocab = vocab_config.get_vocab()
     special_tokens = vocab_config.get_special_tokens()
@@ -46,9 +58,21 @@ def test_vocab_config_from_examples_config():
 
 
 def test_vocab_config_from_examples_config_creates_tokenizer():
-    """Test that VocabConfig from examples/configs/vocab.yaml can create a tokenizer."""
+    """Test that VocabConfig from examples/demos/configs/lexer.yaml can create a tokenizer."""
+    import yaml
+    from pathlib import Path
+    
+    # Load lexer.yaml and extract vocab section
+    lexer_config_path = Path("examples/demos/configs/lexer.yaml")
+    if not lexer_config_path.exists():
+        pytest.skip(f"Config file not found: {lexer_config_path}")
+    
+    with open(lexer_config_path, 'r') as f:
+        lexer_config = yaml.safe_load(f)
+    
+    vocab_config_dict = lexer_config.get("vocab", {})
     vocab_config = VocabConfig([], {})
-    vocab_config = vocab_config.from_config("examples/configs/vocab.yaml")
+    vocab_config = vocab_config.from_config(vocab_config_dict)
     
     tokenizer = get_tokenizer(vocab_config=vocab_config)
     

@@ -3,8 +3,7 @@ import tempfile
 import os
 import yaml
 
-from calt.io.vocabs.base import VocabConfig
-from calt.io.vocabs import get_monomial_vocab, get_generic_vocab
+from calt.io.vocabulary import VocabConfig, get_monomial_vocab, get_generic_vocab
 
 
 # Fixtures for VocabConfig
