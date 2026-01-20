@@ -2,9 +2,8 @@ from .io.pipeline import load_data
 from .io.base import StandardDataCollator, StandardDataset
 from .io.preprocessors import (
     AbstractPreprocessor,
-    CoefficientPostfixProcessor,
-    IntegerToInternalProcessor,
-    PolynomialToInternalProcessor,
+    UnifiedLexer,
+    NumberPolicy,
     ProcessorChain,
 )
 from .io.tokenizer import get_tokenizer

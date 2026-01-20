@@ -26,5 +26,9 @@ train:
 data:
   train_dataset_path: ./data/train_raw.txt
   test_dataset_path: ./data/test_raw.txt
-  vocab_config: ./configs/vocab.yaml
-  preprocessor: 'generic'
+  # Use lexer config (includes vocab config)
+  lexer_config: ./configs/lexer.yaml
+  preprocessor: 'lexer'
+  # Alternative: use separate vocab config (deprecated)
+  # vocab_config: ./configs/vocab.yaml
+  # preprocessor: 'generic'
