@@ -1,0 +1,24 @@
+"""
+Positional embedding modules for transformer models.
+
+This module provides various positional embedding strategies:
+- Sinusoidal: Fixed sin/cos embeddings (original Transformer)
+- Learned/Generic: Trainable embeddings using nn.Embedding
+- RoPE: Rotary Position Embedding (RoFormer)
+"""
+
+from .base import get_positional_embedding
+from .sinusoidal import SinusoidalPositionalEmbedding
+from .generic import GenericPositionalEmbedding
+from .rope import RoPEPositionalEmbedding
+
+# Alias for backward compatibility
+LearnedPositionalEmbedding = GenericPositionalEmbedding
+
+__all__ = [
+    "SinusoidalPositionalEmbedding",
+    "GenericPositionalEmbedding",
+    "LearnedPositionalEmbedding",
+    "RoPEPositionalEmbedding",
+    "get_positional_embedding",
+]

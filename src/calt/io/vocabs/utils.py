@@ -9,7 +9,7 @@ def get_vocab(vocab_list: list[tuple[str, int, int]], misc=[]):
     
     vocab.extend(misc)
     
-    return VocabConfig(vocab=vocab)
+    return VocabConfig(vocab=vocab, special_tokens={})
 
 def get_range_vocab(tag, begin, end, centered=False):
     

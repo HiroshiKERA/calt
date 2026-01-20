@@ -1,5 +1,5 @@
-range:  # (prefix, min, max_inclusive)
-  coefficients: ["C", -50, 50]
+range:  
+  coefficients: ["C", -50, 50]  # (prefix, min, max_inclusive)
   exponents: ["E", 0, 20]
   variables: ["x", 0, 2]
 misc: ["+", "*", "^", "(", ")"]

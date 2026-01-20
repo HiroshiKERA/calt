@@ -1,6 +1,6 @@
 import pytest
 
-from calt.io.processors import (
+from calt.io.preprocessors import (
     AbstractPreprocessor,
     CoefficientPostfixProcessor,
     PolynomialToInternalProcessor,

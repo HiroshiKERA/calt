@@ -26,12 +26,10 @@ train:
 data:
   train_dataset_path: samples/test_raw.txt
   test_dataset_path: samples/test_raw.txt
-  num_variables: 2
-  max_degree: 20
-  max_coeff: 10
-  field: GF7
   num_train_samples: -1
   num_test_samples: -1
+  vocab_config: config/vocab.yaml
+  preprocessor: 'generic'
 
 wandb:
   project: calt-test

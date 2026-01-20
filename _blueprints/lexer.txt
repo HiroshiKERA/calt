@@ -1,0 +1,338 @@
+CALT Unified Regex-Based Lexer / Preprocessor Specification
+0. Purpose（目的）
+
+CALT において、
+生データ（数式・数列・行列など）を「語彙（vocab）に完全に一致するトークン列テキスト」へ正規化する統一 preprocessor（lexer）を定義する。
+
+本 lexer は：
+
+HuggingFace tokenizer の 前段
+
+構文解析（parser）は行わない
+
+出力は 空白区切りの token text
+
+arithmetic / polynomial / matrix などの違いを 設定（config）で吸収
+
+1. Terminology（用語）
+
+lexer
+生文字列 → トークン列（list[str]）に変換する部品
+
+token text
+" ".join(tokens) された文字列（HF tokenizer が split-on-space で処理可能）
+
+reserved token
+lexer が最優先で認識するトークン（range 展開・演算子・区切り記号など）
+
+range token
+["C", -50, 50] のような定義から自動生成される C-50 ... C50 等
+
+2. Overall Pipeline（全体の流れ）
+Raw Input String
+      ↓
+Regex-based Lexer
+      ↓
+Token List (list[str])
+      ↓
+Space-joined Token Text
+      ↓
+HF Tokenizer (vocab lookup)
+
+
+lexer の責務は Raw Input → Token List まで。
+
+3. Input / Output Specification
+Input
+
+Python str
+
+数式・数列・行列表現など（空白の有無は任意）
+
+Output
+
+list[str]（token list）
+
+または " ".join(list[str])（token text）
+
+4. Configuration Overview
+4.1 Vocab Config（YAML）
+range:
+  coefficients: ["C", -50, 50]
+  exponents: ["E", 0, 20]
+  variables: ["x", 0, 2]
+
+misc: ["+", "*", "^", "(", ")"]
+
+special_tokens:
+  pad_token: "<pad>"
+  unk_token: "<unk>"
+
+flags:
+  include_base_vocab: true
+  include_base_special_tokens: true
+
+Semantics
+
+range
+
+Each entry: [prefix, min, max_inclusive]
+
+Expanded to tokens: prefix{min} ... prefix{max}
+
+Example: ["C", -50, 50] → "C-50" ... "C50"
+
+misc
+
+Single-character or multi-character operators / symbols
+
+Treated as reserved tokens
+
+special_tokens
+
+Passed to HF tokenizer (pad, unk, bos, eos, etc.)
+
+Not used for lexical splitting
+
+flags
+
+include_base_vocab
+
+Include base operators, brackets, separators
+
+include_base_special_tokens
+
+Include default HF special tokens
+
+5. Base Vocabulary Presets
+5.1 Base Vocab (when include_base_vocab = true)
+BASE_VOCAB = {
+  separators: ("||", "|"),
+  operators: ("+", "-", "*", "^", "/"),
+  brackets:  ("(", ")", "[", "]"),
+}
+
+5.2 Base Special Tokens
+BASE_SPECIAL_TOKENS = {
+  "pad_token": "<pad>",
+  "unk_token": "<unk>",
+  "bos_token": "<bos>",
+  "eos_token": "<eos>",
+}
+
+
+User-defined special_tokens override base defaults.
+
+6. Reserved Token Construction (Critical)
+Priority Order (Highest → Lowest)
+
+Range-expanded tokens
+e.g. C-50, E12, x0
+
+Misc tokens
+e.g. +, *, ^
+
+Base vocab tokens
+separators, operators, brackets
+
+Numbers
+
+Identifiers
+
+Unknown characters
+
+All reserved tokens must be matched using longest-match (maximal munch).
+
+7. Number Tokenization Policy
+
+数字の扱いは オプション化される。
+
+7.1 NumberPolicy
+NumberPolicy:
+  sign: "separate" | "attach"
+  digit_group: int  # 0 = no split, d>=1 = split every d digits
+  allow_float: bool
+  dot_token: str    # token used for "."
+
+7.2 Semantics
+Sign Handling
+
+"separate": -50 → ["-", "50"]
+
+"attach": -50 → ["-50"] or ["-5", "0"] depending on digit grouping
+
+Digit Grouping
+
+digit_group = 0: no split ("12345")
+
+digit_group = 1: ["1","2","3","4","5"]
+
+digit_group = 2: ["12","34","5"]
+
+Floats
+
+Floats are not single tokens
+
+"3.14" → ["3", ".", "14"]
+
+"." is emitted as dot_token
+
+This design avoids vocab explosion and works with digit grouping
+
+8. Lexer Rules (Formal)
+
+Lexer processes input left-to-right, once, without backtracking.
+
+Matching Order per Position
+
+Whitespace → skipped
+
+Reserved tokens (longest-match)
+
+Number (regex)
+
+Identifier ([A-Za-z_][A-Za-z_0-9]*)
+
+Mismatch:
+
+strict=True → error
+
+strict=False → emit <unk>
+
+Regex Notes
+
+Reserved tokens must be escaped and sorted by descending length
+
+Number regex may accept signed / float forms, but post-processed by NumberPolicy
+
+9. Strict vs Non-Strict Mode
+strict = true (default, recommended)
+
+Any unknown character → immediate error
+
+Ideal for dataset generation
+
+strict = false
+
+Unknown character → <unk>
+
+Useful for user-provided input
+
+10. Output Guarantees
+
+Output tokens:
+
+Contain only tokens present in vocab
+
+Are space-separated
+
+Are deterministic and reversible only up to tokenization (no AST)
+
+11. Examples
+Example 1: Polynomial
+
+Input
+
+C-50*x1^2 + 3.14
+
+
+Config
+
+coefficients: ["C",-50,50]
+
+variables: ["x",0,2]
+
+NumberPolicy(sign="separate", digit_group=1)
+
+Output tokens
+
+["C-50", "*", "x1", "^", "2", "+", "3", ".", "1", "4"]
+
+
+Token text
+
+"C-50 * x1 ^ 2 + 3 . 1 4"
+
+Example 2: Separator Priority
+
+Input
+
+x0||x1|x2
+
+
+Output
+
+["x0", "||", "x1", "|", "x2"]
+
+
+(longest-match enforced)
+
+12. Design Decisions (Rationale)
+
+Regex-based lexer
+
+Lightweight
+
+No parser dependency
+
+Easy to auto-generate from vocab config
+
+No AST
+
+CALT needs token sequences, not semantic trees
+
+Float split at '.'
+
+Avoids vocab explosion
+
+Compatible with digit grouping
+
+Range tokens as reserved
+
+Prevents C-50 from being split into C, -, 50
+
+13. Extension Points (Future)
+
+Additional token categories (relations: <=, >=, !=)
+
+Matrix separators (;, ,)
+
+Unicode symbols
+
+Optional parser layer (outside current scope)
+
+14. Implementation Checklist (for Cursor AI)
+
+ Parse vocab YAML
+
+ Expand range tokens
+
+ Merge base vocab and user vocab
+
+ Build reserved-token regex (longest-first)
+
+ Implement NumberPolicy post-processing
+
+ Implement strict / non-strict behavior
+
+ Provide tokenize(str) -> list[str]
+
+ Provide to_token_text(str) -> str
+
+15. Non-Goals (Explicit)
+
+❌ Parsing / AST construction
+
+❌ Semantic validation of expressions
+
+❌ Automatic inference of unary/binary minus beyond NumberPolicy
+
+If you want、次のステップとして：
+
+このドキュメントを README.md / design.md 用に整形
+
+Cursor 用の「実装プロンプト」だけを抜き出した短縮版
+
+CALT の既存 preprocessor API に完全に合わせたクラス設計
+
+のどれかもすぐ出せる。
