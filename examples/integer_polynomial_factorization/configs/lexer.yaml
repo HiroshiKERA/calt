@@ -1,0 +1,19 @@
+vocab:
+  range:
+    numbers: ["", -999, 999]
+  misc: ["+", "-", "*", "^", "(", ")", ",", "<unk>"]
+  special_tokens:
+    unk_token: "<unk>"
+  flags:
+    include_base_vocab: true
+    include_base_special_tokens: true
+
+number_policy:
+  sign: "attach"
+  digit_group: 3
+  allow_float: false
+  dot_token: "."
+
+strict: true
+include_base_vocab: true
+
