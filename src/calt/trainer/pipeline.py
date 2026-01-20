@@ -93,7 +93,7 @@ class TrainerPipeline:
         # Enable wandb
         os.environ.pop("WANDB_DISABLED", None)
 
-        project = getattr(wb, "project", None)
+        project = getattr(wb, "project", 'calt')
         group = getattr(wb, "group", None)
         name = getattr(wb, "name", None)
 
