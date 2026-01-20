@@ -2,12 +2,12 @@
 
 import logging
 
-from .base import AbstractPreprocessor, TermParseException
+from .base import AbstractPostProcessor, TermParseException
 
 logger = logging.getLogger(__name__)
 
 
-class PolynomialToInternalProcessor(AbstractPreprocessor):
+class PolynomialToInternalProcessor(AbstractPostProcessor):
     """Convert SageMath-style expressions to/from internal token representation.
 
     Example (to_internal):

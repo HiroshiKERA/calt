@@ -1,4 +1,4 @@
-"""Base classes for preprocessors."""
+"""Base classes for post-processors (processors that run after lexer)."""
 
 import logging
 from abc import ABC, abstractmethod
@@ -12,69 +12,75 @@ class TermParseException(Exception):
     """Custom exception raised during term parsing errors."""
     pass
 
-class AbstractPreprocessor(ABC):
-    """Base abstract class for all preprocessors."""
+class AbstractPostProcessor(ABC):
+    """Base abstract class for post-processors that run after lexer tokenization.
+    
+    Post-processors are used to apply additional transformations to the tokenized
+    text after the lexer has converted raw input to tokens. They can be chained
+    together using PostProcessorChain.
+    """
 
-    def __init__(self, num_variables: int, max_degree: int, max_coeff: int):
-        """Initialize preprocessor parameters.
-
-        Args:
-            num_variables (int): Number of variables in the polynomial (e.g., x0, x1, ...).
-            max_degree (int): Maximum degree of the polynomial.
-            max_coeff (int): Maximum coefficient value in the polynomial.
-        """
-        if num_variables < 0:
-            raise ValueError("num_variables must be positive")
-        if max_degree < 0:
-            raise ValueError("max_degree must be non-negative")
-        if max_coeff <= 0:
-            raise ValueError("max_coeff must be positive")
-
-        self.num_variables = num_variables
-        self.max_degree = max_degree
-        self.max_coeff = max_coeff
-        self.var_name_to_index = {f"x{i}": i for i in range(num_variables)}
+    def __init__(self):
+        """Initialize post-processor."""
+        pass
 
     def __call__(self, text: str) -> str:
-        """Process text (convenience wrapper for process method)."""
+        """Process text (convenience wrapper for encode method)."""
         return self.encode(text)
 
     @abstractmethod
     def encode(self, text: str) -> str:
-        """Abstract method for text processing to be implemented by subclasses."""
+        """Encode text (apply transformation).
+        
+        Args:
+            text: Input text (token text from lexer).
+        
+        Returns:
+            Transformed text.
+        """
         raise NotImplementedError
 
     @abstractmethod
     def decode(self, tokens: str) -> str:
-        """Abstract method for token processing to be implemented by subclasses."""
+        """Decode tokens (reverse transformation).
+        
+        Args:
+            tokens: Transformed text.
+        
+        Returns:
+            Original text.
+        """
         raise NotImplementedError
 
-    # For backward compatibility: process is an alias for to_internal
+    # For backward compatibility: process is an alias for encode
     def process(self, text: str) -> str:
         return self.encode(text)
 
-class ProcessorChain(AbstractPreprocessor):
-    """Compose multiple preprocessors and apply them sequentially."""
+class PostProcessorChain(AbstractPostProcessor):
+    """Compose multiple post-processors and apply them sequentially."""
 
-    def __init__(self, processors: Iterable["AbstractPreprocessor"]) -> None:
+    def __init__(self, processors: Iterable["AbstractPostProcessor"]) -> None:
+        """Initialize post-processor chain.
+        
+        Args:
+            processors: Iterable of post-processors to chain together.
+        """
         processors = list(processors)
         if not processors:
-            raise ValueError("ProcessorChain requires at least one preprocessor.")
-
-        first = processors[0]
-        super().__init__(
-            num_variables=first.num_variables,
-            max_degree=first.max_degree,
-            max_coeff=first.max_coeff,
-        )
+            raise ValueError("PostProcessorChain requires at least one post-processor.")
+        
+        super().__init__()
         self.processors = processors
 
     def encode(self, text: str) -> str:
+        """Apply all post-processors in sequence."""
         for processor in self.processors:
             text = processor.encode(text)
         return text
 
     def decode(self, tokens: str) -> str:
+        """Reverse all post-processors in reverse order."""
         for processor in reversed(self.processors):
             tokens = processor.decode(tokens)
         return tokens
+

@@ -1,9 +1,9 @@
 """Coefficient postfix processor for reordering coefficient and exponent tokens."""
 
-from .base import AbstractPreprocessor
+from .base import AbstractPostProcessor
 
 
-class CoefficientPostfixProcessor(AbstractPreprocessor):
+class CoefficientPostfixProcessor(AbstractPostProcessor):
     """Move coefficient tokens so they follow their exponent tokens within each term."""
 
     def __init__(

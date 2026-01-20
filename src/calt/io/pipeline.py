@@ -19,7 +19,7 @@ from .base import (
     StandardDataset,
 )
 from .preprocessors import (
-    AbstractPreprocessor,
+    AbstractPostProcessor,
     UnifiedLexer,
     NumberPolicy,
 )
@@ -39,7 +39,7 @@ def load_data(
     max_degree: int | None = None,
     max_coeff: int | None = None,
     max_length: int = 512,
-    processor: AbstractPreprocessor | None = None,
+    processor: AbstractPostProcessor | None = None,
     num_train_samples: int | None = None,
     num_test_samples: int | None = None,
     vocab_config: VocabConfig | dict | str | None = None,
@@ -99,7 +99,7 @@ class IOPipeline():
                  num_train_samples: int | None = None,
                  num_test_samples: int | None = None,
                  vocab_config: VocabConfig | dict | str | None = None,
-                 preprocessor: AbstractPreprocessor | None = None):
+                 preprocessor: AbstractPostProcessor | None = None):
         """Initialize IOPipeline.
         
         Args:
