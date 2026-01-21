@@ -3,7 +3,7 @@ import tempfile
 import os
 
 from calt.io.pipeline import IOPipeline
-from calt.io.vocabulary import get_monomial_vocab
+from calt.io.vocabulary import VocabConfig
 from calt.io.base import StandardDataset, StandardDataCollator
 from transformers import PreTrainedTokenizerFast
 
@@ -40,14 +40,24 @@ def preprocessor():
 @pytest.fixture
 def vocab_config():
     """Create a vocab config for testing."""
-    return get_monomial_vocab(num_variables=2, min_coeff=-10, max_coeff=10, min_degree=0, max_degree=3)
+    return VocabConfig([], {}).from_config({
+        "range": {"coefficients": ["C", -10, 10], "exponents": ["E", 0, 3], "variables": ["x", 0, 2]},
+        "misc": ["+"],
+        "special_tokens": {},
+        "flags": {},
+    })
 
 
 # -- IOPipeline Tests --
 
 def test_io_pipeline_init():
     """Test IOPipeline initialization."""
-    vocab_config = get_monomial_vocab(num_variables=2, min_coeff=-5, max_coeff=5, min_degree=0, max_degree=3)
+    vocab_config = VocabConfig([], {}).from_config({
+        "range": {"coefficients": ["C", -5, 5], "exponents": ["E", 0, 3], "variables": ["x", 0, 2]},
+        "misc": ["+"],
+        "special_tokens": {},
+        "flags": {},
+    })
     
     pipeline = IOPipeline(
         train_dataset_path="train.txt",
