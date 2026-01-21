@@ -12,12 +12,9 @@ from transformers import (
     BartForConditionalGeneration as Transformer,
 )
 
-from calt import Trainer, count_cuda_devices, load_data
-from calt.io.preprocessors import (
-    CoefficientPostfixProcessor,
-    PolynomialToInternalProcessor,
-    ProcessorChain,
-)
+from calt import Trainer, count_cuda_devices
+from calt.io.pipeline import IOPipeline
+from calt.io.vocabulary import get_monomial_vocab
 
 
 @click.command()
@@ -69,23 +66,22 @@ def main(config, dryrun, no_wandb):
             group=cfg.wandb.group,
             name=cfg.wandb.name,
         )
-    poly = PolynomialToInternalProcessor(num_variables=2, max_degree=3, max_coeff=200)
-    postfix = CoefficientPostfixProcessor()
-    chain = ProcessorChain([poly, postfix])
 
     # Load dataset
-    dataset, tokenizer, data_collator = load_data(
+    vocab_config = get_monomial_vocab(
+        cfg.data.num_variables, -cfg.data.max_coeff, cfg.data.max_coeff, 0, cfg.data.max_degree
+    )
+    io_result = IOPipeline(
         train_dataset_path=cfg.data.train_dataset_path,
         test_dataset_path=cfg.data.test_dataset_path,
-        field=cfg.data.field,
-        num_variables=cfg.data.num_variables,
-        max_degree=cfg.data.max_degree,
-        max_coeff=cfg.data.max_coeff,
-        max_length=cfg.model.max_sequence_length,
-        processor=chain,
         num_train_samples=cfg.data.num_train_samples,
         num_test_samples=cfg.data.num_test_samples,
-    )
+        vocab_config=vocab_config,
+        preprocessor=None,
+    ).build()
+    dataset = {"train": io_result["train_dataset"], "test": io_result["test_dataset"]}
+    tokenizer = io_result["tokenizer"]
+    data_collator = io_result["data_collator"]
 
     # Load model
     model_cfg = BartConfig(

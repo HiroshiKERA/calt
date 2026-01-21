@@ -1,10 +1,7 @@
 """Data loading utilities for the Transformer Algebra project.
 
-This module defines helper functions that build the training and evaluation
-`Dataset`, `Tokenizer`, and `DataCollator` objects used throughout the
-library.  In particular, the `load_data` factory translates symbolic
-polynomial expressions into the internal token representation expected by the
-Transformer models.
+This module defines :class:`IOPipeline`, which builds the training and evaluation
+`Dataset`, `Tokenizer`, and `DataCollator` objects used throughout the library.
 """
 
 import logging
@@ -25,70 +22,9 @@ from .preprocessor import (
 )
 from .tokenizer import get_tokenizer
 from .vocabulary.config import VocabConfig
-from .vocabulary.polynomial import get_generic_vocab, get_monomial_vocab
 
 logger = logging.getLogger(__name__)
 
-
-def load_data(
-    train_dataset_path: str | None = None,
-    test_dataset_path: str | None = None,
-    field: str | None = None,
-    num_variables: int | None = None,
-    max_degree: int | None = None,
-    max_coeff: int | None = None,
-    processor: AbstractPreProcessor | None = None,
-    num_train_samples: int | None = None,
-    num_test_samples: int | None = None,
-    vocab_config: VocabConfig | dict | str | None = None,
-):
-    """Load data and create dataset, tokenizer, and data collator.
-    
-    This is a convenience function that wraps IOPipeline for backward compatibility.
-    
-    Args:
-        train_dataset_path: Path to training dataset file
-        test_dataset_path: Path to test dataset file
-        field: Field specification ("ZZ" for integers, "GF<p>" for finite field)
-        num_variables: Number of variables in polynomials
-        max_degree: Maximum degree for any variable
-        max_coeff: Maximum absolute value for coefficients
-        max_length: Maximum sequence length
-        processor: Preprocessor instance (optional)
-        num_train_samples: Maximum number of training samples to load
-        num_test_samples: Maximum number of test samples to load
-        vocab_config: VocabConfig, dict, or path to YAML file (optional)
-    
-    Returns:
-        tuple: (dataset_dict, tokenizer, data_collator) where dataset_dict contains
-            "train" and "test" keys with StandardDataset instances
-    """
-    # Create vocab_config if field is provided
-    if vocab_config is None and field is not None:
-        if num_variables is None or max_degree is None or max_coeff is None:
-            raise ValueError("num_variables, max_degree, and max_coeff must be provided when field is specified")
-        
-        vocab_config = get_monomial_vocab(num_variables, -max_coeff, max_coeff, 0, max_degree)
-    
-    # Use IOPipeline to build the data pipeline
-    pipeline = IOPipeline(
-        train_dataset_path=train_dataset_path,
-        test_dataset_path=test_dataset_path,
-        num_train_samples=num_train_samples,
-        num_test_samples=num_test_samples,
-        vocab_config=vocab_config,
-        preprocessor=processor,
-    )
-    
-    result = pipeline.build()
-    
-    # Return in the expected format: (dataset_dict, tokenizer, data_collator)
-    dataset_dict = {
-        "train": result["train_dataset"],
-        "test": result["test_dataset"],
-    }
-    
-    return dataset_dict, result["tokenizer"], result["data_collator"]
 
 class IOPipeline():
     def __init__(self, 

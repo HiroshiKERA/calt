@@ -1,4 +1,3 @@
-from .io.pipeline import load_data
 from .io.base import StandardDataCollator, StandardDataset
 from .io.preprocessor import (
     AbstractPreProcessor,
