@@ -9,11 +9,11 @@ from abc import ABC, abstractmethod
 from typing import Optional
 
 from omegaconf import DictConfig
+from torch.utils.data import Dataset
 from transformers import PreTrainedModel, PreTrainedTokenizerFast, TrainingArguments
 
-from ..trainer import Trainer
 from ...io.base import StandardDataCollator
-from torch.utils.data import Dataset
+from ..trainer import Trainer
 
 
 class TrainerLoader(ABC):

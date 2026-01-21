@@ -50,9 +50,9 @@ def get_positional_embedding(
         >>> assert pe is None
     """
     # Import here to avoid circular import
-    from .sinusoidal import SinusoidalPositionalEmbedding
     from .generic import GenericPositionalEmbedding
     from .rope import RotaryPositionalEmbedding
+    from .sinusoidal import SinusoidalPositionalEmbedding
     
     pe_type = pe_type.lower() if isinstance(pe_type, str) else pe_type
     

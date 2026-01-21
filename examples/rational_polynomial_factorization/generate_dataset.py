@@ -1,4 +1,5 @@
 from omegaconf import OmegaConf
+
 from calt.dataset.pipeline import DatasetPipeline
 from calt.dataset.sagemath.utils.polynomial_sampler import PolynomialSampler
 

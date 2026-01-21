@@ -8,8 +8,7 @@ import logging
 from pathlib import Path
 
 import yaml
-from omegaconf import DictConfig, OmegaConf
-from transformers import PreTrainedTokenizerFast as StandardTokenizer
+from omegaconf import DictConfig
 
 from .base import (
     StandardDataCollator,
@@ -17,8 +16,8 @@ from .base import (
 )
 from .preprocessor import (
     AbstractPreProcessor,
-    UnifiedLexer,
     NumberPolicy,
+    UnifiedLexer,
 )
 from .tokenizer import get_tokenizer
 from .vocabulary.config import VocabConfig

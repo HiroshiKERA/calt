@@ -5,10 +5,8 @@ Handles conversion from unified config format (cfg.model) to BartConfig
 and creates BART model instances.
 """
 
-from typing import Optional
 
-from omegaconf import DictConfig
-from transformers import BartConfig, BartForConditionalGeneration, PreTrainedTokenizerFast
+from transformers import BartConfig, BartForConditionalGeneration
 
 from ..loader import ModelLoader
 

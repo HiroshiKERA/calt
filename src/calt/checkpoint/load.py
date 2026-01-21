@@ -1,10 +1,9 @@
 """Checkpoint loading: load_inference_bundle, load_run."""
 
 import json
-import yaml
 from pathlib import Path
-from typing import Any
 
+import yaml
 from transformers import (
     AutoModelForCausalLM,
     AutoModelForSeq2SeqLM,
@@ -16,7 +15,6 @@ from calt.io.vocabulary.config import VocabConfig
 
 from .manifest import load_manifest, resolve_paths
 from .types import RunBundle
-
 
 # Model types that use seq2seq; rest treated as causal
 _SEQ2SEQ_TYPES = {"bart", "t5", "marian", "pegasus", "mbart", "blenderbot", "m2m_100"}

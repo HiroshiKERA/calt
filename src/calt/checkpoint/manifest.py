@@ -1,8 +1,9 @@
 """Manifest read/write and path resolution."""
 
-import yaml
 from pathlib import Path
 from typing import Any
+
+import yaml
 
 
 def _get_calt_version() -> str:

@@ -7,9 +7,9 @@ in the complex plane. This implementation provides positional embeddings that ca
 be applied to input embeddings.
 """
 
+
 import torch
 import torch.nn as nn
-import math
 
 
 class RotaryPositionalEmbedding(nn.Module):

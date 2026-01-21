@@ -5,12 +5,12 @@ This module provides a class-based interface similar to IOPipeline for creating
 trainer instances from configuration files.
 """
 
-from typing import Optional
 import os
+from typing import Optional
 
 from omegaconf import DictConfig
-from transformers import PreTrainedModel, PreTrainedTokenizerFast
 from torch.utils.data import Dataset
+from transformers import PreTrainedModel, PreTrainedTokenizerFast
 
 from ..io.base import StandardDataCollator
 from .loaders.base import get_trainer_loader

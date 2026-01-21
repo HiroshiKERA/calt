@@ -1,4 +1,3 @@
-from typing import Optional, TypedDict
 
 from tokenizers import Tokenizer
 from tokenizers.models import WordLevel
@@ -7,6 +6,7 @@ from tokenizers.processors import TemplateProcessing
 from transformers import PreTrainedTokenizerFast
 
 from .vocabulary.config import VocabConfig
+
 
 def get_tokenizer(
     vocab_config: VocabConfig,

@@ -102,8 +102,8 @@ def get_model_loader(
         >>> model = loader.load()
     """
     # Import here to avoid circular import
-    from .generic.loader import TransformerLoader
     from .bart.loader import BartLoader
+    from .generic.loader import TransformerLoader
     
     # Determine model name
     if model_name is None:

@@ -1,7 +1,7 @@
 """BART model implementation."""
 
-from .loader import BartLoader
 from .config_mapping import create_bart_config
+from .loader import BartLoader
 
 __all__ = [
     "BartLoader",

@@ -1,6 +1,7 @@
-import pytest
-import tempfile
 import os
+import tempfile
+
+import pytest
 import yaml
 
 from calt.io.vocabulary import VocabConfig

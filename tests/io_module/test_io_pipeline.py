@@ -1,11 +1,12 @@
-import pytest
-import tempfile
 import os
+import tempfile
 
+import pytest
+from transformers import PreTrainedTokenizerFast
+
+from calt.io.base import StandardDataCollator, StandardDataset
 from calt.io.pipeline import IOPipeline
 from calt.io.vocabulary import VocabConfig
-from calt.io.base import StandardDataset, StandardDataCollator
-from transformers import PreTrainedTokenizerFast
 
 
 # Fixtures

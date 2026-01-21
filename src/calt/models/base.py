@@ -4,7 +4,7 @@ Model registry for creating model instances.
 This module provides a registry class for creating different types of models.
 """
 
-from typing import Optional, Type, Callable
+from typing import Callable, Optional, Type
 
 from omegaconf import DictConfig
 from transformers import PretrainedConfig, PreTrainedModel, PreTrainedTokenizerFast
@@ -39,10 +39,11 @@ class ModelRegistry:
     def _register_defaults(self):
         """Register default model types."""
         # Import here to avoid circular import
-        from .generic.model import Transformer, TransformerConfig
+        from transformers import BartConfig, BartForConditionalGeneration
+
         from .bart.config_mapping import create_bart_config
         from .generic.config_mapping import create_transformer_config
-        from transformers import BartForConditionalGeneration, BartConfig
+        from .generic.model import Transformer, TransformerConfig
         
         # Register generic transformer model (aliases: transformer, calt, generic)
         self.register("transformer", Transformer, TransformerConfig)

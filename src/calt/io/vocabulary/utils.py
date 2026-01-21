@@ -1,5 +1,6 @@
 from .config import VocabConfig
 
+
 # recieve list of (prefix, begin, end)
 def get_vocab(vocab_list: list[tuple[str, int, int]], misc=[]):
     
