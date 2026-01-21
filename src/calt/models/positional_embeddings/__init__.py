@@ -8,9 +8,9 @@ This module provides various positional embedding strategies:
 """
 
 from .base import get_positional_embedding
-from .sinusoidal import SinusoidalPositionalEmbedding
 from .generic import GenericPositionalEmbedding
 from .rope import RotaryPositionalEmbedding
+from .sinusoidal import SinusoidalPositionalEmbedding
 
 # Alias for backward compatibility
 LearnedPositionalEmbedding = GenericPositionalEmbedding

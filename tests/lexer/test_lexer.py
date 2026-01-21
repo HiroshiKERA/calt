@@ -1,12 +1,11 @@
 """Tests for UnifiedLexer and NumberPolicy."""
 
-import json
 from pathlib import Path
 
 import pytest
 
+from calt.io.preprocessor import NumberPolicy, UnifiedLexer
 from calt.io.vocabulary import VocabConfig
-from calt.io.preprocessor import UnifiedLexer, NumberPolicy
 
 # Output directory for test results
 OUTPUT_DIR = Path(__file__).parent / "test_outputs"
@@ -95,7 +94,7 @@ class TestUnifiedLexer:
             f.write("-" * 80 + "\n")
             if "number_policy" in config:
                 np = config["number_policy"]
-                f.write(f"  Number Policy:\n")
+                f.write("  Number Policy:\n")
                 f.write(f"    sign: {np.get('sign', 'N/A')}\n")
                 f.write(f"    digit_group: {np.get('digit_group', 'N/A')}\n")
                 f.write(f"    allow_float: {np.get('allow_float', 'N/A')}\n")
@@ -320,7 +319,7 @@ class TestUnifiedLexer:
         text = 'x0 + x1 @ invalid'
         error_occurred = False
         try:
-            tokens = lexer.tokenize(text)
+            lexer.tokenize(text)
         except ValueError as e:
             error_occurred = True
             error_msg = str(e)
@@ -345,7 +344,7 @@ class TestUnifiedLexer:
             f.write("Configuration:\n")
             f.write("-" * 80 + "\n")
             np = config["number_policy"]
-            f.write(f"  Number Policy:\n")
+            f.write("  Number Policy:\n")
             f.write(f"    sign: {np.get('sign', 'N/A')}\n")
             f.write(f"    digit_group: {np.get('digit_group', 'N/A')}\n")
             f.write(f"    allow_float: {np.get('allow_float', 'N/A')}\n")

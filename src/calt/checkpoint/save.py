@@ -1,10 +1,10 @@
 """Checkpoint saving: save_run."""
 
 import json
-import yaml
 from pathlib import Path
 from typing import Any
 
+import yaml
 from omegaconf import DictConfig, OmegaConf
 
 

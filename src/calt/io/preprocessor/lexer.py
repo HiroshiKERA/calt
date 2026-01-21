@@ -10,9 +10,8 @@ import re
 from dataclasses import dataclass
 from typing import Optional
 
-from ..vocabulary.config import VocabConfig, BASE_VOCAB, BASE_SPECIAL_TOKENS
+from ..vocabulary.config import VocabConfig
 from .base import AbstractPreProcessor
-
 
 # Base vocabulary as per specification
 BASE_VOCAB_TOKENS = {

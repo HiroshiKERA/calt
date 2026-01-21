@@ -1,8 +1,8 @@
 from omegaconf import OmegaConf
+
 from calt.io.pipeline import IOPipeline
 from calt.models import ModelPipeline
 from calt.trainer import TrainerPipeline
-
 
 cfg = OmegaConf.load("configs/train.yaml")
 

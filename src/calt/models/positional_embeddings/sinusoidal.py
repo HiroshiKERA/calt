@@ -3,9 +3,10 @@ Sinusoidal positional embeddings as used in the original Transformer paper.
 Fixed, non-learnable positional embeddings using sin/cos functions.
 """
 
+import math
+
 import torch
 import torch.nn as nn
-import math
 
 
 class SinusoidalPositionalEmbedding(nn.Module):

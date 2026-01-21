@@ -5,13 +5,10 @@ Handles conversion from unified config format (cfg.model) to TransformerConfig
 and creates Transformer model instances.
 """
 
-from typing import Optional
 
-from omegaconf import DictConfig
-from transformers import PreTrainedTokenizerFast
 
-from .model import Transformer, TransformerConfig
 from ..loader import ModelLoader
+from .model import Transformer, TransformerConfig
 
 # Default TransformerConfig for reference
 _DEFAULT_TRANSFORMER_CONFIG = TransformerConfig()

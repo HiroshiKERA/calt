@@ -5,13 +5,9 @@ Handles conversion from unified config format (cfg.train) to TrainingArguments
 and creates Trainer instances.
 """
 
-from typing import Optional
 
-from omegaconf import DictConfig
-from transformers import PreTrainedModel, PreTrainedTokenizerFast, TrainingArguments
-from torch.utils.data import Dataset
+from transformers import TrainingArguments
 
-from ...io.base import StandardDataCollator
 from ...trainer.utils import count_cuda_devices
 from ..trainer import Trainer
 from .base import TrainerLoader

@@ -1,14 +1,15 @@
-import pytest
-import os
 
-from calt.io.vocabulary import VocabConfig
+import pytest
+
 from calt.io.tokenizer import get_tokenizer
+from calt.io.vocabulary import VocabConfig
 
 
 def test_vocab_config_from_examples_config():
     """Test loading VocabConfig from examples/demos/configs/lexer.yaml."""
-    import yaml
     from pathlib import Path
+
+    import yaml
     
     # Load lexer.yaml and extract vocab section
     lexer_config_path = Path("examples/demos/configs/lexer.yaml")
@@ -59,8 +60,9 @@ def test_vocab_config_from_examples_config():
 
 def test_vocab_config_from_examples_config_creates_tokenizer():
     """Test that VocabConfig from examples/demos/configs/lexer.yaml can create a tokenizer."""
-    import yaml
     from pathlib import Path
+
+    import yaml
     
     # Load lexer.yaml and extract vocab section
     lexer_config_path = Path("examples/demos/configs/lexer.yaml")
