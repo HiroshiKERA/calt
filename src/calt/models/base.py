@@ -280,7 +280,7 @@ def get_model_from_config(
         >>> cfg = OmegaConf.load("config/train.yaml")
         >>> model = get_model_from_config(cfg.model, tokenizer)
     """
-    from .loaders import get_model_loader
+    from .loader import get_model_loader
     
     loader = get_model_loader(
         model_name=model_name,

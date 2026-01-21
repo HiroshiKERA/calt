@@ -11,7 +11,7 @@ from omegaconf import DictConfig
 from transformers import PreTrainedTokenizerFast
 
 from .model import Transformer, TransformerConfig
-from ..loaders import ModelLoader
+from ..loader import ModelLoader
 
 # Default TransformerConfig for reference
 _DEFAULT_TRANSFORMER_CONFIG = TransformerConfig()

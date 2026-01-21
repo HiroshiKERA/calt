@@ -10,7 +10,7 @@ from typing import Optional
 from omegaconf import DictConfig
 from transformers import BartConfig, BartForConditionalGeneration, PreTrainedTokenizerFast
 
-from ..loaders import ModelLoader
+from ..loader import ModelLoader
 
 # Default BartConfig for reference
 _DEFAULT_BART_CONFIG = BartConfig()
