@@ -10,7 +10,7 @@ from transformers import (
 
 from calt import Trainer, count_cuda_devices
 from calt.io.pipeline import IOPipeline
-from calt.io.vocabulary import get_monomial_vocab
+from calt.io.vocabulary import VocabConfig
 from calt.models import (
     CaltModel,
     CaltModelConfig,
@@ -68,9 +68,17 @@ def main(config, dryrun, no_wandb):
         )
 
     # Load dataset
-    vocab_config = get_monomial_vocab(
-        cfg.data.num_variables, -cfg.data.max_coeff, cfg.data.max_coeff, 0, cfg.data.max_degree
-    )
+    _v = {
+        "range": {
+            "coefficients": ["C", -cfg.data.max_coeff, cfg.data.max_coeff],
+            "exponents": ["E", 0, cfg.data.max_degree],
+            "variables": ["x", 0, cfg.data.num_variables],
+        },
+        "misc": ["+"],
+        "special_tokens": {},
+        "flags": {},
+    }
+    vocab_config = VocabConfig([], {}).from_config(_v)
     io_result = IOPipeline(
         train_dataset_path=cfg.data.train_dataset_path,
         test_dataset_path=cfg.data.test_dataset_path,

@@ -3,7 +3,7 @@ import tempfile
 import os
 import yaml
 
-from calt.io.vocabulary import VocabConfig, get_monomial_vocab, get_generic_vocab
+from calt.io.vocabulary import VocabConfig
 
 
 # Fixtures for VocabConfig
@@ -199,79 +199,3 @@ def test_vocab_config_save_and_load():
         if os.path.exists(temp_path):
             os.unlink(temp_path)
 
-
-def test_get_monomial_vocab():
-    """Test get_monomial_vocab function."""
-    vocab_config = get_monomial_vocab(
-        num_variables=2, min_coeff=-2, max_coeff=2, min_degree=0, max_degree=3
-    )
-    
-    vocab = vocab_config.get_vocab()
-    special_tokens = vocab_config.get_special_tokens()
-    
-    # Should include base vocab
-    assert "[SEP]" in vocab
-    
-    # Should include coefficient tokens
-    assert "C-2" in vocab
-    assert "C-1" in vocab
-    assert "C0" in vocab
-    assert "C1" in vocab
-    assert "C2" in vocab
-    
-    # Should include exponent tokens
-    assert "E0" in vocab
-    assert "E1" in vocab
-    assert "E2" in vocab
-    assert "E3" in vocab
-    
-    # Should include variable tokens
-    assert "x0" in vocab
-    assert "x1" in vocab
-    
-    # Should include + token
-    assert "+" in vocab
-    
-    # Should include base special tokens
-    assert "pad_token" in special_tokens
-    assert special_tokens["pad_token"] == "[PAD]"
-
-
-def test_get_generic_vocab():
-    """Test get_generic_vocab function."""
-    vocab_config = get_generic_vocab(
-        num_variables=2, min_coeff=-2, max_coeff=2, min_degree=0, max_degree=3
-    )
-    
-    vocab = vocab_config.get_vocab()
-    special_tokens = vocab_config.get_special_tokens()
-    
-    # Should include base vocab
-    assert "[SEP]" in vocab
-    
-    # Should include coefficient tokens
-    assert "C-2" in vocab
-    assert "C-1" in vocab
-    assert "C0" in vocab
-    assert "C1" in vocab
-    assert "C2" in vocab
-    
-    # Should include exponent tokens
-    assert "E0" in vocab
-    assert "E1" in vocab
-    assert "E2" in vocab
-    assert "E3" in vocab
-    
-    # Should include variable tokens
-    assert "x0" in vocab
-    assert "x1" in vocab
-    
-    # Should include operators
-    assert "+" in vocab
-    assert "*" in vocab
-    assert "^" in vocab
-    assert "(" in vocab
-    assert ")" in vocab
-    
-    # Should include base special tokens
-    assert "pad_token" in special_tokens
