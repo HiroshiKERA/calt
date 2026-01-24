@@ -1,18 +1,16 @@
 vocab:
   range:
-    numbers: ["", -999, 999]
-  misc: [",", ";", "[", "]", "<unk>"]
-  special_tokens:
-    unk_token: "<unk>"
+    numbers: ["", -9, 9]
+  misc: [",", ";", "[", "]", "-", "."]
+  special_tokens: {}
   flags:
     include_base_vocab: true
     include_base_special_tokens: true
 
 number_policy:
-  sign: "attach"
-  digit_group: 3
+  separate_sign: false  # false = attach sign to number, true = separate sign as token
+  digit_group: 1
   allow_float: true
-  dot_token: "."
 
 strict: true
 include_base_vocab: true
