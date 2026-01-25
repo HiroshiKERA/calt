@@ -4,7 +4,7 @@ Test: number_tokenization_attach
 Configuration:
 --------------------------------------------------------------------------------
   Number Policy:
-    sign: attach
+    sign: True
     digit_group: 0
     allow_float: False
   strict: True

@@ -4,7 +4,7 @@ Test: complex_exponent_chain
 Configuration:
 --------------------------------------------------------------------------------
   Number Policy:
-    sign: separate
+    sign: False
     digit_group: 0
     allow_float: False
   strict: True

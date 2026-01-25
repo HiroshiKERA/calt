@@ -4,7 +4,7 @@ Test: very_complex_polynomial_matrix_mix
 Configuration:
 --------------------------------------------------------------------------------
   Number Policy:
-    sign: separate
+    sign: False
     digit_group: 0
     allow_float: False
   strict: True

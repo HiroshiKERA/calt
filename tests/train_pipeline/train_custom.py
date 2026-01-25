@@ -11,10 +11,7 @@ from transformers import (
 from calt import Trainer, count_cuda_devices
 from calt.io.pipeline import IOPipeline
 from calt.io.vocabulary import VocabConfig
-from calt.models import (
-    CaltModel,
-    CaltModelConfig,
-)
+from calt.models import Transformer, TransformerConfig
 
 
 @click.command()
@@ -91,7 +88,7 @@ def main(config, dryrun, no_wandb):
     data_collator = io_result["data_collator"]
 
     # Load model
-    model_cfg = CaltModelConfig(
+    model_cfg = TransformerConfig(
         d_model=cfg.model.d_model,
         attention_heads=cfg.model.num_encoder_heads,
         num_encoder_layers=cfg.model.num_encoder_layers,
@@ -104,7 +101,7 @@ def main(config, dryrun, no_wandb):
         eos_token_id=tokenizer.eos_token_id,
         seed=cfg.train.seed,
     )
-    model = CaltModel(config=model_cfg)
+    model = Transformer(config=model_cfg)
 
     if torch.cuda.is_available():
         train_batch_size = cfg.train.batch_size // count_cuda_devices()

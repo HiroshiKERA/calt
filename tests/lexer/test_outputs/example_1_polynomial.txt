@@ -4,7 +4,7 @@ Test: example_1_polynomial
 Configuration:
 --------------------------------------------------------------------------------
   Number Policy:
-    sign: separate
+    sign: False
     digit_group: 1
     allow_float: True
   strict: True

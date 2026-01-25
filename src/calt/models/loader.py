@@ -122,12 +122,12 @@ def get_model_loader(
     model_name = model_name.lower() if isinstance(model_name, str) else model_name
     
     # Create appropriate loader
-    if model_name in ["transformer", "calt", "generic"]:
+    if model_name == "generic":
         return TransformerLoader(calt_config=calt_config, tokenizer=tokenizer)
     elif model_name == "bart":
         return BartLoader(calt_config=calt_config, tokenizer=tokenizer)
     else:
-        supported_types = ["transformer", "calt", "bart"]
+        supported_types = ["generic", "bart"]
         raise ValueError(
             f"Unsupported model type: {model_name}. "
             f"Supported types: {supported_types}"

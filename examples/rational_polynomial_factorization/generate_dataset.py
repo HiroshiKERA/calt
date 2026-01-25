@@ -14,8 +14,8 @@ def rational_factor_generator(seed: int):
         symbols="x",
         field_str="QQ",
         order="grevlex",
-        max_num_terms=3,
-        max_degree=2,
+        max_num_terms=4,
+        max_degree=4,
         min_degree=1,
         num_bound=10,
     )
@@ -23,7 +23,7 @@ def rational_factor_generator(seed: int):
     # expanded = p.expand()
     factored = p.factor()
 
-    return str(p), str(factored)
+    return p, factored
 
 
 if __name__ == "__main__":

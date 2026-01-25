@@ -4,7 +4,7 @@ Test: digit_grouping
 Configuration:
 --------------------------------------------------------------------------------
   Number Policy:
-    sign: separate
+    sign: False
     digit_group: 2
     allow_float: False
   strict: True
