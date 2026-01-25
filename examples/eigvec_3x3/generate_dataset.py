@@ -18,8 +18,6 @@ def eigvec_generator(seed: int):
         v = v / norm
     v = np.round(v, 2)
 
-
-
     # # round to 2 decimals and format as rows separated by ';'
     # rows = ["{:.2f},{:.2f},{:.2f}".format(*row) for row in M]
     # matrix_str = ";".join(rows)

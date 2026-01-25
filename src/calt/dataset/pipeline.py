@@ -91,7 +91,10 @@ class DatasetPipeline:
 
         # Generate datasets with batch processing
         dataset_generator.run(
-            dataset_sizes={"train": self.num_train_samples, "test": self.num_test_samples},
+            dataset_sizes={
+                "train": self.num_train_samples,
+                "test": self.num_test_samples,
+            },
             batch_size=self.batch_size,  # set batch size
             problem_generator=self.problem_generator,
             statistics_calculator=self.statistics_calculator,

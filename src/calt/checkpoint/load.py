@@ -31,7 +31,8 @@ def _detect_model_type(model_path: Path) -> str:
     arch = cfg.get("architectures") or []
     arch_str = " ".join(arch).lower()
     if mt in _SEQ2SEQ_TYPES or any(
-        a in arch_str for a in ("bart", "t5", "marian", "pegasus", "mbart", "encoderdecoder")
+        a in arch_str
+        for a in ("bart", "t5", "marian", "pegasus", "mbart", "encoderdecoder")
     ):
         return "seq2seq"
     return "causal"
@@ -101,7 +102,9 @@ def _load_yaml(path: Path) -> dict:
         return yaml.safe_load(f)
 
 
-def _build_lexer_from_config(lexer_config: dict, vocab_config: VocabConfig) -> UnifiedLexer:
+def _build_lexer_from_config(
+    lexer_config: dict, vocab_config: VocabConfig
+) -> UnifiedLexer:
     """Build UnifiedLexer from lexer_config (number_policy, strict, etc.) and VocabConfig."""
     np = lexer_config.get("number_policy") or {}
     # attach_sign: true = attach sign to number, false = separate sign as token
@@ -191,7 +194,7 @@ def load_run(
             )
         vocab_config = _load_yaml(vocab_path)
         lexer_config = _load_yaml(lexer_path)
-        
+
         voc = VocabConfig([], {})
         voc.from_config(vocab_config)
         vocab = voc
@@ -219,7 +222,7 @@ def load_run(
             voc = VocabConfig([], {})
             voc.from_config(vocab_config_dict)
             _vocab = voc
-    
+
     _lexer = lexer or _build_lexer_from_config(lexer_config or {}, _vocab)
     # Use the extended vocab_config from lexer if lexer was created
     if _lexer is not None:

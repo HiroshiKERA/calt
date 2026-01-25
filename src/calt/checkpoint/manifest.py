@@ -9,6 +9,7 @@ import yaml
 def _get_calt_version() -> str:
     try:
         from importlib.metadata import version
+
         return version("calt-x")
     except Exception:
         return "0.0.0"
@@ -64,7 +65,9 @@ def save_manifest(output_dir: str | Path, manifest: dict[str, Any]) -> None:
         yaml.safe_dump(manifest, f, default_flow_style=False, allow_unicode=True)
 
 
-def resolve_paths(output_dir: str | Path, manifest: dict[str, Any] | None) -> tuple[Path, Path]:
+def resolve_paths(
+    output_dir: str | Path, manifest: dict[str, Any] | None
+) -> tuple[Path, Path]:
     """Resolve (model_dir, tokenizer_dir) as absolute paths.
 
     Uses manifest.paths if present; otherwise defaults to model/ and tokenizer/.

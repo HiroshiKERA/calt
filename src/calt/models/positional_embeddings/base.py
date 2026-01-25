@@ -16,7 +16,7 @@ def get_positional_embedding(
     **kwargs,
 ) -> Optional[nn.Module]:
     """Create a positional embedding instance based on the specified type.
-    
+
     Args:
         pe_type (str): Type of positional embedding. Supported types:
             - "generic": Learnable embeddings using nn.Embedding
@@ -28,23 +28,23 @@ def get_positional_embedding(
         **kwargs: Additional arguments passed to the positional embedding constructor.
             For RoPE, supports:
             - base (float): Base for computing frequencies. Default: 10000.0.
-    
+
     Returns:
         nn.Module | None: Positional embedding module, or None if pe_type is "none".
-    
+
     Raises:
         ValueError: If pe_type is not supported.
-    
+
     Examples:
         >>> # Create a learned positional embedding
         >>> pe = get_positional_embedding("learned", d_model=128, max_len=512)
-        >>> 
+        >>>
         >>> # Create a sinusoidal positional embedding
         >>> pe = get_positional_embedding("sinusoidal", d_model=128, max_len=512)
-        >>> 
+        >>>
         >>> # Create a RoPE positional embedding with custom base
         >>> pe = get_positional_embedding("rope", d_model=128, max_len=512, base=10000.0)
-        >>> 
+        >>>
         >>> # No positional embedding
         >>> pe = get_positional_embedding("none", d_model=128, max_len=512)
         >>> assert pe is None
@@ -53,9 +53,9 @@ def get_positional_embedding(
     from .generic import GenericPositionalEmbedding
     from .rope import RotaryPositionalEmbedding
     from .sinusoidal import SinusoidalPositionalEmbedding
-    
+
     pe_type = pe_type.lower() if isinstance(pe_type, str) else pe_type
-    
+
     if pe_type == "generic":
         return GenericPositionalEmbedding(
             d_model=d_model,

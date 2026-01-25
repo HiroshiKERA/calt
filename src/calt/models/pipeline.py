@@ -15,29 +15,29 @@ from .base import ModelRegistry
 
 class ModelPipeline:
     """Pipeline for creating models from configuration using ModelRegistry.
-    
+
     Similar to IOPipeline, this class provides a simple interface for creating
     model instances from config files. It uses ModelRegistry internally to handle
     model creation.
-    
+
     Example:
         >>> from omegaconf import OmegaConf
         >>> from calt.models import ModelPipeline
-        >>> 
+        >>>
         >>> cfg = OmegaConf.load("config/train.yaml")
         >>> tokenizer = ...  # Get tokenizer from IOPipeline
-        >>> 
+        >>>
         >>> model_pipeline = ModelPipeline(cfg.model, tokenizer)
         >>> model = model_pipeline.build()
     """
-    
+
     def __init__(
         self,
         calt_config: DictConfig,
         tokenizer: Optional[PreTrainedTokenizerFast] = None,
     ):
         """Initialize the model pipeline.
-        
+
         Args:
             calt_config (DictConfig): Model configuration from cfg.model (OmegaConf).
             tokenizer (PreTrainedTokenizerFast | None): Tokenizer instance (required for some models).
@@ -64,10 +64,10 @@ class ModelPipeline:
             calt_config=calt_config,
             tokenizer=io_dict["tokenizer"],
         )
-    
+
     def build(self) -> PreTrainedModel:
         """Build the model from configuration using ModelRegistry.
-        
+
         Returns:
             PreTrainedModel: Model instance.
         """
