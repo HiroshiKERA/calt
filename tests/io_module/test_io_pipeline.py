@@ -275,10 +275,3 @@ def test_io_pipeline_build_tokenizer_works(
     # Test decoding
     decoded = tokenizer.decode(encoded)
     assert isinstance(decoded, str)
-
-
-def test_io_pipeline_build_data_collator_works(sample_data_file, vocab_config):
-    """Test that data collator works correctly."""
-    # Skip this test when preprocessor is None because raw text may contain unknown tokens
-    # This test requires a preprocessor to tokenize the text properly
-    pytest.skip("This test requires a preprocessor to tokenize text properly")
