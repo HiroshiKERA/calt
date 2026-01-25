@@ -49,13 +49,31 @@ def apply_dryrun_settings(cfg):
     print("-" * 100)
 
 
+# Get sample data directory
+SAMPLE_DATA_DIR = Path(__file__).parent / "sample_data"
+
+
+def get_sample_data_path(example_dir: str) -> Path:
+    """Get the path to sample data for an example."""
+    return SAMPLE_DATA_DIR / example_dir
+
+
 def run_example(example_dir: str):
-    """Run a single example."""
+    """Run a single example using sample data."""
     example_path = EXAMPLES_DIR / example_dir
     config_path = example_path / "configs" / "train.yaml"
 
     if not config_path.exists():
         print(f"⚠️  Skipping {example_dir}: config file not found at {config_path}")
+        return False
+
+    # Check if sample data exists
+    sample_data_path = get_sample_data_path(example_dir)
+    train_sample = sample_data_path / "train_raw.txt"
+    test_sample = sample_data_path / "test_raw.txt"
+
+    if not train_sample.exists() or not test_sample.exists():
+        print(f"⚠️  Skipping {example_dir}: sample data not found at {sample_data_path}")
         return False
 
     print(f"\n{'=' * 100}")
@@ -69,6 +87,11 @@ def run_example(example_dir: str):
 
         # Load config
         cfg = OmegaConf.load("configs/train.yaml")
+
+        # Override dataset paths to use sample data
+        # Convert to absolute paths relative to example directory
+        cfg.data.train_dataset_path = str(train_sample.resolve())
+        cfg.data.test_dataset_path = str(test_sample.resolve())
 
         # Apply dryrun settings
         apply_dryrun_settings(cfg)
@@ -170,7 +193,26 @@ def test_run_example_dryrun(example_dir):
     """Test that each example can be run in dryrun mode.
 
     This test actually runs the training pipeline, so it may take some time.
+    Uses sample data from tests/train_pipeline/sample_data/.
     """
+    # Check if config file exists
+    example_path = EXAMPLES_DIR / example_dir
+    config_path = example_path / "configs" / "train.yaml"
+
+    if not config_path.exists():
+        pytest.skip(f"Config file not found: {config_path}")
+
+    # Check if sample data exists
+    sample_data_path = get_sample_data_path(example_dir)
+    train_sample = sample_data_path / "train_raw.txt"
+    test_sample = sample_data_path / "test_raw.txt"
+
+    if not train_sample.exists() or not test_sample.exists():
+        pytest.skip(
+            f"Sample data not found for {example_dir}. "
+            f"Run 'python tests/train_pipeline/prepare_sample_data.py' to generate sample data."
+        )
+
     result = run_example(example_dir)
     assert result is True, f"Example {example_dir} failed to run"
 
@@ -180,10 +222,38 @@ def test_all_examples_run():
 
     This is an integration test that runs all examples.
     Note: This test may take a long time to complete.
+    Uses sample data from tests/train_pipeline/sample_data/.
     """
     results = {}
+    skipped = []
+
     for example_dir in EXAMPLE_DIRS:
+        # Check if config file exists
+        example_path = EXAMPLES_DIR / example_dir
+        config_path = example_path / "configs" / "train.yaml"
+
+        if not config_path.exists():
+            skipped.append(example_dir)
+            continue
+
+        # Check if sample data exists
+        sample_data_path = get_sample_data_path(example_dir)
+        train_sample = sample_data_path / "train_raw.txt"
+        test_sample = sample_data_path / "test_raw.txt"
+
+        if not train_sample.exists() or not test_sample.exists():
+            skipped.append(example_dir)
+            continue
+
         results[example_dir] = run_example(example_dir)
+
+    # Skip the entire test if no examples can be run
+    if len(results) == 0:
+        pytest.skip(
+            f"No sample data found for any example. "
+            f"Run 'python tests/train_pipeline/prepare_sample_data.py' to generate sample data. "
+            f"Skipped: {', '.join(skipped) if skipped else 'all examples'}"
+        )
 
     # Check that all examples passed
     failed = [name for name, success in results.items() if not success]
