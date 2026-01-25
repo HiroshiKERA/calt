@@ -5,10 +5,8 @@ from calt.dataset.pipeline import DatasetPipeline
 
 def integer_poly_factor_generator(seed: int):
     """Generate an integer-coefficient quadratic and its factored form."""
-    from random import randint
-
     import sage.misc.randstate as randstate
-    from sage.all import prod, PolynomialSampler
+    from sage.all import PolynomialSampler, prod
 
     randstate.set_random_seed(seed)
 

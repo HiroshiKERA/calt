@@ -20,8 +20,8 @@ from .preprocessor import (
     UnifiedLexer,
 )
 from .tokenizer import get_tokenizer
-from .vocabulary.config import VocabConfig
 from .utils.vocab_validator import validate_dataset_tokens
+from .vocabulary.config import VocabConfig
 
 logger = logging.getLogger(__name__)
 

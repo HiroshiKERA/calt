@@ -6,8 +6,8 @@ This module provides functions to tokenize datasets using a lexer and detect tok
 
 from typing import List
 
-from ..vocabulary.config import VocabConfig
 from ..preprocessor.lexer import UnifiedLexer
+from ..vocabulary.config import VocabConfig
 
 
 def validate_dataset_tokens(

@@ -1,5 +1,6 @@
-import random
 import math
+import random
+
 from omegaconf import OmegaConf
 
 from calt.dataset.pipeline import DatasetPipeline
