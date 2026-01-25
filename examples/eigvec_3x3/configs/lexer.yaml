@@ -1,7 +1,7 @@
 vocab:
   range:
     numbers: ["", -9, 9]
-  misc: [",", ";", "[", "]", "-", "."]
+  misc: [",", ";", "[", "]", "-"]
   special_tokens: {}
   flags:
     include_base_vocab: true
@@ -9,7 +9,7 @@ vocab:
 
 number_policy:
   separate_sign: false  # false = attach sign to number, true = separate sign as token
-  digit_group: 1
+  digit_group: 2
   allow_float: true
 
 strict: true
