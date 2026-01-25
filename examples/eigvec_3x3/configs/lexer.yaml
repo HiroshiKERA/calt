@@ -1,6 +1,6 @@
 vocab:
   range:
-    numbers: ["", -99, 99]
+    numbers: ["", -999, 999]
   misc: [",", ";", "[", "]", "-"]
   special_tokens: {}
   flags:

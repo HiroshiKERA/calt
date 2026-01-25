@@ -7,7 +7,7 @@ from calt.dataset.pipeline import DatasetPipeline
 def eigvec_generator(seed: int):
     # Simple 3x3 symmetric PSD matrix M = A^T A, so eigenvalues are real and >= 0
     A = np.random.randn(3, 3)
-    M = np.round(A.T @ A, 2)
+    M = A.T @ A
 
     # Symmetric PSD → use eigh
     vals, vecs = np.linalg.eigh(M)
@@ -16,14 +16,15 @@ def eigvec_generator(seed: int):
     norm = np.linalg.norm(v)
     if norm > 0:
         v = v / norm
-    v = np.round(v, 2)
 
-    # # round to 2 decimals and format as rows separated by ';'
-    # rows = ["{:.2f},{:.2f},{:.2f}".format(*row) for row in M]
-    # matrix_str = ";".join(rows)
-    # vec_str = "{:.2f},{:.2f},{:.2f}".format(*v)
+    # round to 2 decimals; convert to string to avoid expression like 1.4e-2 etc.
+    M = M.tolist()
+    M = [[f"{x:.2f}" for x in row] for row in M]
+    M_str = ";".join([",".join(row) for row in M])  # rows separated by ';'
+    v = v.tolist()
+    v_str = ",".join([f"{x:.2f}" for x in v])  # components separated by ','
 
-    return M, v
+    return M_str, v_str
 
 
 if __name__ == "__main__":
