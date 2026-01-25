@@ -8,7 +8,9 @@ from .pipeline import ModelPipeline
 def _get_loaders():
     from .bart.loader import BartLoader
     from .generic.loader import TransformerLoader
+
     return TransformerLoader, BartLoader
+
 
 __all__ = [
     "ModelRegistry",

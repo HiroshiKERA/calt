@@ -1,4 +1,3 @@
-
 from tokenizers import Tokenizer
 from tokenizers.models import WordLevel
 from tokenizers.pre_tokenizers import CharDelimiterSplit
@@ -11,7 +10,6 @@ from .vocabulary.config import VocabConfig
 def get_tokenizer(
     vocab_config: VocabConfig,
 ) -> PreTrainedTokenizerFast:
-
     vocab_list = vocab_config.vocab
     special_token_map = vocab_config.special_tokens
     special_tokens = list(special_token_map.values())

@@ -5,8 +5,6 @@ Handles conversion from unified config format (cfg.model) to TransformerConfig
 and creates Transformer model instances.
 """
 
-
-
 from ..loader import ModelLoader
 from .model import Transformer, TransformerConfig
 
@@ -16,23 +14,25 @@ _DEFAULT_TRANSFORMER_CONFIG = TransformerConfig()
 
 class TransformerLoader(ModelLoader):
     """Loader for Transformer model.
-    
+
     Converts cfg.model to TransformerConfig and creates Transformer instances.
     """
-    
+
     def translate_config(self) -> TransformerConfig:
         """Convert unified config format to TransformerConfig.
-        
+
         Returns:
             TransformerConfig: Transformer model configuration.
         """
         # Get vocab_size from tokenizer if available, otherwise use default
         vocab_size = (
-            len(self.tokenizer.vocab) 
-            if self.tokenizer is not None 
-            else getattr(self.calt_config, 'vocab_size', _DEFAULT_TRANSFORMER_CONFIG.vocab_size)
+            len(self.tokenizer.vocab)
+            if self.tokenizer is not None
+            else getattr(
+                self.calt_config, "vocab_size", _DEFAULT_TRANSFORMER_CONFIG.vocab_size
+            )
         )
-        
+
         self.config = TransformerConfig(
             d_model=self.calt_config.d_model,
             attention_heads=self.calt_config.num_encoder_heads,  # Use encoder_heads as default
@@ -42,25 +42,31 @@ class TransformerLoader(ModelLoader):
             max_input_len=self.calt_config.max_sequence_length,
             vocab_size=vocab_size,
             use_positional_embedding=getattr(
-                self.calt_config, 
-                'use_positional_embedding', 
-                'generic'
+                self.calt_config, "use_positional_embedding", "generic"
             ),
             # Optional parameters with defaults from _DEFAULT_TRANSFORMER_CONFIG
-            dropout=getattr(self.calt_config, 'dropout', _DEFAULT_TRANSFORMER_CONFIG.dropout),
-            activation=getattr(self.calt_config, 'activation', _DEFAULT_TRANSFORMER_CONFIG.activation),
-            init_std=getattr(self.calt_config, 'init_std', _DEFAULT_TRANSFORMER_CONFIG.init_std),
-            seed=getattr(self.calt_config, 'seed', _DEFAULT_TRANSFORMER_CONFIG.seed),
+            dropout=getattr(
+                self.calt_config, "dropout", _DEFAULT_TRANSFORMER_CONFIG.dropout
+            ),
+            activation=getattr(
+                self.calt_config, "activation", _DEFAULT_TRANSFORMER_CONFIG.activation
+            ),
+            init_std=getattr(
+                self.calt_config, "init_std", _DEFAULT_TRANSFORMER_CONFIG.init_std
+            ),
+            seed=getattr(self.calt_config, "seed", _DEFAULT_TRANSFORMER_CONFIG.seed),
         )
         return self.config
-    
+
     def build_model(self) -> Transformer:
         """Create Transformer model instance.
-        
+
         Returns:
             Transformer: Transformer model instance.
         """
         if self.config is None:
-            raise ValueError("config must be set before building model. Call translate_config() first.")
-        
+            raise ValueError(
+                "config must be set before building model. Call translate_config() first."
+            )
+
         return Transformer(config=self.config)

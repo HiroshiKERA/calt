@@ -13,11 +13,11 @@ def create_bart_config(
     tokenizer: PreTrainedTokenizerFast,
 ) -> BartConfig:
     """Create BartConfig from unified config format.
-    
+
     Args:
         model_config (DictConfig): Model configuration from cfg.model (OmegaConf).
         tokenizer (PreTrainedTokenizerFast): Tokenizer instance for vocab and token IDs.
-    
+
     Returns:
         BartConfig: BART model configuration.
     """

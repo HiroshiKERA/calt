@@ -19,22 +19,22 @@ from .trainer import Trainer
 
 class TrainerPipeline:
     """Pipeline for creating trainers from configuration.
-    
+
     Similar to IOPipeline, this class provides a simple interface for creating
     trainer instances from config files. It automatically selects the appropriate
     TrainerLoader based on the config.
-    
+
     Example:
         >>> from omegaconf import OmegaConf
         >>> from calt.trainer import TrainerPipeline
-        >>> 
+        >>>
         >>> cfg = OmegaConf.load("config/train.yaml")
         >>> model = ...  # Get model from ModelPipeline
         >>> tokenizer = ...  # Get tokenizer from IOPipeline
         >>> train_dataset = ...  # Get from IOPipeline
         >>> eval_dataset = ...  # Get from IOPipeline
         >>> data_collator = ...  # Get from IOPipeline
-        >>> 
+        >>>
         >>> trainer_pipeline = TrainerPipeline(
         ...     cfg.train,
         ...     model=model,
@@ -45,7 +45,7 @@ class TrainerPipeline:
         ... )
         >>> trainer = trainer_pipeline.build()
     """
-    
+
     def __init__(
         self,
         config: DictConfig,
@@ -58,7 +58,7 @@ class TrainerPipeline:
         io_dict: Optional[dict] = None,
     ):
         """Initialize the trainer pipeline.
-        
+
         Args:
             config (DictConfig): Training configuration from cfg.train (OmegaConf).
             model (PreTrainedModel | None): Model instance.
@@ -101,7 +101,7 @@ class TrainerPipeline:
         # Enable wandb
         os.environ.pop("WANDB_DISABLED", None)
 
-        project = getattr(wb, "project", 'calt')
+        project = getattr(wb, "project", "calt")
         group = getattr(wb, "group", None)
         name = getattr(wb, "name", None)
 
@@ -122,7 +122,7 @@ class TrainerPipeline:
 
     def build(self) -> Trainer:
         """Build the trainer from configuration.
-        
+
         Returns:
             Trainer: Trainer instance.
         """
@@ -138,7 +138,7 @@ class TrainerPipeline:
             eval_dataset=self.eval_dataset,
             data_collator=self.data_collator,
         )
-        
+
         # Load the trainer
         self.trainer = self._loader.load()
         return self.trainer
@@ -152,7 +152,7 @@ class TrainerPipeline:
         wandb_config: Optional[DictConfig] = None,
     ) -> "TrainerPipeline":
         """Create a TrainerPipeline from a dict returned by IOPipeline.build().
-        
+
         Args:
             config: Training configuration (cfg.train).
             model: Model instance from ModelPipeline.

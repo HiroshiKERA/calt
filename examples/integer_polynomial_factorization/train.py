@@ -13,4 +13,3 @@ trainer = TrainerPipeline.from_io_dict(cfg.train, model, io_dict, cfg.wandb).bui
 trainer.train()
 success_rate = trainer.evaluate_and_save_generation()
 print(f"Success rate: {100 * success_rate:.1f}%")
-
