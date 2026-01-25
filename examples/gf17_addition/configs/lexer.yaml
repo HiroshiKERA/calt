@@ -8,10 +8,9 @@ vocab:
     include_base_special_tokens: true
 
 number_policy:
-  sign: "separate"
+  attach_sign: true  # true = attach sign to number, false = separate sign as token
   digit_group: 0
   allow_float: false
-  dot_token: "."
 
 strict: true
 include_base_vocab: true

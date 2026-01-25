@@ -26,20 +26,18 @@ class NumberPolicy:
     """Policy for tokenizing numbers.
     
     Attributes:
-        sign: How to handle sign. "separate" means sign is a separate token,
-            "attach" means sign is part of the number.
+        sign: How to handle sign. True (attach) means sign is part of the number,
+            False (separate) means sign is a separate token.
         digit_group: Group digits. 0 = no split, d>=1 = split every d digits.
         allow_float: Whether to allow floating point numbers.
-        dot_token: Token used for decimal point (default: ".").
     """
-    sign: str = "separate"  # "separate" | "attach"
+    sign: bool = False  # True = attach, False = separate
     digit_group: int = 0  # 0 = no split, d>=1 = split every d digits
     allow_float: bool = True
-    dot_token: str = "."
     
     def __post_init__(self):
-        if self.sign not in ("separate", "attach"):
-            raise ValueError(f"sign must be 'separate' or 'attach', got {self.sign}")
+        if not isinstance(self.sign, bool):
+            raise ValueError(f"sign must be bool (True=attach, False=separate), got {type(self.sign).__name__}: {self.sign}")
         if self.digit_group < 0:
             raise ValueError(f"digit_group must be >= 0, got {self.digit_group}")
     
@@ -53,17 +51,20 @@ class NumberPolicy:
             List of tokens representing the number.
         """
         tokens = []
+        has_negative_sign = False
         
         # Handle sign
         if number_str.startswith("-"):
-            if self.sign == "separate":
+            if not self.sign:  # sign == False (separate)
                 tokens.append("-")
                 number_str = number_str[1:]
             else:
-                # sign == "attach", keep the minus sign
-                pass
+                # sign == True (attach): keep minus sign with the number
+                # If digit_group > 0, attach - to the first digit group
+                has_negative_sign = True
+                number_str = number_str[1:]
         elif number_str.startswith("+"):
-            if self.sign == "separate":
+            if not self.sign:  # sign == False (separate)
                 tokens.append("+")
                 number_str = number_str[1:]
             # else: ignore leading +
@@ -76,12 +77,19 @@ class NumberPolicy:
             
             # Process integer part
             if self.digit_group > 0:
-                tokens.extend(self._group_digits(integer_part))
+                # For sign=True (attach) with digit_group, attach - to the first group
+                if has_negative_sign and self.sign:
+                    tokens.extend(self._group_digits(integer_part, prefix="-"))
+                else:
+                    tokens.extend(self._group_digits(integer_part))
             else:
-                tokens.append(integer_part)
+                if has_negative_sign and self.sign:
+                    tokens.append("-" + integer_part)
+                else:
+                    tokens.append(integer_part)
             
-            # Add dot token
-            tokens.append(self.dot_token)
+            # Add dot token (always use ".")
+            tokens.append(".")
             
             # Process fractional part
             if self.digit_group > 0:
@@ -91,27 +99,40 @@ class NumberPolicy:
         else:
             # Integer
             if self.digit_group > 0:
-                tokens.extend(self._group_digits(number_str))
+                # For sign=True (attach) with digit_group, attach - to the first group
+                if has_negative_sign and self.sign:
+                    tokens.extend(self._group_digits(number_str, prefix="-"))
+                else:
+                    tokens.extend(self._group_digits(number_str))
             else:
-                tokens.append(number_str)
+                if has_negative_sign and self.sign:
+                    tokens.append("-" + number_str)
+                else:
+                    tokens.append(number_str)
         
         return tokens
     
-    def _group_digits(self, digits: str) -> list[str]:
+    def _group_digits(self, digits: str, prefix: str = "") -> list[str]:
         """Group digits according to digit_group.
         
         Args:
             digits: String of digits.
+            prefix: Optional prefix to attach to the first group (e.g., "-").
         
         Returns:
             List of digit groups.
         """
         if self.digit_group == 0:
-            return [digits]
+            return [prefix + digits] if prefix else [digits]
         
         groups = []
         for i in range(0, len(digits), self.digit_group):
-            groups.append(digits[i:i + self.digit_group])
+            group = digits[i:i + self.digit_group]
+            # Attach prefix only to the first group
+            if i == 0 and prefix:
+                groups.append(prefix + group)
+            else:
+                groups.append(group)
         return groups
 
 
@@ -127,7 +148,7 @@ class UnifiedLexer(AbstractPreProcessor):
         >>> from calt.io.preprocessor import UnifiedLexer, NumberPolicy
         >>> 
         >>> vocab_config = VocabConfig([], {}).from_config("config/vocab.yaml")
-        >>> number_policy = NumberPolicy(sign="separate", digit_group=1)
+        >>> number_policy = NumberPolicy(sign=False, digit_group=1)
         >>> lexer = UnifiedLexer(vocab_config, number_policy=number_policy)
         >>> 
         >>> tokens = lexer.tokenize("C-50*x1^2 + 3.14")
@@ -152,16 +173,77 @@ class UnifiedLexer(AbstractPreProcessor):
         # Initialize post-processor base class
         super().__init__()
         
-        self.vocab_config = vocab_config
         self.number_policy = number_policy or NumberPolicy()
         self.strict = strict
         self.include_base_vocab = include_base_vocab
+        
+        # Extend vocab_config with required tokens based on number_policy
+        self.vocab_config = self._extend_vocab_for_number_policy(vocab_config)
         
         # Build reserved tokens
         self._build_reserved_tokens()
         
         # Build regex patterns
         self._build_patterns()
+    
+    def _extend_vocab_for_number_policy(self, vocab_config: VocabConfig) -> VocabConfig:
+        """Extend vocab_config with tokens required by number_policy settings.
+        
+        If allow_float is true, automatically adds:
+        - "." (dot token)
+        - "-0" (if attach_sign is true, i.e., attach sign)
+        - Fractional part tokens (if digit_group > 0, e.g., "00", "01", ..., "99" for digit_group=2)
+        
+        If digit_group > 0, automatically adds zero-padded digit group tokens
+        (e.g., "00", "01", ..., "99" for digit_group=2) for both integer and fractional parts.
+        
+        Args:
+            vocab_config: Original vocabulary configuration.
+        
+        Returns:
+            New VocabConfig with required tokens added (or original if no additions needed).
+        """
+        vocab_list = vocab_config.get_vocab()
+        existing_vocab = set(vocab_list)
+        tokens_to_add = []
+        
+        if self.number_policy.allow_float:
+            # Add "." if not present
+            if "." not in existing_vocab:
+                tokens_to_add.append(".")
+            
+            # Add "-0" if sign is True (attach sign, i.e., attach_sign=true) and not present
+            # For floats like -0.5, this generates "-0", ".", "5" tokens
+            if self.number_policy.sign and "-0" not in existing_vocab:
+                tokens_to_add.append("-0")
+        
+        # If digit_group > 0, add zero-padded digit group tokens
+        # These are needed for both integer and fractional parts when numbers are split
+        # e.g., digit_group=2: "00", "01", ..., "99"
+        # e.g., digit_group=3: "000", "001", ..., "999"
+        # Also add shorter zero-padded tokens (1-digit, 2-digit, etc.) up to digit_group
+        # because numbers with fewer digits than digit_group can still produce these tokens
+        if self.number_policy.digit_group > 0:
+            # Generate all possible zero-padded digit group tokens for all lengths up to digit_group
+            # e.g., digit_group=3: "0", "1", ..., "9" (1-digit), "00", "01", ..., "99" (2-digit), "000", "001", ..., "999" (3-digit)
+            for length in range(1, self.number_policy.digit_group + 1):
+                max_value = 10 ** length - 1
+                for i in range(max_value + 1):
+                    token = str(i).zfill(length)
+                    if token not in existing_vocab and token not in tokens_to_add:
+                        tokens_to_add.append(token)
+        
+        if not tokens_to_add:
+            return vocab_config
+        
+        # Create new VocabConfig with added tokens
+        new_vocab = vocab_list + tokens_to_add
+        return VocabConfig(
+            vocab=new_vocab,
+            special_tokens=vocab_config.get_special_tokens(),
+            include_base_vocab=False,  # Already included in vocab_list
+            include_base_special_tokens=False,  # Already included in special_tokens
+        )
     
     def _build_reserved_tokens(self):
         """Build the list of reserved tokens in priority order."""
@@ -198,8 +280,8 @@ class UnifiedLexer(AbstractPreProcessor):
             reserved_pattern = "(?!)"  # Never matches
         
         # Number pattern (may include sign and/or decimal point)
-        # If sign is "attach", we need to match signed numbers before operators
-        if self.number_policy.sign == "attach":
+        # If sign is True (attach), we need to match signed numbers before operators
+        if self.number_policy.sign:
             # Match signed numbers (negative lookbehind to ensure - is not preceded by word char)
             # This allows -50 but not a-50 (where - is an operator)
             if self.number_policy.allow_float:
@@ -207,7 +289,7 @@ class UnifiedLexer(AbstractPreProcessor):
             else:
                 number_pattern = r"(?<![A-Za-z0-9_])-?\d+"
         else:
-            # sign == "separate": match unsigned numbers, sign will be matched as operator
+            # sign == False (separate): match unsigned numbers, sign will be matched as operator
             if self.number_policy.allow_float:
                 number_pattern = r"\d+\.?\d*|\.\d+"
             else:
@@ -218,14 +300,25 @@ class UnifiedLexer(AbstractPreProcessor):
         
         # Combined pattern: number first if attach mode, then reserved tokens, then identifier
         # This ensures signed numbers are matched before operators in attach mode
-        if self.number_policy.sign == "attach":
+        # If digit_group=0, prioritize number pattern over reserved tokens to avoid splitting
+        # numbers that are longer than vocab tokens (e.g., 1111111 should not be split into 111, 111, 1)
+        if self.number_policy.sign:
             self.pattern = re.compile(
                 f"({number_pattern})|({reserved_pattern})|({identifier_pattern})"
             )
         else:
-            self.pattern = re.compile(
-                f"({reserved_pattern})|({number_pattern})|({identifier_pattern})"
-            )
+            # sign == False (separate)
+            if self.number_policy.digit_group == 0:
+                # digit_group=0: numbers should not be split, so prioritize number pattern
+                # This prevents numbers like 1111111 from being split when vocab contains 111
+                self.pattern = re.compile(
+                    f"({number_pattern})|({reserved_pattern})|({identifier_pattern})"
+                )
+            else:
+                # digit_group > 0: numbers will be split, so reserved tokens can take priority
+                self.pattern = re.compile(
+                    f"({reserved_pattern})|({number_pattern})|({identifier_pattern})"
+                )
     
     def tokenize(self, text: str) -> list[str]:
         """Tokenize input text into a list of tokens.
@@ -254,8 +347,8 @@ class UnifiedLexer(AbstractPreProcessor):
             
             if match:
                 # Check which group matched
-                # Group order depends on sign mode
-                if self.number_policy.sign == "attach":
+                # Group order depends on sign mode and digit_group
+                if self.number_policy.sign:
                     # Pattern order: number, reserved, identifier
                     if match.group(1):  # Number
                         number_str = match.group(1)
@@ -271,20 +364,37 @@ class UnifiedLexer(AbstractPreProcessor):
                     else:
                         raise RuntimeError("Pattern matched but no group matched")
                 else:
-                    # Pattern order: reserved, number, identifier
-                    if match.group(1):  # Reserved token
-                        tokens.append(match.group(1))
-                        pos = match.end()
-                    elif match.group(2):  # Number
-                        number_str = match.group(2)
-                        number_tokens = self.number_policy.process_number(number_str)
-                        tokens.extend(number_tokens)
-                        pos = match.end()
-                    elif match.group(3):  # Identifier
-                        tokens.append(match.group(3))
-                        pos = match.end()
+                    # sign == False (separate)
+                    if self.number_policy.digit_group == 0:
+                        # Pattern order: number, reserved, identifier (number prioritized)
+                        if match.group(1):  # Number
+                            number_str = match.group(1)
+                            number_tokens = self.number_policy.process_number(number_str)
+                            tokens.extend(number_tokens)
+                            pos = match.end()
+                        elif match.group(2):  # Reserved token
+                            tokens.append(match.group(2))
+                            pos = match.end()
+                        elif match.group(3):  # Identifier
+                            tokens.append(match.group(3))
+                            pos = match.end()
+                        else:
+                            raise RuntimeError("Pattern matched but no group matched")
                     else:
-                        raise RuntimeError("Pattern matched but no group matched")
+                        # Pattern order: reserved, number, identifier
+                        if match.group(1):  # Reserved token
+                            tokens.append(match.group(1))
+                            pos = match.end()
+                        elif match.group(2):  # Number
+                            number_str = match.group(2)
+                            number_tokens = self.number_policy.process_number(number_str)
+                            tokens.extend(number_tokens)
+                            pos = match.end()
+                        elif match.group(3):  # Identifier
+                            tokens.append(match.group(3))
+                            pos = match.end()
+                        else:
+                            raise RuntimeError("Pattern matched but no group matched")
             else:
                 # No match - unknown character
                 if self.strict:

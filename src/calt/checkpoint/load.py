@@ -104,11 +104,12 @@ def _load_yaml(path: Path) -> dict:
 def _build_lexer_from_config(lexer_config: dict, vocab_config: VocabConfig) -> UnifiedLexer:
     """Build UnifiedLexer from lexer_config (number_policy, strict, etc.) and VocabConfig."""
     np = lexer_config.get("number_policy") or {}
+    # attach_sign: true = attach sign to number, false = separate sign as token
+    attach_sign = np.get("attach_sign", True)  # default: attach
     number_policy = NumberPolicy(
-        sign=np.get("sign", "separate"),
+        sign=attach_sign,  # sign=True means attach, sign=False means separate
         digit_group=np.get("digit_group", 0),
         allow_float=np.get("allow_float", True),
-        dot_token=np.get("dot_token", "."),
     )
     lexer_cfg = lexer_config.get("lexer") or {}
     strict = lexer_cfg.get("strict", lexer_config.get("strict", True))
@@ -190,10 +191,13 @@ def load_run(
             )
         vocab_config = _load_yaml(vocab_path)
         lexer_config = _load_yaml(lexer_path)
+        
         voc = VocabConfig([], {})
         voc.from_config(vocab_config)
         vocab = voc
         lexer = _build_lexer_from_config(lexer_config, vocab)
+        # Use the extended vocab_config from lexer
+        vocab = lexer.vocab_config
     else:
         if vocab_path.exists():
             vocab_config = _load_yaml(vocab_path)
@@ -204,9 +208,22 @@ def load_run(
             lexer_config = _load_yaml(lexer_path)
             if vocab is not None:
                 lexer = _build_lexer_from_config(lexer_config, vocab)
+                # Use the extended vocab_config from lexer
+                vocab = lexer.vocab_config
 
     _vocab = vocab or VocabConfig([], {})
+    # If vocab is None and lexer_config exists, create minimal vocab and build lexer
+    if vocab is None and lexer_config:
+        if not vocab_config or isinstance(vocab_config, dict):
+            vocab_config_dict = vocab_config or {}
+            voc = VocabConfig([], {})
+            voc.from_config(vocab_config_dict)
+            _vocab = voc
+    
     _lexer = lexer or _build_lexer_from_config(lexer_config or {}, _vocab)
+    # Use the extended vocab_config from lexer if lexer was created
+    if _lexer is not None:
+        _vocab = _lexer.vocab_config
 
     return RunBundle(
         model=model,

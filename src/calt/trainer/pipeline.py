@@ -131,7 +131,7 @@ class TrainerPipeline:
 
         # Get the appropriate loader
         self._loader = get_trainer_loader(
-            config=self.config,
+            calt_config=self.config,
             model=self.model,
             tokenizer=self.tokenizer,
             train_dataset=self.train_dataset,

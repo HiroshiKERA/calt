@@ -28,9 +28,12 @@ data:
   test_dataset_path: ./data/test_raw.txt
   preprocessor: 'lexer'
   lexer_config: ./configs/lexer.yaml
+  # Vocabulary validation options
+  validate_train_tokens: true   # Validate training dataset tokens before training
+  validate_test_tokens: true    # Validate test dataset tokens before training
 
 wandb:
-  project: calt-test
+  project: calt
   group: rational_polynomial_factorization
   name: rational_polynomial_factorization
   no_wandb: False

@@ -21,6 +21,7 @@ from .preprocessor import (
 )
 from .tokenizer import get_tokenizer
 from .vocabulary.config import VocabConfig
+from .utils.vocab_validator import validate_dataset_tokens
 
 logger = logging.getLogger(__name__)
 
@@ -32,7 +33,9 @@ class IOPipeline():
                  num_train_samples: int | None = None,
                  num_test_samples: int | None = None,
                  vocab_config: VocabConfig | dict | str | None = None,
-                 preprocessor: AbstractPreProcessor | None = None):
+                 preprocessor: AbstractPreProcessor | None = None,
+                 validate_train_tokens: bool = False,
+                 validate_test_tokens: bool = False):
         """Initialize IOPipeline.
         
         Args:
@@ -49,6 +52,8 @@ class IOPipeline():
         self.num_test_samples = num_test_samples
         self.vocab_config = self.get_vocab_config(vocab_config)
         self.preprocessor = preprocessor
+        self.validate_train_tokens = validate_train_tokens
+        self.validate_test_tokens = validate_test_tokens
     
     @classmethod
     def from_config(cls, config: DictConfig) -> "IOPipeline":
@@ -100,14 +105,15 @@ class IOPipeline():
             
             # Create NumberPolicy from lexer config
             number_policy_dict = lexer_config.get("number_policy", {})
+            # attach_sign: true = attach sign to number, false = separate sign as token
+            attach_sign = number_policy_dict.get("attach_sign", True)  # default: attach
             number_policy = NumberPolicy(
-                sign=number_policy_dict.get("sign", "separate"),
+                sign=attach_sign,  # sign=True means attach, sign=False means separate
                 digit_group=number_policy_dict.get("digit_group", 0),
                 allow_float=number_policy_dict.get("allow_float", True),
-                dot_token=number_policy_dict.get("dot_token", "."),
             )
             
-            # Create UnifiedLexer
+            # Create UnifiedLexer (vocab extension is handled inside UnifiedLexer.__init__)
             preprocessor = UnifiedLexer(
                 vocab_config=vocab_config,
                 number_policy=number_policy,
@@ -115,8 +121,8 @@ class IOPipeline():
                 include_base_vocab=lexer_config.get("include_base_vocab", True),
             )
             
-            # Use vocab_config from lexer config
-            vocab_config_path = vocab_config
+            # Use the extended vocab_config from lexer (includes auto-added tokens for floats)
+            vocab_config_path = preprocessor.vocab_config
         elif isinstance(preprocessor, str):
             # Convert string preprocessor name to None (generic means no preprocessing)
             if preprocessor.lower() in ["generic", "none", "null"]:
@@ -135,6 +141,8 @@ class IOPipeline():
             num_test_samples=config.get("num_test_samples", -1),
             vocab_config=vocab_config_path,
             preprocessor=preprocessor,
+            validate_train_tokens=config.get("validate_train_tokens", False),
+            validate_test_tokens=config.get("validate_test_tokens", True),
         )
     
     def get_vocab_config(self, vocab_config: VocabConfig | dict | str | None):
@@ -146,6 +154,28 @@ class IOPipeline():
         
         return vocab_config
     
+    def validate_tokens(self, dataset: StandardDataset):
+        """Validate tokens in a dataset and raise error if out-of-vocabulary tokens are found."""
+        
+        out_of_vocab_tokens = validate_dataset_tokens(
+            lexer=self.preprocessor,
+            vocab_config=self.vocab_config,
+            input_texts=dataset.input_texts,
+            target_texts=dataset.target_texts,
+        )
+        
+        if out_of_vocab_tokens:
+            token_list = ", ".join([f"'{token}'" for token in out_of_vocab_tokens])
+            error_msg = (
+                "\n--------------------------------\n"
+                f"Vocabulary validation errors in dataset.\n"
+                f"Out-of-vocabulary tokens: {token_list}\n"
+                f"Please check your lexer.yaml configuration and dataset generation."
+                "\n--------------------------------\n"
+            )
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+
     def build(self):
         '''
         Build the data pipeline by loading the raw text data, applying the preprocessor, and setting the collator.
@@ -158,6 +188,15 @@ class IOPipeline():
         # processed data (by InfixPolynomialProcessor): "C2 E1 E2 + C5 E1 E0 + C-3 E0 E0"
         train_dataset = StandardDataset.load_file(self.train_dataset_path, self.preprocessor, self.num_train_samples)
         test_dataset = StandardDataset.load_file(self.test_dataset_path, self.preprocessor, self.num_test_samples)
+
+        if self.validate_train_tokens: 
+            print('Validating training dataset tokens...', end=' ')
+            self.validate_tokens(train_dataset)
+            print('passed!')
+        if self.validate_test_tokens:
+            print('Validating test dataset tokens...', end=' ')
+            self.validate_tokens(test_dataset)
+            print('passed!')
 
         # Step 2: Set collator that will transform the processed data into tokens (or token ids)
         #         This will be called every time at the beginning of each epoch

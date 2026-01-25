@@ -1,6 +1,6 @@
 vocab:
   range:
-    numbers: ["", -9, 9]
+    numbers: ["", -99, 99]
   misc: [",", ";", "[", "]", "-"]
   special_tokens: {}
   flags:
@@ -8,7 +8,7 @@ vocab:
     include_base_special_tokens: true
 
 number_policy:
-  separate_sign: false  # false = attach sign to number, true = separate sign as token
+  attach_sign: true  # true = attach sign to number, false = separate sign as token
   digit_group: 2
   allow_float: true
 

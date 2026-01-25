@@ -1,7 +1,7 @@
 vocab:
   range:
     numbers: ["", -999, 999]
-  misc: ["+", "-", "*", "^", "(", ")", ",", "<unk>"]
+  misc: ["+", "-", "*", "^", "(", ")", ",", "x", "<unk>"]  # Add "x" for variable names
   special_tokens:
     unk_token: "<unk>"
   flags:
@@ -9,10 +9,9 @@ vocab:
     include_base_special_tokens: true
 
 number_policy:
-  sign: "attach"
+  attach_sign: true  # true = attach sign to number, false = separate sign as token
   digit_group: 3
   allow_float: false
-  dot_token: "."
 
 strict: true
 include_base_vocab: true

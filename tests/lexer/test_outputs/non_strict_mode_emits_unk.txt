@@ -4,7 +4,7 @@ Test: non_strict_mode_emits_unk
 Configuration:
 --------------------------------------------------------------------------------
   Number Policy:
-    sign: separate
+    sign: False
     digit_group: 0
     allow_float: False
   strict: False

@@ -1,7 +1,7 @@
 vocab:
   range:
-    numbers: ["", -999, 999]
-  misc: ["+", "-", "*", "^", "(", ")", "/", ",", "]", "x"]  # Add "x" for variable names
+    numbers: ["", 0, 1000]
+  misc: ["|"]  # Add separator token
   special_tokens: {}
   flags:
     include_base_vocab: true

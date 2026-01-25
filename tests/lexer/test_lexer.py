@@ -36,39 +36,34 @@ class TestNumberPolicy:
     
     def test_separate_sign(self):
         """Test number policy with separate sign."""
-        policy = NumberPolicy(sign='separate', digit_group=0, allow_float=False)
+        policy = NumberPolicy(sign=False, digit_group=0, allow_float=False)
         assert policy.process_number('-50') == ['-', '50']
         assert policy.process_number('+123') == ['+', '123']
         assert policy.process_number('42') == ['42']
     
     def test_attach_sign(self):
         """Test number policy with attach sign."""
-        policy = NumberPolicy(sign='attach', digit_group=0, allow_float=False)
+        policy = NumberPolicy(sign=True, digit_group=0, allow_float=False)
         assert policy.process_number('-50') == ['-50']
         assert policy.process_number('123') == ['123']
     
     def test_digit_grouping(self):
         """Test digit grouping."""
-        policy = NumberPolicy(sign='separate', digit_group=2, allow_float=False)
+        policy = NumberPolicy(sign=False, digit_group=2, allow_float=False)
         assert policy.process_number('12345') == ['12', '34', '5']
         assert policy.process_number('12') == ['12']
         assert policy.process_number('1') == ['1']
     
     def test_float_handling(self):
         """Test float number handling."""
-        policy = NumberPolicy(sign='separate', digit_group=1, allow_float=True)
+        policy = NumberPolicy(sign=False, digit_group=1, allow_float=True)
         assert policy.process_number('3.14') == ['3', '.', '1', '4']
         assert policy.process_number('-2.5') == ['-', '2', '.', '5']
         assert policy.process_number('.5') == ['0', '.', '5']
     
-    def test_custom_dot_token(self):
-        """Test custom dot token."""
-        policy = NumberPolicy(sign='separate', digit_group=1, allow_float=True, dot_token='[DOT]')
-        assert policy.process_number('3.14') == ['3', '[DOT]', '1', '4']
-    
     def test_invalid_sign(self):
         """Test that invalid sign raises error."""
-        with pytest.raises(ValueError, match="sign must be"):
+        with pytest.raises(ValueError, match="sign must be bool"):
             NumberPolicy(sign='invalid')
     
     def test_invalid_digit_group(self):
@@ -130,7 +125,7 @@ class TestUnifiedLexer:
     
     def test_example_1_polynomial(self, vocab_config):
         """Test Example 1 from spec: Polynomial."""
-        number_policy = NumberPolicy(sign='separate', digit_group=1, allow_float=True)
+        number_policy = NumberPolicy(sign=False, digit_group=1, allow_float=True)
         lexer = UnifiedLexer(vocab_config, number_policy=number_policy)
         
         text = 'C-50*x1^2 + 3.14'
@@ -141,7 +136,7 @@ class TestUnifiedLexer:
         # Save test result
         config = {
             "number_policy": {
-                "sign": "separate",
+                "sign": False,
                 "digit_group": 1,
                 "allow_float": True,
             },
@@ -154,7 +149,7 @@ class TestUnifiedLexer:
     
     def test_example_2_separator_priority(self, vocab_config):
         """Test Example 2 from spec: Separator Priority."""
-        number_policy = NumberPolicy(sign='separate', digit_group=1, allow_float=True)
+        number_policy = NumberPolicy(sign=False, digit_group=1, allow_float=True)
         lexer = UnifiedLexer(vocab_config, number_policy=number_policy)
         
         text = 'x0||x1|x2'
@@ -165,7 +160,7 @@ class TestUnifiedLexer:
         # Save test result
         config = {
             "number_policy": {
-                "sign": "separate",
+                "sign": False,
                 "digit_group": 1,
                 "allow_float": True,
             },
@@ -178,7 +173,7 @@ class TestUnifiedLexer:
     
     def test_longest_match(self, vocab_config):
         """Test that longest-match is enforced."""
-        number_policy = NumberPolicy(sign='separate', digit_group=0, allow_float=False)
+        number_policy = NumberPolicy(sign=False, digit_group=0, allow_float=False)
         lexer = UnifiedLexer(vocab_config, number_policy=number_policy)
         
         # || should be matched before |
@@ -189,7 +184,7 @@ class TestUnifiedLexer:
     
     def test_number_tokenization_separate(self, vocab_config):
         """Test number tokenization with separate sign."""
-        number_policy = NumberPolicy(sign='separate', digit_group=0, allow_float=False)
+        number_policy = NumberPolicy(sign=False, digit_group=0, allow_float=False)
         lexer = UnifiedLexer(vocab_config, number_policy=number_policy)
         
         text = '-50 + 123'
@@ -199,7 +194,7 @@ class TestUnifiedLexer:
         # Save test result
         config = {
             "number_policy": {
-                "sign": "separate",
+                "sign": False,
                 "digit_group": 0,
                 "allow_float": False,
             },
@@ -212,7 +207,7 @@ class TestUnifiedLexer:
     
     def test_number_tokenization_attach(self, vocab_config):
         """Test number tokenization with attach sign."""
-        number_policy = NumberPolicy(sign='attach', digit_group=0, allow_float=False)
+        number_policy = NumberPolicy(sign=True, digit_group=0, allow_float=False)
         lexer = UnifiedLexer(vocab_config, number_policy=number_policy)
         
         text = '-50 + 123'
@@ -222,7 +217,7 @@ class TestUnifiedLexer:
         # Save test result
         config = {
             "number_policy": {
-                "sign": "attach",
+                "sign": True,
                 "digit_group": 0,
                 "allow_float": False,
             },
@@ -235,7 +230,7 @@ class TestUnifiedLexer:
     
     def test_digit_grouping(self, vocab_config):
         """Test digit grouping in numbers."""
-        number_policy = NumberPolicy(sign='separate', digit_group=2, allow_float=False)
+        number_policy = NumberPolicy(sign=False, digit_group=2, allow_float=False)
         lexer = UnifiedLexer(vocab_config, number_policy=number_policy)
         
         text = '12345'
@@ -245,7 +240,7 @@ class TestUnifiedLexer:
         # Save test result
         config = {
             "number_policy": {
-                "sign": "separate",
+                "sign": False,
                 "digit_group": 2,
                 "allow_float": False,
             },
@@ -258,7 +253,7 @@ class TestUnifiedLexer:
     
     def test_float_tokenization(self, vocab_config):
         """Test float number tokenization."""
-        number_policy = NumberPolicy(sign='separate', digit_group=1, allow_float=True)
+        number_policy = NumberPolicy(sign=False, digit_group=1, allow_float=True)
         lexer = UnifiedLexer(vocab_config, number_policy=number_policy)
         
         text = '3.14'
@@ -268,7 +263,7 @@ class TestUnifiedLexer:
         # Save test result
         config = {
             "number_policy": {
-                "sign": "separate",
+                "sign": False,
                 "digit_group": 1,
                 "allow_float": True,
             },
@@ -281,7 +276,7 @@ class TestUnifiedLexer:
     
     def test_whitespace_handling(self, vocab_config):
         """Test that whitespace is properly skipped."""
-        number_policy = NumberPolicy(sign='separate', digit_group=0, allow_float=False)
+        number_policy = NumberPolicy(sign=False, digit_group=0, allow_float=False)
         lexer = UnifiedLexer(vocab_config, number_policy=number_policy)
         
         text = 'x0  +  x1'
@@ -290,7 +285,7 @@ class TestUnifiedLexer:
     
     def test_to_token_text(self, vocab_config):
         """Test to_token_text method."""
-        number_policy = NumberPolicy(sign='separate', digit_group=0, allow_float=False)
+        number_policy = NumberPolicy(sign=False, digit_group=0, allow_float=False)
         lexer = UnifiedLexer(vocab_config, number_policy=number_policy)
         
         text = 'x0 + x1'
@@ -299,7 +294,7 @@ class TestUnifiedLexer:
     
     def test_abstract_preprocessor_interface(self, vocab_config):
         """Test AbstractPreprocessor interface."""
-        number_policy = NumberPolicy(sign='separate', digit_group=0, allow_float=False)
+        number_policy = NumberPolicy(sign=False, digit_group=0, allow_float=False)
         lexer = UnifiedLexer(vocab_config, number_policy=number_policy)
         
         text = 'x0 + x1'
@@ -313,7 +308,7 @@ class TestUnifiedLexer:
     
     def test_strict_mode_raises_error(self, vocab_config):
         """Test that strict mode raises error on unknown characters."""
-        number_policy = NumberPolicy(sign='separate', digit_group=0, allow_float=False)
+        number_policy = NumberPolicy(sign=False, digit_group=0, allow_float=False)
         lexer = UnifiedLexer(vocab_config, number_policy=number_policy, strict=True)
         
         text = 'x0 + x1 @ invalid'
@@ -327,7 +322,7 @@ class TestUnifiedLexer:
         # Save test result
         config = {
             "number_policy": {
-                "sign": "separate",
+                "sign": False,
                 "digit_group": 0,
                 "allow_float": False,
             },
@@ -369,7 +364,7 @@ class TestUnifiedLexer:
     
     def test_non_strict_mode_emits_unk(self, vocab_config):
         """Test that non-strict mode emits unk token."""
-        number_policy = NumberPolicy(sign='separate', digit_group=0, allow_float=False)
+        number_policy = NumberPolicy(sign=False, digit_group=0, allow_float=False)
         lexer = UnifiedLexer(vocab_config, number_policy=number_policy, strict=False)
         
         text = 'x0 + x1 @ invalid'
@@ -379,7 +374,7 @@ class TestUnifiedLexer:
         # Save test result
         config = {
             "number_policy": {
-                "sign": "separate",
+                "sign": False,
                 "digit_group": 0,
                 "allow_float": False,
             },
@@ -393,7 +388,7 @@ class TestUnifiedLexer:
     
     def test_identifier_tokenization(self, vocab_config):
         """Test identifier tokenization."""
-        number_policy = NumberPolicy(sign='separate', digit_group=0, allow_float=False)
+        number_policy = NumberPolicy(sign=False, digit_group=0, allow_float=False)
         lexer = UnifiedLexer(vocab_config, number_policy=number_policy)
         
         text = 'abc_123 + xyz'
@@ -403,7 +398,7 @@ class TestUnifiedLexer:
     
     def test_range_tokens_priority(self, vocab_config):
         """Test that range tokens have highest priority."""
-        number_policy = NumberPolicy(sign='separate', digit_group=0, allow_float=False)
+        number_policy = NumberPolicy(sign=False, digit_group=0, allow_float=False)
         lexer = UnifiedLexer(vocab_config, number_policy=number_policy)
         
         # C-50 should be matched as a single token, not C, -, 50
@@ -413,7 +408,7 @@ class TestUnifiedLexer:
     
     def test_base_vocab_inclusion(self, vocab_config):
         """Test that base vocab tokens are included."""
-        number_policy = NumberPolicy(sign='separate', digit_group=0, allow_float=False)
+        number_policy = NumberPolicy(sign=False, digit_group=0, allow_float=False)
         lexer = UnifiedLexer(vocab_config, number_policy=number_policy, include_base_vocab=True)
         
         text = 'x0 + x1'
@@ -436,7 +431,7 @@ class TestUnifiedLexer:
         }
         vocab_config_no_base = VocabConfig([], {}).from_config(vocab_dict)
         
-        number_policy = NumberPolicy(sign='separate', digit_group=0, allow_float=False)
+        number_policy = NumberPolicy(sign=False, digit_group=0, allow_float=False)
         lexer = UnifiedLexer(vocab_config_no_base, number_policy=number_policy, include_base_vocab=False)
         
         text = 'x0 + x1'
@@ -445,7 +440,7 @@ class TestUnifiedLexer:
     
     def test_very_complex_polynomial_matrix_mix(self, vocab_config):
         """Test very complex expression mixing polynomials, matrices, and sequences."""
-        number_policy = NumberPolicy(sign='separate', digit_group=0, allow_float=False)
+        number_policy = NumberPolicy(sign=False, digit_group=0, allow_float=False)
         lexer = UnifiedLexer(vocab_config, number_policy=number_policy)
         
         text = '[C-25*x0^3 + C10*x1|x0 + x1^2][C5*x0||x1||x2]'
@@ -454,7 +449,7 @@ class TestUnifiedLexer:
         
         config = {
             "number_policy": {
-                "sign": "separate",
+                "sign": False,
                 "digit_group": 0,
                 "allow_float": False,
             },
@@ -473,7 +468,7 @@ class TestUnifiedLexer:
     
     def test_sequence_of_polynomials(self, vocab_config):
         """Test sequence of polynomial expressions."""
-        number_policy = NumberPolicy(sign='separate', digit_group=0, allow_float=False)
+        number_policy = NumberPolicy(sign=False, digit_group=0, allow_float=False)
         lexer = UnifiedLexer(vocab_config, number_policy=number_policy)
         
         text = 'C-30*x0^2||C20*x1^3||C10*x0*x1||C5'
@@ -482,7 +477,7 @@ class TestUnifiedLexer:
         
         config = {
             "number_policy": {
-                "sign": "separate",
+                "sign": False,
                 "digit_group": 0,
                 "allow_float": False,
             },
@@ -500,7 +495,7 @@ class TestUnifiedLexer:
     
     def test_matrix_with_nested_expressions(self, vocab_config):
         """Test matrix with nested polynomial expressions."""
-        number_policy = NumberPolicy(sign='separate', digit_group=0, allow_float=False)
+        number_policy = NumberPolicy(sign=False, digit_group=0, allow_float=False)
         lexer = UnifiedLexer(vocab_config, number_policy=number_policy)
         
         text = '[(x0 + x1)^2|x0*x1][(x0 - x1)^2|x0/x1]'
@@ -509,7 +504,7 @@ class TestUnifiedLexer:
         
         config = {
             "number_policy": {
-                "sign": "separate",
+                "sign": False,
                 "digit_group": 0,
                 "allow_float": False,
             },
@@ -528,7 +523,7 @@ class TestUnifiedLexer:
     
     def test_mixed_arithmetic_sequence(self, vocab_config):
         """Test mixed arithmetic operations in a sequence."""
-        number_policy = NumberPolicy(sign='separate', digit_group=1, allow_float=True)
+        number_policy = NumberPolicy(sign=False, digit_group=1, allow_float=True)
         lexer = UnifiedLexer(vocab_config, number_policy=number_policy)
         
         text = 'x0 + 3.14||x1 * 2.5||x2 - 1.0||x0 / 0.5'
@@ -537,7 +532,7 @@ class TestUnifiedLexer:
         
         config = {
             "number_policy": {
-                "sign": "separate",
+                "sign": False,
                 "digit_group": 1,
                 "allow_float": True,
             },
@@ -556,7 +551,7 @@ class TestUnifiedLexer:
     
     def test_complex_exponent_chain(self, vocab_config):
         """Test complex chain of exponents."""
-        number_policy = NumberPolicy(sign='separate', digit_group=0, allow_float=False)
+        number_policy = NumberPolicy(sign=False, digit_group=0, allow_float=False)
         lexer = UnifiedLexer(vocab_config, number_policy=number_policy)
         
         text = 'C-50*x0^10*x1^5*x2^3 + C30*x0^2*x1^1 - C5'
@@ -565,7 +560,7 @@ class TestUnifiedLexer:
         
         config = {
             "number_policy": {
-                "sign": "separate",
+                "sign": False,
                 "digit_group": 0,
                 "allow_float": False,
             },
@@ -583,7 +578,7 @@ class TestUnifiedLexer:
     
     def test_matrix_sequence_combination(self, vocab_config):
         """Test combination of matrix and sequence expressions."""
-        number_policy = NumberPolicy(sign='separate', digit_group=0, allow_float=False)
+        number_policy = NumberPolicy(sign=False, digit_group=0, allow_float=False)
         lexer = UnifiedLexer(vocab_config, number_policy=number_policy)
         
         text = '[x0|x1]||[x2|x0]||[x1|x2]'
@@ -592,7 +587,7 @@ class TestUnifiedLexer:
         
         config = {
             "number_policy": {
-                "sign": "separate",
+                "sign": False,
                 "digit_group": 0,
                 "allow_float": False,
             },
@@ -609,7 +604,7 @@ class TestUnifiedLexer:
     
     def test_deeply_nested_polynomial(self, vocab_config):
         """Test deeply nested polynomial expression."""
-        number_policy = NumberPolicy(sign='separate', digit_group=0, allow_float=False)
+        number_policy = NumberPolicy(sign=False, digit_group=0, allow_float=False)
         lexer = UnifiedLexer(vocab_config, number_policy=number_policy)
         
         text = '((C-25*x0^2 + C10*x1) * (x0 + x1)) + ((C5*x0 - C3) * x1)'
@@ -618,7 +613,7 @@ class TestUnifiedLexer:
         
         config = {
             "number_policy": {
-                "sign": "separate",
+                "sign": False,
                 "digit_group": 0,
                 "allow_float": False,
             },
@@ -633,3 +628,105 @@ class TestUnifiedLexer:
         assert tokens.count('(') == tokens.count(')')
         assert 'C-25' in tokens
         assert '*' in tokens
+    
+    def test_digit_group_zero_prioritizes_number_pattern(self, vocab_config):
+        """Test that digit_group=0 prioritizes number pattern over reserved tokens."""
+        # Create vocab with number tokens that could match parts of longer numbers
+        vocab_dict = {
+            'range': {
+                'numbers': ['', 0, 111],  # Includes 111
+            },
+            'misc': ['+', '*'],
+            'special_tokens': {},
+            'flags': {
+                'include_base_vocab': True,
+                'include_base_special_tokens': True,
+            }
+        }
+        vocab_with_numbers = VocabConfig([], {}).from_config(vocab_dict)
+        
+        # digit_group=0: numbers should not be split
+        number_policy = NumberPolicy(sign=False, digit_group=0, allow_float=False)
+        lexer = UnifiedLexer(vocab_with_numbers, number_policy=number_policy)
+        
+        # 1111111 should be a single token, not split into 111, 111, 1
+        text = '1111111'
+        tokens = lexer.tokenize(text)
+        assert tokens == ['1111111'], f"Expected ['1111111'], got {tokens}"
+        
+        # 111 should also work (it's in vocab)
+        text2 = '111'
+        tokens2 = lexer.tokenize(text2)
+        assert tokens2 == ['111'], f"Expected ['111'], got {tokens2}"
+        
+        # Mixed case
+        text3 = '111+1111111'
+        tokens3 = lexer.tokenize(text3)
+        assert tokens3 == ['111', '+', '1111111'], f"Expected ['111', '+', '1111111'], got {tokens3}"
+    
+    def test_zero_padded_digit_tokens_auto_added(self, vocab_config):
+        """Test that zero-padded digit tokens are automatically added when digit_group > 0."""
+        vocab_dict = {
+            'range': {
+                'numbers': ['', 0, 1000],
+            },
+            'misc': ['|'],
+            'special_tokens': {},
+            'flags': {
+                'include_base_vocab': True,
+                'include_base_special_tokens': True,
+            }
+        }
+        vocab_config_test = VocabConfig([], {}).from_config(vocab_dict)
+        
+        # digit_group=3: should add 000-999, 00-99, 0-9
+        number_policy = NumberPolicy(sign=False, digit_group=3, allow_float=False)
+        lexer = UnifiedLexer(vocab_config_test, number_policy=number_policy)
+        
+        vocab_list = lexer.vocab_config.get_vocab()
+        
+        # Check that zero-padded tokens are present
+        assert '006' in vocab_list, "006 should be in vocab"
+        assert '009' in vocab_list, "009 should be in vocab"
+        assert '02' in vocab_list, "02 should be in vocab"
+        assert '05' in vocab_list, "05 should be in vocab"
+        assert '06' in vocab_list, "06 should be in vocab"
+        assert '000' in vocab_list, "000 should be in vocab"
+        assert '999' in vocab_list, "999 should be in vocab"
+        
+        # Test tokenization with zero-padded numbers
+        text = '1006'  # Should be split into ['100', '6']
+        tokens = lexer.tokenize(text)
+        assert '6' in tokens, f"Expected '6' in tokens, got {tokens}"
+        
+        # Test with a number that produces zero-padded token
+        text2 = '2009'  # Should be split into ['200', '9']
+        tokens2 = lexer.tokenize(text2)
+        assert '9' in tokens2, f"Expected '9' in tokens2, got {tokens2}"
+    
+    def test_attach_sign_with_digit_group_zero(self, vocab_config):
+        """Test attach_sign with digit_group=0 and vocab containing negative numbers."""
+        vocab_dict = {
+            'range': {
+                'numbers': ['', -99, 99],
+            },
+            'misc': [',', ';', '[', ']', '-'],
+            'special_tokens': {},
+            'flags': {
+                'include_base_vocab': True,
+                'include_base_special_tokens': True,
+            }
+        }
+        vocab_config_test = VocabConfig([], {}).from_config(vocab_dict)
+        
+        # attach_sign: true, digit_group=0
+        number_policy = NumberPolicy(sign=True, digit_group=0, allow_float=True)
+        lexer = UnifiedLexer(vocab_config_test, number_policy=number_policy)
+        
+        # Test negative numbers
+        text = '-10 + -11 - -13'
+        tokens = lexer.tokenize(text)
+        # Should be: ['-10', '+', '-11', '-', '-13']
+        assert '-10' in tokens, f"Expected '-10' in tokens, got {tokens}"
+        assert '-11' in tokens, f"Expected '-11' in tokens, got {tokens}"
+        assert '-13' in tokens, f"Expected '-13' in tokens, got {tokens}"

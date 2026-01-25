@@ -8,22 +8,21 @@ def integer_poly_factor_generator(seed: int):
     from random import randint
 
     import sage.misc.randstate as randstate
-    from sage.all import ZZ, PolynomialRing
+    from sage.all import prod, PolynomialSampler
 
     randstate.set_random_seed(seed)
 
-    R = PolynomialRing(ZZ, "x")
-    x = R.gen()
-
-    # Choose two integer roots a, b in a small range
-    a = randint(-9, 9)
-    b = randint(-9, 9)
-
-    p = (x - a) * (x - b)
-    expanded = p          # already expanded by construction
+    sampler = PolynomialSampler(
+        symbols="x",
+        field_str="ZZ",
+        max_num_terms=4,
+        max_degree=4,
+        min_degree=1,
+    )
+    ps = sampler.sample(num_samples=3)
+    p = prod(ps)
     factored = p.factor()
-
-    return str(expanded), str(factored)
+    return p, factored
 
 
 if __name__ == "__main__":
