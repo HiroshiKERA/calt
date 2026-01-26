@@ -9,13 +9,13 @@ three YAML files:
   `ModelPipeline` and `TrainerPipeline`.
 
 All three are loaded with `OmegaConf.load` and passed around as `omegaconf.DictConfig`
-objects, so they support dot-style access (e.g. `cfg.data`, `cfg.model`, `cfg.train`,
-`cfg.wandb`).
+objects, so they support dot-style access (e.g. `cfg.data`, `cfg.model`, `cfg.train`).
+WandB configuration can be included in `cfg.train.wandb` or passed separately as `cfg.wandb`.
 
 ### `data.yaml` – dataset generation (`DatasetPipeline`)
 
 The `dataset` block in `configs/data.yaml` is consumed by
-`calt.dataset.pipeline.DatasetPipeline.from_config`:
+:meth:`calt.dataset.DatasetPipeline.from_config`:
 
 - `save_dir`: base directory where all splits (train/test/…) are written.
 - `num_train_samples`: number of training samples in the `"train"` split.
@@ -31,7 +31,7 @@ The `dataset` block in `configs/data.yaml` is consumed by
 ### `lexer.yaml` – IO and vocabulary (`IOPipeline`)
 
 `configs/lexer.yaml` is referenced from the `data` block of `configs/train.yaml` and
-consumed inside `calt.io.pipeline.IOPipeline.from_config`. It controls:
+consumed inside :meth:`calt.io.IOPipeline.from_config`. It controls:
 
 - **Number handling**
   - `number.policy`: numeric type (`integer`, `rational`, `float`, …).
@@ -75,10 +75,11 @@ cfg = OmegaConf.load("configs/train.yaml")
 
 io_dict = IOPipeline.from_config(cfg.data).build()
 model = ModelPipeline.from_io_dict(cfg.model, io_dict).build()
-trainer = TrainerPipeline.from_io_dict(cfg.train, model, io_dict, cfg.wandb).build()
+# wandb_config is optional - if not provided, TrainerPipeline will try to get it from cfg.train.wandb
+trainer_pipeline = TrainerPipeline.from_io_dict(cfg.train, model, io_dict).build()
 
-trainer.train()
-success_rate = trainer.evaluate_and_save_generation()
+trainer_pipeline.train()
+success_rate = trainer_pipeline.evaluate_and_save_generation()
 print(f"Success rate: {100 * success_rate:.1f}%")
 ```
 
@@ -93,12 +94,12 @@ Typical keys include:
 - `logging_steps`, `eval_steps`, `save_steps`
 - `evaluation_strategy`, `save_strategy`
 - `metric_for_best_model`, `load_best_model_at_end`
-- `output_dir`, `seed`, `fp16`, `bf16`
+- `save_dir` (or `output_dir` for backward compatibility), `seed`, `fp16`, `bf16`
 
 #### `wandb` block – experiment tracking
 
-`cfg.wandb` is passed to `TrainerPipeline` as `wandb_config` and used to configure
-Weights & Biases:
+WandB configuration can be included in `cfg.train.wandb` or passed separately as `cfg.wandb`.
+If provided, it is used to configure Weights & Biases:
 
 - `project`: project name on WandB.
 - `group`: logical experiment group (e.g. task name).

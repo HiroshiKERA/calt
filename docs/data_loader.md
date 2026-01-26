@@ -4,11 +4,11 @@ Utilities to prepare training/evaluation datasets, tokenizers, and data collator
 
 ## IOPipeline
 
-The main entry point for building data pipelines is :class:`calt.io.pipeline.IOPipeline`.
+The main entry point for building data pipelines is :class:`calt.io.IOPipeline`.
 
-::: calt.io.pipeline.IOPipeline
+::: calt.io.IOPipeline
 
-`IOPipeline.from_config(cfg.data)` consumes a :class:`omegaconf.DictConfig` that contains
+:meth:`IOPipeline.from_config` consumes a :class:`omegaconf.DictConfig` that contains
 paths to the lexer/vocabulary configuration and dataset files, then builds:
 
 - tokenised training and test datasets (`train_dataset`, `test_dataset`)
@@ -60,6 +60,6 @@ tokenizer that is shared between the model and trainer.
 ## Visualization utilities (optional)
 
 Quickly render visual diffs between predictions and references.
-::: calt.io.utils.comparison_vis.display_with_diff
-::: calt.io.utils.comparison_vis.load_eval_results
-::: calt.io.utils.comparison_vis.parse_poly
+::: calt.io.visualization.comparison_vis.display_with_diff
+::: calt.io.visualization.comparison_vis.load_eval_results
+::: calt.io.visualization.comparison_vis.parse_poly
