@@ -141,7 +141,9 @@ class PolynomialSampler:
             # Provide informative error message with the parameters used
             field_str = self.field_str if self.field_str else "unknown"
             order_str = (
-                str(self.order) if isinstance(self.order, (str, TermOrder)) else self.order
+                str(self.order)
+                if isinstance(self.order, (str, TermOrder))
+                else self.order
             )
             raise ValueError(
                 f"Failed to create polynomial ring with parameters: "
