@@ -23,7 +23,7 @@ class PolynomialSampler:
         self,
         symbols: str | None = None,
         field_str: str | None = None,
-        order: str | TermOrder | None = None,
+        order: str | TermOrder | None = "degrevlex",
         ring: Any = None,
         max_num_terms: int | None = 10,
         max_degree: int = 5,
@@ -73,7 +73,12 @@ class PolynomialSampler:
             self.ring = None
             self.symbols = symbols
             self.field_str = field_str
-            self.order = order
+            # Map "grevlex" to "degrevlex" for SageMath compatibility
+            # SageMath uses "degrevlex" instead of "grevlex"
+            if isinstance(order, str) and order == "grevlex":
+                self.order = "degrevlex"
+            else:
+                self.order = order
 
         self.max_num_terms = max_num_terms
         self.max_degree = max_degree
@@ -121,12 +126,28 @@ class PolynomialSampler:
 
         Returns:
             PolynomialRing: Generated polynomial ring
+
+        Raises:
+            ValueError: If polynomial ring creation fails with informative error message
         """
         if self.ring is not None:
             return self.ring
 
-        R = PolynomialRing(self.get_field(), self.symbols, order=self.order)
-        return R
+        try:
+            field = self.get_field()
+            R = PolynomialRing(field, self.symbols, order=self.order)
+            return R
+        except (ValueError, TypeError, AttributeError) as e:
+            # Provide informative error message with the parameters used
+            field_str = self.field_str if self.field_str else "unknown"
+            order_str = (
+                str(self.order) if isinstance(self.order, (str, TermOrder)) else self.order
+            )
+            raise ValueError(
+                f"Failed to create polynomial ring with parameters: "
+                f"field={field_str}, symbols={self.symbols}, order={order_str}. "
+                f"Error details: {str(e)}"
+            ) from e
 
     def sample(
         self,
