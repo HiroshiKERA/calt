@@ -1,7 +1,14 @@
 import logging
 import re
 
-from sage.all import QQ, RR, ZZ, PolynomialRing
+try:
+    from sage.all import QQ, RR, ZZ, PolynomialRing
+except ImportError:
+    # SageMath is optional - FormatChecker will raise ImportError when used
+    QQ = None
+    RR = None
+    ZZ = None
+    PolynomialRing = None
 
 # Set up logger for this module
 logger = logging.getLogger(__name__)
@@ -78,6 +85,12 @@ class FormatChecker:
         """Set up polynomial rings for efficiency."""
         if not self.variables:
             return []
+
+        if PolynomialRing is None:
+            raise ImportError(
+                "SageMath is required for FormatChecker. "
+                "Install it with: conda install -c conda-forge sage"
+            )
 
         # Pre-generate polynomial rings for efficiency
         rings = []
@@ -288,12 +301,13 @@ class FormatChecker:
                         continue
 
             # Then, try as different number types
-            for ring in [RR, QQ, ZZ]:
-                try:
-                    ring(s)
-                    return True
-                except (ValueError, TypeError, SyntaxError):
-                    continue
+            if RR is not None and QQ is not None and ZZ is not None:
+                for ring in [RR, QQ, ZZ]:
+                    try:
+                        ring(s)
+                        return True
+                    except (ValueError, TypeError, SyntaxError):
+                        continue
 
             return False
         except (ValueError, TypeError, SyntaxError):
