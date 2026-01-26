@@ -60,7 +60,9 @@ class Trainer(HTrainer):
             ignore_index (int, optional): Label id to ignore. Defaults to -100.
 
         Returns:
-            dict: Dictionary with accuracy metrics.
+            dict: Dictionary with accuracy metrics including:
+                - token_accuracy: Token-level accuracy (fraction of correct tokens)
+                - success_rate: Sequence-level accuracy (fraction of sequences that match exactly)
         """
         predictions, labels = eval_preds
 
@@ -73,9 +75,34 @@ class Trainer(HTrainer):
         # Mask tokens with ignore_index
         mask = labels != ignore_index
         correct = (predictions == labels) & mask
-        acc = correct.sum().item() / mask.sum().item()
+        token_acc = correct.sum().item() / mask.sum().item()
 
-        return {"token_accuracy": acc}
+        # Compute success rate (exact sequence match)
+        # For each sequence, check if all non-ignored tokens match exactly
+        batch_size = predictions.shape[0]
+        exact_matches = 0
+
+        for i in range(batch_size):
+            # Get valid tokens (non-ignored) for this sequence
+            seq_mask = mask[i]
+            if seq_mask.sum().item() == 0:
+                # Skip sequences with no valid tokens
+                continue
+
+            # Compare only the valid tokens
+            pred_seq = predictions[i][seq_mask]
+            label_seq = labels[i][seq_mask]
+
+            # Check if sequences match exactly
+            if pred_seq.shape == label_seq.shape and torch.equal(pred_seq, label_seq):
+                exact_matches += 1
+
+        success_rate = exact_matches / batch_size if batch_size > 0 else 0.0
+
+        return {
+            "token_accuracy": token_acc,
+            "success_rate": success_rate,
+        }
 
     def evaluate_and_save_generation(self, max_length: int = 512):
         """Run greedy/beam-search generation on the evaluation set.

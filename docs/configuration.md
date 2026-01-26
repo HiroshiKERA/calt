@@ -67,7 +67,7 @@ The high-level training flow in the examples is:
 
 ```python
 from omegaconf import OmegaConf
-from calt.io.pipeline import IOPipeline
+from calt.io import IOPipeline
 from calt.models import ModelPipeline
 from calt.trainer import TrainerPipeline
 

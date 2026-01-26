@@ -10,7 +10,7 @@ class DatasetPipeline:
 
     Example:
         >>> from omegaconf import OmegaConf
-        >>> from calt.dataset.pipeline import DatasetPipeline
+        >>> from calt.dataset import DatasetPipeline
         >>> cfg = OmegaConf.load("configs/dataset.yaml")
         >>> pipeline = DatasetPipeline.from_config(
         ...     cfg.dataset,

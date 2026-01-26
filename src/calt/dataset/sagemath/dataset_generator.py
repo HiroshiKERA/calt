@@ -6,8 +6,8 @@ from typing import Any, Callable
 
 from joblib import Parallel, delayed
 
-from .utils.dataset_writer import DatasetWriter
-from .utils.statistics_calculator import MemoryEfficientStatisticsCalculator
+from ..utils.dataset_writer import DatasetWriter
+from ..utils.statistics_calculator import MemoryEfficientStatisticsCalculator
 
 # Type aliases for better readability
 ProblemOrSolution = Any | list[Any] | list[list[Any]] | list[Any | list[Any]]

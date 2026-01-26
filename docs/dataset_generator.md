@@ -35,7 +35,7 @@ The typical usage pattern is:
 
 ```python
 from omegaconf import OmegaConf
-from calt.dataset.pipeline import DatasetPipeline
+from calt.dataset import DatasetPipeline
 
 cfg = OmegaConf.load("configs/data.yaml")
 pipeline = DatasetPipeline.from_config(

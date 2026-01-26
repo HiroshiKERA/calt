@@ -10,7 +10,7 @@ model:
   max_sequence_length: 256
 
 train:
-  output_dir: ./results
+  save_dir: ./results
   num_train_epochs: 5
   learning_rate: 0.0001
   weight_decay: 0.01
@@ -28,7 +28,3 @@ data:
   test_dataset_path: ./data/test_raw.txt
   # Use lexer config (includes vocab config)
   lexer_config: ./configs/lexer.yaml
-  preprocessor: 'lexer'
-  # Alternative: use separate vocab config (deprecated)
-  # vocab_config: ./configs/vocab.yaml
-  # preprocessor: 'generic'

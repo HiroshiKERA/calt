@@ -4,8 +4,7 @@ import tempfile
 import pytest
 from transformers import PreTrainedTokenizerFast
 
-from calt.io.base import StandardDataCollator, StandardDataset
-from calt.io.pipeline import IOPipeline
+from calt.io import IOPipeline, StandardDataCollator, StandardDataset
 from calt.io.vocabulary import VocabConfig
 
 

@@ -1,11 +1,5 @@
-from .statistics_calculator import (
-    BaseStatisticsCalculator,
-    IncrementalStatistics,
-    MemoryEfficientStatisticsCalculator,
-)
+from .polynomial_sampler import PolynomialSampler
 
 __all__ = [
-    "BaseStatisticsCalculator",
-    "IncrementalStatistics",
-    "MemoryEfficientStatisticsCalculator",
+    "PolynomialSampler",
 ]

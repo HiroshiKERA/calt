@@ -1,7 +1,7 @@
+from ..utils.dataset_writer import DatasetWriter
+from ..utils.statistics_calculator import BaseStatisticsCalculator
 from .dataset_generator import DatasetGenerator
-from .utils.dataset_writer import DatasetWriter
 from .utils.polynomial_sampler import PolynomialSampler
-from .utils.statistics_calculator import BaseStatisticsCalculator
 
 __all__ = [
     "DatasetGenerator",
