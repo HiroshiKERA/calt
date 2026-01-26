@@ -31,10 +31,6 @@ jobs:
           uv venv
           uv sync --dev
 
-      - name: Run pytest (data_loader)
+      - name: Run pytest
         run: uvx --with tox-uv tox -e test
-
-      - name: Run train pipeline smoke tests
-        run: |
-          uvx --with tox-uv tox -e train-test
 
