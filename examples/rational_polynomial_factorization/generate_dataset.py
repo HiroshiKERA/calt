@@ -1,8 +1,8 @@
 from omegaconf import OmegaConf
+from sage.all import QQ, RR, ZZ
 
 from calt.dataset.pipeline import DatasetPipeline
 from calt.dataset.sagemath.utils.polynomial_sampler import PolynomialSampler
-from sage.all import ZZ, QQ, RR
 
 
 def rational_factor_generator(seed: int):
