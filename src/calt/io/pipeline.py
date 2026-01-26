@@ -20,7 +20,7 @@ from .preprocessor import (
     UnifiedLexer,
 )
 from .tokenizer import get_tokenizer
-from .utils.vocab_validator import validate_dataset_tokens
+from .validation.vocab_validator import validate_dataset_tokens
 from .vocabulary.config import VocabConfig
 
 logger = logging.getLogger(__name__)
@@ -56,6 +56,9 @@ class IOPipeline:
         self.preprocessor = preprocessor
         self.validate_train_tokens = validate_train_tokens
         self.validate_test_tokens = validate_test_tokens
+        # Store config dicts for checkpoint saving
+        self.lexer_config_dict: dict | None = None
+        self.vocab_config_dict: dict | None = None
 
     @classmethod
     def from_config(cls, config: DictConfig) -> "IOPipeline":
@@ -63,82 +66,64 @@ class IOPipeline:
 
         Args:
             config (DictConfig): Data configuration from cfg.data (OmegaConf).
-                Can include:
-                - preprocessor: str ("generic", "none", "null") or "lexer" to use UnifiedLexer
-                - lexer_config: str path to lexer.yaml file (required if preprocessor="lexer")
-                - vocab_config: str path to vocab.yaml file (if not using lexer_config)
+                Must include:
+                - lexer_config: str path to lexer.yaml file (required)
 
         Returns:
             IOPipeline: IOPipeline instance configured from the config.
 
         Example:
             >>> from omegaconf import OmegaConf
-            >>> from calt.io.pipeline import IOPipeline
+            >>> from calt.io import IOPipeline
             >>>
             >>> cfg = OmegaConf.load("config/train.yaml")
             >>> io_pipeline = IOPipeline.from_config(cfg.data)
         """
-        preprocessor = config.get("preprocessor")
         lexer_config_path = config.get("lexer_config")
-        vocab_config_path = config.get("vocab_config")
+        if lexer_config_path is None:
+            raise ValueError("lexer_config must be provided")
 
-        # Handle lexer config
-        if isinstance(preprocessor, str) and preprocessor.lower() == "lexer":
-            if lexer_config_path is None:
-                raise ValueError(
-                    "lexer_config must be provided when preprocessor='lexer'"
-                )
+        # Resolve lexer config path (support relative paths)
+        lexer_config_path_obj = Path(lexer_config_path)
+        if not lexer_config_path_obj.is_absolute():
+            # Try to resolve relative to current working directory first
+            if not lexer_config_path_obj.exists():
+                # If not found, try relative to config file location if available
+                # (This is a best-effort approach)
+                pass
+        lexer_config_path = str(lexer_config_path_obj.resolve())
 
-            # Resolve lexer config path (support relative paths)
-            lexer_config_path_obj = Path(lexer_config_path)
-            if not lexer_config_path_obj.is_absolute():
-                # Try to resolve relative to current working directory first
-                if not lexer_config_path_obj.exists():
-                    # If not found, try relative to config file location if available
-                    # (This is a best-effort approach)
-                    pass
-            lexer_config_path = str(lexer_config_path_obj.resolve())
+        # Load lexer config
+        with open(lexer_config_path, "r") as f:
+            lexer_config = yaml.safe_load(f)
 
-            # Load lexer config
-            with open(lexer_config_path, "r") as f:
-                lexer_config = yaml.safe_load(f)
+        # Create VocabConfig from lexer config
+        vocab_config_dict = lexer_config.get("vocab", {})
+        vocab_config = VocabConfig([], {}).from_config(vocab_config_dict)
 
-            # Create VocabConfig from lexer config
-            vocab_config_dict = lexer_config.get("vocab", {})
-            vocab_config = VocabConfig([], {}).from_config(vocab_config_dict)
+        # Create NumberPolicy from lexer config
+        number_policy_dict = lexer_config.get("number_policy", {})
+        # attach_sign: true = attach sign to number, false = separate sign as token
+        attach_sign = number_policy_dict.get("attach_sign", True)  # default: attach
+        number_policy = NumberPolicy(
+            sign=attach_sign,  # sign=True means attach, sign=False means separate
+            digit_group=number_policy_dict.get("digit_group", 0),
+            allow_float=number_policy_dict.get("allow_float", True),
+        )
 
-            # Create NumberPolicy from lexer config
-            number_policy_dict = lexer_config.get("number_policy", {})
-            # attach_sign: true = attach sign to number, false = separate sign as token
-            attach_sign = number_policy_dict.get("attach_sign", True)  # default: attach
-            number_policy = NumberPolicy(
-                sign=attach_sign,  # sign=True means attach, sign=False means separate
-                digit_group=number_policy_dict.get("digit_group", 0),
-                allow_float=number_policy_dict.get("allow_float", True),
-            )
+        # Create UnifiedLexer (vocab extension is handled inside UnifiedLexer.__init__)
+        preprocessor = UnifiedLexer(
+            vocab_config=vocab_config,
+            number_policy=number_policy,
+            strict=lexer_config.get("strict", True),
+            include_base_vocab=lexer_config.get("include_base_vocab", True),
+        )
 
-            # Create UnifiedLexer (vocab extension is handled inside UnifiedLexer.__init__)
-            preprocessor = UnifiedLexer(
-                vocab_config=vocab_config,
-                number_policy=number_policy,
-                strict=lexer_config.get("strict", True),
-                include_base_vocab=lexer_config.get("include_base_vocab", True),
-            )
+        # Use the extended vocab_config from lexer (includes auto-added tokens for floats)
+        vocab_config_path = preprocessor.vocab_config
 
-            # Use the extended vocab_config from lexer (includes auto-added tokens for floats)
-            vocab_config_path = preprocessor.vocab_config
-        elif isinstance(preprocessor, str):
-            # Convert string preprocessor name to None (generic means no preprocessing)
-            if preprocessor.lower() in ["generic", "none", "null"]:
-                preprocessor = None
-            else:
-                # If other preprocessor types are needed, add them here
-                raise ValueError(
-                    f"Unsupported preprocessor type: {preprocessor}. "
-                    f"Supported types: 'generic', 'none', 'null', 'lexer'"
-                )
-
-        return cls(
+        # Create instance
+        instance = cls(
             train_dataset_path=config.get("train_dataset_path"),
             test_dataset_path=config.get("test_dataset_path"),
             num_train_samples=config.get("num_train_samples", -1),
@@ -148,6 +133,14 @@ class IOPipeline:
             validate_train_tokens=config.get("validate_train_tokens", False),
             validate_test_tokens=config.get("validate_test_tokens", True),
         )
+
+        # Store config dicts for checkpoint saving
+        # Store the original lexer_config (includes vocab, number_policy, strict, etc.)
+        instance.lexer_config_dict = lexer_config
+        # Store vocab_config dict (from lexer config, before extension)
+        instance.vocab_config_dict = vocab_config_dict
+
+        return instance
 
     def get_vocab_config(self, vocab_config: VocabConfig | dict | str | None):
         if vocab_config is None:
@@ -221,9 +214,11 @@ class IOPipeline:
         self.tokenizer = tokenizer
         self.data_collator = data_collator
 
-        return {
+        self.io_dict = {
             "train_dataset": train_dataset,
             "test_dataset": test_dataset,
             "tokenizer": tokenizer,
             "data_collator": data_collator,
         }
+
+        return self.io_dict

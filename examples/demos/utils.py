@@ -1,4 +1,4 @@
-from calt.io.utils.comparison_vis import load_eval_results
+from calt.io.visualization.comparison_vis import load_eval_results
 
 
 def showcase(dataset, success_cases=True, num_show=5):

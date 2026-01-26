@@ -267,9 +267,9 @@ def get_model_from_config(
     tokenizer: Optional[PreTrainedTokenizerFast] = None,
     model_name: Optional[str] = None,
 ) -> PreTrainedModel:
-    """Create a model instance from OmegaConf config using model loaders.
+    """Create a model instance from OmegaConf config using ModelRegistry.
 
-    This function uses the ModelLoader system to convert configs and create models.
+    This function uses the ModelRegistry to convert configs and create models.
 
     Args:
         model_config (DictConfig): Model configuration from cfg.model (OmegaConf).
@@ -285,11 +285,8 @@ def get_model_from_config(
         >>> cfg = OmegaConf.load("config/train.yaml")
         >>> model = get_model_from_config(cfg.model, tokenizer)
     """
-    from .loader import get_model_loader
-
-    loader = get_model_loader(
-        model_name=model_name,
-        calt_config=model_config,
+    return _registry.create_from_config(
+        model_config=model_config,
         tokenizer=tokenizer,
+        model_name=model_name,
     )
-    return loader.load()

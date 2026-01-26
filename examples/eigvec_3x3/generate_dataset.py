@@ -1,7 +1,7 @@
 import numpy as np
 from omegaconf import OmegaConf
 
-from calt.dataset.pipeline import DatasetPipeline
+from calt.dataset import DatasetPipeline
 
 
 def eigvec_generator(seed: int):

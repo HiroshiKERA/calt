@@ -1,7 +1,7 @@
 from .dataset.sympy.dataset_generator import DatasetGenerator
-from .dataset.sympy.utils.dataset_writer import DatasetWriter
 from .dataset.sympy.utils.polynomial_sampler import PolynomialSampler
-from .dataset.sympy.utils.statistics_calculator import (
+from .dataset.utils.dataset_writer import DatasetWriter
+from .dataset.utils.statistics_calculator import (
     BaseStatisticsCalculator,
 )
 from .io.base import StandardDataCollator, StandardDataset

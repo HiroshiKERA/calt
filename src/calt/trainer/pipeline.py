@@ -13,7 +13,6 @@ from torch.utils.data import Dataset
 from transformers import PreTrainedModel, PreTrainedTokenizerFast
 
 from ..io.base import StandardDataCollator
-from .loaders.base import get_trainer_loader
 from .trainer import Trainer
 
 
@@ -98,39 +97,36 @@ class TrainerPipeline:
             setattr(self.config, "report_to", None)
             return
 
-        # Enable wandb
         os.environ.pop("WANDB_DISABLED", None)
-
-        project = getattr(wb, "project", "calt")
-        group = getattr(wb, "group", None)
-        name = getattr(wb, "name", None)
-
-        if project is not None:
-            os.environ["WANDB_PROJECT"] = str(project)
-        if group is not None:
-            os.environ["WANDB_RUN_GROUP"] = str(group)
-        if name is not None:
-            os.environ["WANDB_NAME"] = str(name)
+        for key, env in [
+            ("project", "WANDB_PROJECT"),
+            ("group", "WANDB_RUN_GROUP"),
+            ("name", "WANDB_NAME"),
+        ]:
+            value = getattr(wb, key, None)
+            if value is not None:
+                os.environ[env] = str(value)
 
         # Attach wandb config to training config so TrainerLoader can inspect it
         setattr(self.config, "wandb", wb)
 
         # Make sure Trainer sees wandb settings
         setattr(self.config, "report_to", getattr(self.config, "report_to", "wandb"))
-        if name is not None and not hasattr(self.config, "run_name"):
-            setattr(self.config, "run_name", str(name))
 
-    def build(self) -> Trainer:
+    def build(self) -> "TrainerPipeline":
         """Build the trainer from configuration.
 
         Returns:
-            Trainer: Trainer instance.
+            TrainerPipeline: Returns self for method chaining.
         """
         # Configure wandb before building TrainingArguments / Trainer
         self._configure_wandb()
 
-        # Get the appropriate loader
-        self._loader = get_trainer_loader(
+        # Import here to avoid circular import
+        from .loader import StandardTrainerLoader
+
+        # Create trainer loader
+        self._loader = StandardTrainerLoader(
             calt_config=self.config,
             model=self.model,
             tokenizer=self.tokenizer,
@@ -141,7 +137,60 @@ class TrainerPipeline:
 
         # Load the trainer
         self.trainer = self._loader.load()
-        return self.trainer
+        return self
+
+    def train(self, resume_from_checkpoint: str | bool | None = None) -> None:
+        """Train the model.
+
+        This method calls trainer.train(). If resume_from_checkpoint is provided,
+        training will resume from the specified checkpoint.
+
+        Args:
+            resume_from_checkpoint: If True, resume from the latest checkpoint in output_dir.
+                                   If str, resume from the specified checkpoint path.
+                                   If None, start training from scratch.
+        """
+        if self.trainer is None:
+            raise ValueError("Trainer not built. Call build() first.")
+
+        # Train the model
+        self.trainer.train(resume_from_checkpoint=resume_from_checkpoint)
+
+    def save_model(self, output_dir: str | None = None) -> None:
+        """Save the model and tokenizer.
+
+        Args:
+            output_dir: Directory to save the model and tokenizer. If None, uses trainer's output_dir.
+        """
+        if self.trainer is None:
+            raise ValueError("Trainer not built. Call build() first.")
+        if output_dir is None:
+            output_dir = self.trainer.args.output_dir
+        self.trainer.save_model(output_dir=output_dir)
+        # Also save tokenizer
+        if self.tokenizer is not None:
+            self.tokenizer.save_pretrained(output_dir)
+
+    def evaluate_and_save_generation(self, max_length: int = 512) -> float:
+        """Evaluate and save generation results."""
+        if self.trainer is None:
+            raise ValueError("Trainer not built. Call build() first.")
+        return self.trainer.evaluate_and_save_generation(max_length=max_length)
+
+    def __getattr__(self, name: str):
+        """Delegate attribute access to trainer if not found in TrainerPipeline.
+
+        This allows calling trainer methods directly on TrainerPipeline, e.g.:
+        - trainer_pipeline.evaluate_and_save_generation()
+        - trainer_pipeline.evaluate()
+        - etc.
+        """
+        if self.trainer is None:
+            raise AttributeError(
+                f"'{self.__class__.__name__}' object has no attribute '{name}'. "
+                "Trainer not built. Call build() first."
+            )
+        return getattr(self.trainer, name)
 
     @classmethod
     def from_io_dict(
@@ -154,12 +203,16 @@ class TrainerPipeline:
         """Create a TrainerPipeline from a dict returned by IOPipeline.build().
 
         Args:
-            config: Training configuration (cfg.train).
+            config: Training configuration (cfg.train). May contain wandb config as config.wandb.
             model: Model instance from ModelPipeline.
             io_dict: IOPipeline.build() result.
-            wandb_config: Optional wandb configuration block (cfg.wandb).
+            wandb_config: Optional wandb configuration block. If None, tries to get from config.wandb.
         """
-        return cls(
+        # Get wandb_config from config.wandb if not provided
+        if wandb_config is None and hasattr(config, "wandb"):
+            wandb_config = config.wandb
+
+        instance = cls(
             config=config,
             model=model,
             tokenizer=io_dict["tokenizer"],
@@ -167,4 +220,37 @@ class TrainerPipeline:
             eval_dataset=io_dict["test_dataset"],
             data_collator=io_dict["data_collator"],
             wandb_config=wandb_config,
+            io_dict=io_dict,
         )
+        return instance
+
+    @classmethod
+    def resume_from_checkpoint(
+        cls,
+        save_dir: str,
+        resume_from_checkpoint: bool = True,
+    ) -> "TrainerPipeline":
+        """Resume training from a saved checkpoint directory.
+
+        This method loads train.yaml from save_dir, reconstructs IOPipeline, ModelPipeline,
+        and TrainerPipeline, and optionally loads the saved model and tokenizer.
+
+        Args:
+            save_dir: Directory containing train.yaml, model/, and tokenizer/.
+            resume_from_checkpoint: If True, load saved model and tokenizer. If False, create new model.
+
+        Returns:
+            TrainerPipeline: TrainerPipeline instance ready for training continuation.
+
+        Example:
+            >>> from calt.trainer import TrainerPipeline
+            >>>
+            >>> # Load from checkpoint and continue training
+            >>> trainer_pipeline = TrainerPipeline.resume_from_checkpoint("./results")
+            >>> trainer_pipeline.build()
+            >>> trainer_pipeline.train()  # Continue training
+        """
+        from .utils import load_from_checkpoint
+
+        _, _, trainer_pipeline = load_from_checkpoint(save_dir, resume_from_checkpoint)
+        return trainer_pipeline

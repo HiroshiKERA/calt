@@ -1,18 +1,93 @@
 """
-Loader for standard Trainer.
+Trainer loader for creating trainer instances from config.
 
 Handles conversion from unified config format (cfg.train) to TrainingArguments
 and creates Trainer instances.
 """
 
-from transformers import TrainingArguments
+from abc import ABC, abstractmethod
+from typing import Optional
 
-from ...trainer.utils import count_cuda_devices
-from ..trainer import Trainer
-from .base import TrainerLoader
+from omegaconf import DictConfig
+from torch.utils.data import Dataset
+from transformers import PreTrainedModel, PreTrainedTokenizerFast, TrainingArguments
+
+from ..io.base import StandardDataCollator
+from .trainer import Trainer
+from .utils import count_cuda_devices
 
 # Default TrainingArguments for reference
 _DEFAULT_TRAINING_ARGS = TrainingArguments(output_dir="./tmp")
+
+
+class TrainerLoader(ABC):
+    """Abstract base class for trainer loaders.
+
+    Each trainer loader is responsible for:
+    1. Converting unified config format (cfg.train) to TrainingArguments
+    2. Creating the trainer instance from the converted arguments
+
+    Attributes:
+        calt_config (DictConfig): Original config from cfg.train (before conversion).
+        training_args (TrainingArguments): Training arguments (after conversion).
+        trainer (Trainer): Trainer instance.
+    """
+
+    def __init__(
+        self,
+        calt_config: DictConfig,
+        model: Optional[PreTrainedModel] = None,
+        tokenizer: Optional[PreTrainedTokenizerFast] = None,
+        train_dataset: Optional[Dataset] = None,
+        eval_dataset: Optional[Dataset] = None,
+        data_collator: Optional[StandardDataCollator] = None,
+    ):
+        """Initialize the trainer loader.
+
+        Args:
+            calt_config (DictConfig): Training configuration from cfg.train (OmegaConf).
+            model (PreTrainedModel | None): Model instance.
+            tokenizer (PreTrainedTokenizerFast | None): Tokenizer instance.
+            train_dataset (Dataset | None): Training dataset.
+            eval_dataset (Dataset | None): Evaluation dataset.
+            data_collator (StandardDataCollator | None): Data collator.
+        """
+        self.calt_config = calt_config
+        self.model = model
+        self.tokenizer = tokenizer
+        self.train_dataset = train_dataset
+        self.eval_dataset = eval_dataset
+        self.data_collator = data_collator
+        self.training_args: Optional[TrainingArguments] = None
+        self.trainer: Optional[Trainer] = None
+
+    @abstractmethod
+    def translate_config(self) -> TrainingArguments:
+        """Convert unified config format to TrainingArguments.
+
+        Returns:
+            TrainingArguments: Training arguments.
+        """
+        raise NotImplementedError
+
+    @abstractmethod
+    def build_trainer(self) -> Trainer:
+        """Create trainer instance from the translated arguments.
+
+        Returns:
+            Trainer: Trainer instance.
+        """
+        raise NotImplementedError
+
+    def load(self) -> Trainer:
+        """Load the trainer by translating config and building the trainer.
+
+        Returns:
+            Trainer: Trainer instance.
+        """
+        self.training_args = self.translate_config()
+        self.trainer = self.build_trainer()
+        return self.trainer
 
 
 class StandardTrainerLoader(TrainerLoader):
@@ -60,7 +135,9 @@ class StandardTrainerLoader(TrainerLoader):
             report_to = None
 
         self.training_args = TrainingArguments(
-            output_dir=self.calt_config.output_dir,
+            output_dir=self.calt_config.get(
+                "save_dir", self.calt_config.get("output_dir", "./tmp")
+            ),
             num_train_epochs=self.calt_config.num_train_epochs,
             learning_rate=self.calt_config.learning_rate,
             weight_decay=getattr(

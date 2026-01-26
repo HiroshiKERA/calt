@@ -10,7 +10,7 @@ model:
   max_sequence_length: 512
 
 train:
-  output_dir: ./results
+  save_dir: ./results
   num_train_epochs: 100
   learning_rate: 0.0003
   weight_decay: 0.0
@@ -22,18 +22,16 @@ train:
   optimizer: adamw_torch
   num_workers: 2
   seed: 42
+  wandb:
+    project: calt
+    group: integer_polynomial_factorization
+    name: integer_polynomial_factorization
+    no_wandb: False
 
 data:
   train_dataset_path: ./data/train_raw.txt
   test_dataset_path: ./data/test_raw.txt
-  preprocessor: 'lexer'
   lexer_config: ./configs/lexer.yaml
   # Vocabulary validation options
   validate_train_tokens: true   # Validate training dataset tokens before training
   validate_test_tokens: true    # Validate test dataset tokens before training
-
-wandb:
-  project: calt
-  group: integer_polynomial_factorization
-  name: integer_polynomial_factorization
-  no_wandb: False

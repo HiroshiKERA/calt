@@ -5,7 +5,7 @@ from torch.utils.data import Dataset
 from transformers import PreTrainedTokenizerFast as Tokenizer
 
 from .preprocessor import AbstractPreProcessor
-from .utils.read import read_data_from_file
+from .read import read_data_from_file
 
 # Set up logger for this module
 logger = logging.getLogger(__name__)

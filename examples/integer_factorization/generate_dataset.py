@@ -4,7 +4,7 @@ import random
 import numpy as np
 from omegaconf import OmegaConf
 
-from calt.dataset.pipeline import DatasetPipeline
+from calt.dataset import DatasetPipeline
 
 
 def integer_factorization_generator(seed, max_number=30):
