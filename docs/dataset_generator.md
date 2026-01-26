@@ -30,7 +30,7 @@ A unified interface with SageMath and SymPy backends for large-scale dataset gen
 ## Configuration via `data.yaml`
 
 Example tasks under `calt/examples/*` use a small configuration file `configs/data.yaml`
-to drive dataset generation through :class:`calt.dataset.pipeline.DatasetPipeline`.
+to drive dataset generation through :class:`calt.dataset.DatasetPipeline`.
 The typical usage pattern is:
 
 ```python
