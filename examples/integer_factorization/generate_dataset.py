@@ -24,7 +24,6 @@ def integer_factorization_generator(seed, max_number=30):
 
 
 def integer_factor_stats_calc(problem, answer) -> dict[str, dict[str, int | float]]:
-
     return {"problem": _integer_stats(problem), "answer": _integer_list_stats(answer)}
 
 
@@ -32,12 +31,12 @@ def _integer_stats(data: int | float) -> dict[str, int | float]:
     if not data:
         raise ValueError("Cannot calculate statistics for empty data")
     return {"value": float(data)}
-    
+
 
 def _integer_list_stats(data: list[int | float]) -> dict[str, int | float]:
     if not data:
         raise ValueError("Cannot calculate statistics for empty data list")
-    values = [float(n) for n in data] # Convert to float for calculations
+    values = [float(n) for n in data]  # Convert to float for calculations
     stats = {
         "num_values": len(data),
         "min_value": min(values),
