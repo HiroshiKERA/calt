@@ -2,12 +2,88 @@
 
 from pathlib import Path
 
-from omegaconf import OmegaConf
+from omegaconf import DictConfig, OmegaConf
 from transformers import AutoTokenizer, PreTrainedModel
 
 from ..io.pipeline import IOPipeline
 from ..models import ModelPipeline
 from .pipeline import TrainerPipeline
+
+
+def apply_dryrun_settings(cfg: DictConfig) -> None:
+    """Apply dryrun settings to config for quick testing.
+
+    This function modifies the config in-place to reduce training time and resource usage:
+    - Sets training epochs to 1
+    - Reduces batch sizes to 8 (if larger)
+    - Disables multiprocessing (num_workers = 0)
+    - Marks wandb run name/group with "_dryrun" suffix (keeps wandb enabled)
+    - Limits dataset size (1000 train samples, 100 test samples)
+
+    Args:
+        cfg: OmegaConf DictConfig containing train, data, and wandb sections.
+    """
+    # Reduce training epochs
+    cfg.train.num_train_epochs = 1
+
+    # Reduce batch sizes if needed (keep original if already small)
+    if not hasattr(cfg.train, "batch_size") or cfg.train.batch_size > 8:
+        cfg.train.batch_size = 8
+    if not hasattr(cfg.train, "test_batch_size") or cfg.train.test_batch_size > 8:
+        cfg.train.test_batch_size = 8
+
+    # Disable multiprocessing for faster startup
+    cfg.train.num_workers = 0
+
+    # Adjust eval/save steps for dryrun to ensure evaluation runs during training
+    # With 1000 samples and batch_size=8, we get ~125 steps per epoch
+    # Set eval_steps and save_steps to a small value (e.g., 10) so evaluation runs
+    cfg.train.eval_steps = 10
+    cfg.train.save_steps = 10
+    # Ensure eval_strategy and save_strategy are set to "steps" if not already set
+    if not hasattr(cfg.train, "eval_strategy"):
+        cfg.train.eval_strategy = "steps"
+    if not hasattr(cfg.train, "save_strategy"):
+        cfg.train.save_strategy = "steps"
+
+    # Configure wandb for dryrun
+    # wandb config can be in cfg.wandb or cfg.train.wandb
+    wandb_cfg = None
+    if hasattr(cfg, "wandb"):
+        wandb_cfg = cfg.wandb
+    elif hasattr(cfg.train, "wandb"):
+        wandb_cfg = cfg.train.wandb
+
+    if wandb_cfg is not None:
+        # Keep existing project/group but mark as dryrun
+        original_name = getattr(wandb_cfg, "name", "dryrun")
+        original_group = getattr(wandb_cfg, "group", "dryrun")
+        # Add "dryrun-" prefix to name if not already present
+        if not original_name.startswith("dryrun-"):
+            wandb_cfg.name = f"dryrun-{original_name}"
+        else:
+            wandb_cfg.name = original_name
+        # Add "dryrun-" prefix to group if not already present
+        if not original_group.startswith("dryrun-"):
+            wandb_cfg.group = f"dryrun-{original_group}"
+        else:
+            wandb_cfg.group = original_group
+        # Keep wandb enabled but mark run name/group as dryrun
+        if hasattr(wandb_cfg, "no_wandb"):
+            wandb_cfg.no_wandb = False
+    else:
+        # Create wandb config if it doesn't exist
+        if not hasattr(cfg.train, "wandb"):
+            cfg.train.wandb = OmegaConf.create({})
+        cfg.train.wandb.project = "calt"
+        cfg.train.wandb.group = "dryrun"
+        cfg.train.wandb.name = "dryrun"
+        cfg.train.wandb.no_wandb = False
+
+    # Limit dataset size for quick testing
+    # IOPipeline uses -1 to load all samples, so set specific limits for dryrun
+    cfg.data.num_train_samples = 1000  # Limit to 1000 training samples
+    cfg.data.num_test_samples = 100  # Limit to 100 test samples
 
 
 def count_cuda_devices() -> int:
