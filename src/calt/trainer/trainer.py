@@ -54,8 +54,8 @@ class Trainer(HTrainer):
         """Compute metrics at each prediction step.
 
         Args:
-            eval_preds (tuple): (predictions, labels) where
-                - predictions: shape (batch_size, seq_len)
+            eval_preds (tuple or EvalPrediction): (predictions, labels) or EvalPrediction object where
+                - predictions: shape (batch_size, seq_len) or (batch_size, seq_len, vocab_size) if logits
                 - labels: shape (batch_size, seq_len)
             ignore_index (int, optional): Label id to ignore. Defaults to -100.
 
@@ -64,13 +64,28 @@ class Trainer(HTrainer):
                 - token_accuracy: Token-level accuracy (fraction of correct tokens)
                 - success_rate: Sequence-level accuracy (fraction of sequences that match exactly)
         """
-        predictions, labels = eval_preds
+        # Handle both tuple and EvalPrediction object formats
+        if hasattr(eval_preds, "predictions") and hasattr(eval_preds, "label_ids"):
+            # EvalPrediction object
+            predictions = eval_preds.predictions
+            labels = eval_preds.label_ids
+        else:
+            # Tuple format
+            predictions, labels = eval_preds
+
+        # Handle tuple predictions (e.g., (logits, ...) from model output)
+        if isinstance(predictions, tuple):
+            predictions = predictions[0]  # Take first element (usually logits)
 
         # Convert to tensors since inputs are often numpy arrays
         if isinstance(predictions, np.ndarray):
             predictions = torch.tensor(predictions)
         if isinstance(labels, np.ndarray):
             labels = torch.tensor(labels)
+
+        # If predictions are logits (3D: batch_size, seq_len, vocab_size), convert to token IDs
+        if predictions.dim() == 3:
+            predictions = predictions.argmax(dim=-1)
 
         # Mask tokens with ignore_index
         mask = labels != ignore_index
@@ -104,7 +119,57 @@ class Trainer(HTrainer):
             "success_rate": success_rate,
         }
 
-    def evaluate_and_save_generation(self, max_length: int = 512):
+    def evaluate(
+        self,
+        eval_dataset=None,
+        ignore_keys=None,
+        metric_key_prefix="eval",
+    ):
+        """Override evaluate to also save generation results during training.
+
+        This method is called during training evaluation steps and after training.
+        It runs the standard evaluation and then saves generation results.
+        """
+        # Run standard evaluation
+        metrics = super().evaluate(eval_dataset, ignore_keys, metric_key_prefix)
+
+        # Also save generation results during evaluation
+        # Get current step number if available
+        step = getattr(self.state, "global_step", None)
+        import logging
+
+        logger = logging.getLogger(__name__)
+        logger.info(
+            f"Running evaluate_and_save_generation (step={step}, metric_key_prefix={metric_key_prefix})"
+        )
+        try:
+            # Pass step number to evaluate_and_save_generation
+            success_rate = self.evaluate_and_save_generation(step=step)
+            # Add generation metrics to the returned metrics dict
+            generation_metrics = {
+                f"{metric_key_prefix}_generation_success_rate": success_rate,
+            }
+            if step is not None:
+                generation_metrics[f"{metric_key_prefix}_generation_step"] = step
+            # Update the metrics dict
+            metrics.update(generation_metrics)
+            # Explicitly log only the generation metrics to ensure they are recorded
+            self.log(generation_metrics)
+            logger.info(
+                f"Successfully saved generation results (step={step}, success_rate={success_rate:.4f})"
+            )
+        except Exception as e:
+            # Log error but don't fail the evaluation
+            logger.warning(
+                f"Failed to save generation results during evaluation: {e}",
+                exc_info=True,
+            )
+
+        return metrics
+
+    def evaluate_and_save_generation(
+        self, max_length: int = 512, step: int | None = None
+    ):
         """Run greedy/beam-search generation on the evaluation set.
 
         The helper decodes the model outputs into strings, stores the results in
@@ -113,6 +178,7 @@ class Trainer(HTrainer):
 
         Args:
             max_length (int, optional): Maximum generation length. Defaults to 512.
+            step (int, optional): Current training step number. If None, tries to get from self.state.
 
         Returns:
             float: Exact-match accuracy in the [0, 1] interval.
@@ -166,10 +232,22 @@ class Trainer(HTrainer):
                 # Keep placeholder when reference labels are missing.
                 all_reference_texts.extend(["" for _ in current_generated_texts])
 
-        output_eval_file = os.path.join(
-            self.args.output_dir,
-            "eval_results.json",
-        )
+        # Include step number in filename if available during training
+        if step is None:
+            step = getattr(self.state, "global_step", None)
+        if step is not None:
+            # Save step-wise results in a subdirectory
+            eval_results_dir = os.path.join(self.args.output_dir, "eval_results")
+            os.makedirs(eval_results_dir, exist_ok=True)
+            output_eval_file = os.path.join(
+                eval_results_dir,
+                f"step_{step}.json",
+            )
+        else:
+            output_eval_file = os.path.join(
+                self.args.output_dir,
+                "eval_results.json",
+            )
         results = []
         for gen_text, ref_text in zip(all_generated_texts, all_reference_texts):
             results.append(

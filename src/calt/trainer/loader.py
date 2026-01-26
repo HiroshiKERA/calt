@@ -134,6 +134,12 @@ class StandardTrainerLoader(TrainerLoader):
         ):
             report_to = None
 
+        # Determine run_name from wandb config or explicit run_name
+        run_name = getattr(self.calt_config, "run_name", None)
+        if run_name is None and hasattr(self.calt_config, "wandb"):
+            # Use wandb name as run_name if run_name is not explicitly set
+            run_name = getattr(self.calt_config.wandb, "name", None)
+
         self.training_args = TrainingArguments(
             output_dir=self.calt_config.get(
                 "save_dir", self.calt_config.get("output_dir", "./tmp")
@@ -174,7 +180,7 @@ class StandardTrainerLoader(TrainerLoader):
             logging_strategy=getattr(self.calt_config, "logging_strategy", "steps"),
             logging_steps=getattr(self.calt_config, "logging_steps", 50),
             report_to=report_to,
-            run_name=getattr(self.calt_config, "run_name", None),
+            run_name=run_name,
             # Others
             remove_unused_columns=getattr(
                 self.calt_config, "remove_unused_columns", False
