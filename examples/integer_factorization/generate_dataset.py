@@ -43,7 +43,6 @@ def _integer_list_stats(data: list[int | float]) -> dict[str, int | float]:
         "max_value": max(values),
         "mean_value": float(np.mean(values)),
         "std_value": float(np.std(values)),
-        "sum_value": sum(values),
     }
     return stats
 

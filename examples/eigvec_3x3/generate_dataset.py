@@ -5,8 +5,9 @@ from calt.dataset import DatasetPipeline
 
 
 def eigvec_generator(seed: int):
+    rng = np.random.default_rng(seed)
     # Simple 3x3 symmetric PSD matrix M = A^T A, so eigenvalues are real and >= 0
-    A = np.random.randn(3, 3)
+    A = rng.normal(size=(3, 3))
     M = A.T @ A
 
     # Symmetric PSD → use eigh
