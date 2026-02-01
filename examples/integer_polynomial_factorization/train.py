@@ -31,6 +31,7 @@ def main(dryrun: bool):
         print("=" * 80)
 
     save_dir = cfg.train.get("save_dir", cfg.train.get("output_dir", "./results"))
+    os.makedirs(save_dir, exist_ok=True)
     OmegaConf.save(cfg, os.path.join(save_dir, "train.yaml"))
 
     io_dict = IOPipeline.from_config(cfg.data).build()
