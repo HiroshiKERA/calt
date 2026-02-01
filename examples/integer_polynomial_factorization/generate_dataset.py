@@ -1,7 +1,6 @@
 import math
 
 from omegaconf import OmegaConf
-from sage.all import QQ, RR, ZZ
 
 from calt.dataset import DatasetPipeline
 from calt.dataset.sagemath.utils.polynomial_sampler import PolynomialSampler
@@ -35,11 +34,17 @@ def _poly_stats(poly) -> dict[str, int | float]:
     if not poly:
         raise ValueError("Polynomial is empty")
     if poly.parent().ngens() == 1:
-        degree = int(max(poly.degree(), 0))  # if polynomial is zero, then poly.degree() is -1, so we need to set it to 0
+        degree = int(
+            max(poly.degree(), 0)
+        )  # if polynomial is zero, then poly.degree() is -1, so we need to set it to 0
     else:
         raise ValueError("Polynomial has multiple variables")
 
-    return {"num_terms": len(poly.monomials()), "max_degree": degree, "min_degree": degree}
+    return {
+        "num_terms": len(poly.monomials()),
+        "max_degree": degree,
+        "min_degree": degree,
+    }
 
 
 def _factor_stats(factor) -> dict[str, int | float]:
