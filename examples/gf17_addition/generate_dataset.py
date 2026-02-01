@@ -26,7 +26,10 @@ def gf17_addition_generator(seed):
 
 
 def gf17_addition_stats_calc(problem, answer) -> dict[str, dict[str, int | float]]:
-    return {"problem": _integer_list_stats(problem), "answer": _integer_list_stats(answer)}
+    return {
+        "problem": _integer_list_stats(problem),
+        "answer": _integer_list_stats(answer),
+    }
 
 
 def _integer_list_stats(data: str) -> dict[str, int | float]:
