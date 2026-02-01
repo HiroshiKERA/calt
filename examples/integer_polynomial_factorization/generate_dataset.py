@@ -34,24 +34,12 @@ def poly_factor_stats_calc(problem, answer) -> dict[str, dict[str, int | float]]
 def _poly_stats(poly) -> dict[str, int | float]:
     if not poly:
         raise ValueError("Polynomial is empty")
-
-    coeffs = _extract_coefficients(poly)
     if poly.parent().ngens() == 1:
-        degree = int(
-            max(poly.degree(), 0)
-        )  # if polynomial is zero, then poly.degree() is -1, so we need to set it to 0
+        degree = int(max(poly.degree(), 0))  # if polynomial is zero, then poly.degree() is -1, so we need to set it to 0
     else:
-        degree = int(
-            max(poly.total_degree(), 0)
-        )  # if polynomial is zero, then poly.total_degree() is -1, so we need to set it to 0
+        raise ValueError("Polynomial has multiple variables")
 
-    return {
-        "num_terms": len(poly.monomials()),
-        "max_degree": degree,
-        "min_degree": degree,
-        "max_coeff": max(coeffs),
-        "min_coeff": min(coeffs),
-    }
+    return {"num_terms": len(poly.monomials()), "max_degree": degree, "min_degree": degree}
 
 
 def _factor_stats(factor) -> dict[str, int | float]:
@@ -64,20 +52,6 @@ def _factor_stats(factor) -> dict[str, int | float]:
         "num_distinct_factors": len(factor_list),  # Number of distinct factors
         "total_factors": total_factors,  # Total number of factors counting multiplicity
     }
-
-
-def _extract_coefficients(poly) -> list[float | int]:
-    """Extract coefficients from polynomial based on field type."""
-    coeff_field = poly.parent().base_ring()
-    if coeff_field == QQ:
-        return [abs(float(c.numerator())) for c in poly.coefficients()] + [
-            abs(float(c.denominator())) for c in poly.coefficients()
-        ]
-    elif coeff_field in (RR, ZZ):
-        return [abs(float(c)) for c in poly.coefficients()]
-    elif coeff_field.is_field() and coeff_field.characteristic() > 0:
-        return [int(c) for c in poly.coefficients()]
-    return []
 
 
 if __name__ == "__main__":
