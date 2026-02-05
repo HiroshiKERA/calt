@@ -7,6 +7,8 @@ from calt.io import IOPipeline
 from calt.models import ModelPipeline
 from calt.trainer import TrainerPipeline, apply_dryrun_settings
 
+from load_preprocessor import PolynomialReductionLoadPreprocessor
+
 
 @click.command()
 @click.option(
@@ -14,8 +16,10 @@ from calt.trainer import TrainerPipeline, apply_dryrun_settings
     is_flag=True,
     help="Run in dryrun mode with reduced epochs and data for quick testing",
 )
-def main(dryrun: bool):
-    """Train a model for eigvec_3x3 task."""
+@click.option("--order", type=click.Choice(["grevlex", "lex"]), default="grevlex")
+@click.option("--pattern", type=int, default=1, help="1=remainder only, 2=quotients|remainder")
+def main(dryrun: bool, order: str, pattern: int):
+    """Train a model for polynomial_reduction task."""
     cfg = OmegaConf.load("configs/train.yaml")
 
     if dryrun:
@@ -25,7 +29,11 @@ def main(dryrun: bool):
     os.makedirs(save_dir, exist_ok=True)
     OmegaConf.save(cfg, os.path.join(save_dir, "train.yaml"))
 
-    io_dict = IOPipeline.from_config(cfg.data).build()
+    io_pipeline = IOPipeline.from_config(cfg.data)
+    io_pipeline.dataset_load_preprocessor = PolynomialReductionLoadPreprocessor(
+        order=order, pattern=pattern
+    )
+    io_dict = io_pipeline.build()
     model = ModelPipeline.from_io_dict(cfg.model, io_dict).build()
     trainer_pipeline = TrainerPipeline.from_io_dict(cfg.train, model, io_dict).build()
 

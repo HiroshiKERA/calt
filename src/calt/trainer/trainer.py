@@ -186,6 +186,13 @@ class Trainer(HTrainer):
         if self.eval_dataset is None:
             raise ValueError("Trainer: evaluation requires an eval_dataset.")
 
+        if len(self.eval_dataset) == 0:
+            import logging
+            logging.getLogger(__name__).warning(
+                "eval_dataset is empty; skipping evaluate_and_save_generation."
+            )
+            return 0.0
+
         all_generated_texts = []
         all_reference_texts = []
 
@@ -195,7 +202,11 @@ class Trainer(HTrainer):
         tokenizer = self.processing_class
 
         for batch in eval_dataloader:
+            if batch is None:
+                continue
             inputs = self._prepare_inputs(batch)
+            if inputs is None:
+                continue
             input_ids = inputs.get("input_ids")
             attention_mask = inputs.get("attention_mask")
             labels = inputs.get("labels")

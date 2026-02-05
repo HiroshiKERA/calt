@@ -16,7 +16,10 @@ from .base import (
 )
 from .preprocessor import (
     AbstractPreProcessor,
+    DatasetLoadPreprocessor,
+    JsonlDefaultLoadPreprocessor,
     NumberPolicy,
+    PickleDefaultLoadPreprocessor,
     UnifiedLexer,
 )
 from .tokenizer import get_tokenizer
@@ -37,16 +40,30 @@ class IOPipeline:
         preprocessor: AbstractPreProcessor | None = None,
         validate_train_tokens: bool = False,
         validate_test_tokens: bool = False,
+        use_jsonl: bool = False,
+        use_pickle: bool = False,
+        train_dataset_jsonl: str | None = None,
+        test_dataset_jsonl: str | None = None,
+        train_dataset_pickle: str | None = None,
+        test_dataset_pickle: str | None = None,
+        dataset_load_preprocessor: DatasetLoadPreprocessor | None = None,
     ):
         """Initialize IOPipeline.
 
         Args:
-            train_dataset_path: Path to training dataset file
+            train_dataset_path: Path to training dataset file (.txt, .jsonl, or .pkl)
             test_dataset_path: Path to test dataset file
             num_train_samples: Maximum number of training samples to load
             num_test_samples: Maximum number of test samples to load
             vocab_config: VocabConfig, dict, or path to YAML file
-            preprocessor: Preprocessor instance (optional)
+            preprocessor: Lexer/preprocessor instance (optional)
+            use_jsonl: If True, read train/test as JSONL when path or jsonl path is set
+            use_pickle: If True, read train/test as pickle (original math objects)
+            train_dataset_jsonl: Optional path to training JSONL
+            test_dataset_jsonl: Optional path to test JSONL
+            train_dataset_pickle: Optional path to training pickle
+            test_dataset_pickle: Optional path to test pickle
+            dataset_load_preprocessor: Optional load-time preprocessor (user-provided or library)
         """
         self.train_dataset_path = train_dataset_path
         self.test_dataset_path = test_dataset_path
@@ -56,6 +73,13 @@ class IOPipeline:
         self.preprocessor = preprocessor
         self.validate_train_tokens = validate_train_tokens
         self.validate_test_tokens = validate_test_tokens
+        self.use_jsonl = use_jsonl
+        self.use_pickle = use_pickle
+        self.train_dataset_jsonl = train_dataset_jsonl
+        self.test_dataset_jsonl = test_dataset_jsonl
+        self.train_dataset_pickle = train_dataset_pickle
+        self.test_dataset_pickle = test_dataset_pickle
+        self.dataset_load_preprocessor = dataset_load_preprocessor
         # Store config dicts for checkpoint saving
         self.lexer_config_dict: dict | None = None
         self.vocab_config_dict: dict | None = None
@@ -122,6 +146,14 @@ class IOPipeline:
         # Use the extended vocab_config from lexer (includes auto-added tokens for floats)
         vocab_config_path = preprocessor.vocab_config
 
+        use_jsonl = config.get("use_jsonl", False)
+        use_pickle = config.get("use_pickle", False)
+        train_jsonl = config.get("train_dataset_jsonl")
+        test_jsonl = config.get("test_dataset_jsonl")
+        train_pickle = config.get("train_dataset_pickle")
+        test_pickle = config.get("test_dataset_pickle")
+        dataset_load_preprocessor = config.get("dataset_load_preprocessor")
+
         # Create instance
         instance = cls(
             train_dataset_path=config.get("train_dataset_path"),
@@ -132,6 +164,13 @@ class IOPipeline:
             preprocessor=preprocessor,
             validate_train_tokens=config.get("validate_train_tokens", False),
             validate_test_tokens=config.get("validate_test_tokens", True),
+            use_jsonl=use_jsonl,
+            use_pickle=use_pickle,
+            train_dataset_jsonl=train_jsonl,
+            test_dataset_jsonl=test_jsonl,
+            train_dataset_pickle=train_pickle,
+            test_dataset_pickle=test_pickle,
+            dataset_load_preprocessor=dataset_load_preprocessor,
         )
 
         # Store config dicts for checkpoint saving
@@ -179,15 +218,70 @@ class IOPipeline:
         """
         # config = self.config
 
-        # Step 1: Load raw text data and apply preprocessor (if any)
-        # e.g.,
-        # raw data: "2*x1^2*x0 + 5*x0 - 3"
-        # processed data (by InfixPolynomialProcessor): "C2 E1 E2 + C5 E1 E0 + C-3 E0 E0"
+        # Step 1: Load data (text, JSONL, or pickle) and apply load-time preprocessor if any
+        train_path = (
+            self.train_dataset_pickle
+            or self.train_dataset_jsonl
+            or self.train_dataset_path
+        )
+        test_path = (
+            self.test_dataset_pickle
+            or self.test_dataset_jsonl
+            or self.test_dataset_path
+        )
+        train_use_pickle = self.use_pickle or (
+            self.train_dataset_pickle is not None
+            or (train_path and str(train_path).endswith(".pkl"))
+        )
+        test_use_pickle = self.use_pickle or (
+            self.test_dataset_pickle is not None
+            or (test_path and str(test_path).endswith(".pkl"))
+        )
+        train_use_jsonl = self.use_jsonl or (
+            self.train_dataset_jsonl is not None
+            or (train_path and str(train_path).endswith(".jsonl"))
+        )
+        test_use_jsonl = self.use_jsonl or (
+            self.test_dataset_jsonl is not None
+            or (test_path and str(test_path).endswith(".jsonl"))
+        )
+        train_preprocessor = self.dataset_load_preprocessor
+        if train_preprocessor is None and (train_use_jsonl or train_use_pickle):
+            from .preprocessor.load_preprocessor import (
+                JsonlDefaultLoadPreprocessor,
+                PickleDefaultLoadPreprocessor,
+            )
+            train_preprocessor = (
+                PickleDefaultLoadPreprocessor()
+                if train_use_pickle
+                else JsonlDefaultLoadPreprocessor()
+            )
+        test_preprocessor = self.dataset_load_preprocessor
+        if test_preprocessor is None and (test_use_jsonl or test_use_pickle):
+            from .preprocessor.load_preprocessor import (
+                JsonlDefaultLoadPreprocessor,
+                PickleDefaultLoadPreprocessor,
+            )
+            test_preprocessor = (
+                PickleDefaultLoadPreprocessor()
+                if test_use_pickle
+                else JsonlDefaultLoadPreprocessor()
+            )
         train_dataset = StandardDataset.load_file(
-            self.train_dataset_path, self.preprocessor, self.num_train_samples
+            train_path,
+            self.preprocessor,
+            self.num_train_samples,
+            use_jsonl=train_use_jsonl,
+            use_pickle=train_use_pickle,
+            dataset_load_preprocessor=train_preprocessor,
         )
         test_dataset = StandardDataset.load_file(
-            self.test_dataset_path, self.preprocessor, self.num_test_samples
+            test_path,
+            self.preprocessor,
+            self.num_test_samples,
+            use_jsonl=test_use_jsonl,
+            use_pickle=test_use_pickle,
+            dataset_load_preprocessor=test_preprocessor,
         )
 
         if self.validate_train_tokens:

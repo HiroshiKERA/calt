@@ -19,16 +19,7 @@ def main(dryrun: bool):
     cfg = OmegaConf.load("configs/train.yaml")
 
     if dryrun:
-        print("=" * 80)
-        print("Running in DRYRUN mode")
-        print("=" * 80)
         apply_dryrun_settings(cfg)
-        print(f"Training epochs: {cfg.train.num_train_epochs}")
-        print(f"Batch size: {cfg.train.batch_size}")
-        print(f"Test batch size: {cfg.train.test_batch_size}")
-        print(f"Training samples: {cfg.data.num_train_samples}")
-        print(f"Test samples: {cfg.data.num_test_samples}")
-        print("=" * 80)
 
     save_dir = cfg.train.get("save_dir", cfg.train.get("output_dir", "./results"))
     os.makedirs(save_dir, exist_ok=True)

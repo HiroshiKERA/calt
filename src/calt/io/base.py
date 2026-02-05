@@ -5,7 +5,7 @@ from torch.utils.data import Dataset
 from transformers import PreTrainedTokenizerFast as Tokenizer
 
 from .preprocessor import AbstractPreProcessor
-from .read import read_data_from_file
+from .read import load_dataset_texts, read_data_from_file
 
 # Set up logger for this module
 logger = logging.getLogger(__name__)
@@ -18,21 +18,36 @@ class StandardDataset(Dataset):
         data_path: str,
         preprocessor: AbstractPreProcessor | None = None,
         max_samples: int | None = None,
+        use_jsonl: bool = False,
+        use_pickle: bool = False,
+        dataset_load_preprocessor=None,
     ) -> "StandardDataset":
         """Load data from a file and create a ``StandardDataset`` instance.
 
-        This method maintains backward compatibility with the previous file-based initialization.
+        When use_jsonl, use_pickle, and dataset_load_preprocessor are all falsy/None,
+        behaves as before (text file with input#target per line).
 
         Args:
-            data_path (str): Path to the data file.
-            preprocessor (AbstractPreProcessor | None): Pre-processor instance. If None, text is returned as-is.
-            max_samples (int | None, optional): Maximum number of samples to load.
-                Use -1 or None to load all samples. Defaults to None.
+            data_path: Path to the data file (.txt, .jsonl, or .pkl).
+            preprocessor: Lexer/preprocessor applied in __getitem__. If None, text is returned as-is.
+            max_samples: Maximum number of samples. Use -1 or None to load all.
+            use_jsonl: If True, read as JSONL.
+            use_pickle: If True, read as pickle (original math objects).
+            dataset_load_preprocessor: Optional DatasetLoadPreprocessor. If None, uses default per source.
 
         Returns:
             StandardDataset: Loaded dataset instance.
         """
-        input_texts, target_texts = read_data_from_file(data_path, max_samples)
+        if use_jsonl or use_pickle or dataset_load_preprocessor is not None:
+            input_texts, target_texts = load_dataset_texts(
+                data_path,
+                max_samples=max_samples,
+                use_jsonl=use_jsonl,
+                use_pickle=use_pickle,
+                dataset_load_preprocessor=dataset_load_preprocessor,
+            )
+        else:
+            input_texts, target_texts = read_data_from_file(data_path, max_samples)
         return cls(
             input_texts=input_texts,
             target_texts=target_texts,
