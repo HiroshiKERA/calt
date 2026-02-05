@@ -3,11 +3,7 @@ import os
 import click
 from omegaconf import OmegaConf
 
-from calt.io import (
-    IOPipeline,
-    # LastElementLoadPreprocessor,
-    # ReversedOrderLoadPreprocessor,
-)
+from calt.io import IOPipeline, LastElementLoadPreprocessor
 from calt.models import ModelPipeline
 from calt.trainer import TrainerPipeline, apply_dryrun_settings
 
@@ -20,18 +16,18 @@ from calt.trainer import TrainerPipeline, apply_dryrun_settings
     help="Path to train config YAML (model, train, data).",
 )
 @click.option(
+    "--target_mode",
+    type=click.Choice(["full", "last_element"]),
+    default="last_element",
+    help="Target format: 'full' = full cumulative (3,5,5 → 3,8,13), 'last_element' = last value only (3,5,5 → 13).",
+)
+@click.option(
     "--dryrun",
     is_flag=True,
     help="Run in dryrun mode with reduced epochs and data for quick testing",
 )
-def main(config_path: str, dryrun: bool):
-    """Train a model for gf17_addition task.
-
-    You can choose from 3 patterns (enable exactly one):
-    - Standard: target is the full cumulative sum (11,4,11,4 # 11,15,9,13)
-    - Last element only: target is only the last value (11,4,11,4 # 13)
-    - Reversed: target sequence is reversed (11,4,11,4 # 13,9,15,11)
-    """
+def main(config_path: str, target_mode: str, dryrun: bool):
+    """Train a model for arithmetic addition task."""
     cfg = OmegaConf.load(config_path)
 
     if dryrun:
@@ -43,15 +39,10 @@ def main(config_path: str, dryrun: bool):
 
     io_pipeline = IOPipeline.from_config(cfg.data)
 
-    # --- Enable exactly one of the following (comment out the others) ---
-    # Standard: Do nothing (target is the full cumulative sum)
-    io_pipeline.dataset_load_preprocessor = None  # default
-
-    # Last element only: target is just the last value (11,15,9,13 → 13)
-    # io_pipeline.dataset_load_preprocessor = LastElementLoadPreprocessor(delimiter=",")
-
-    # Reversed: reverse the target sequence (11,15,9,13 → 13,9,15,11)
-    # io_pipeline.dataset_load_preprocessor = ReversedOrderLoadPreprocessor(delimiter=",")
+    if target_mode == "last_element":
+        io_pipeline.dataset_load_preprocessor = LastElementLoadPreprocessor(delimiter=",")
+    else:
+        io_pipeline.dataset_load_preprocessor = None  # full cumulative
 
     io_dict = io_pipeline.build()
 
