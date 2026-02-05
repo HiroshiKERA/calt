@@ -16,7 +16,13 @@ from .load_preprocessor import (
     TextDefaultLoadPreprocessor,
     UserCallableLoadPreprocessor,
 )
-from .load_preprocessors import LastElementLoadPreprocessor
+from .load_preprocessors import (
+    ChainLoadPreprocessor,
+    ExpandedFormLoadPreprocessor,
+    LastElementLoadPreprocessor,
+    ReversedOrderLoadPreprocessor,
+    TextToSageLoadPreprocessor,
+)
 
 # Legacy preprocessors (_*.py) are not imported here. Use UnifiedLexer instead.
 
@@ -24,14 +30,18 @@ __all__ = [
     "AbstractPreProcessor",
     "BASE_SPECIAL_TOKENS",
     "BASE_VOCAB",
+    "ChainLoadPreprocessor",
     "DatasetLoadPreprocessor",
+    "ExpandedFormLoadPreprocessor",
     "JsonlDefaultLoadPreprocessor",
     "LastElementLoadPreprocessor",
-    "PickleDefaultLoadPreprocessor",
+    "ReversedOrderLoadPreprocessor",
+    "TextDefaultLoadPreprocessor",
+    "TextToSageLoadPreprocessor",
     "NumberPolicy",
+    "PickleDefaultLoadPreprocessor",
     "PreProcessorChain",
     "TermParseException",
-    "TextDefaultLoadPreprocessor",
     "UnifiedLexer",
     "UserCallableLoadPreprocessor",
     "VocabConfig",

@@ -22,6 +22,7 @@ from .preprocessor import (
     PickleDefaultLoadPreprocessor,
     UnifiedLexer,
 )
+from .read import read_data_from_file
 from .tokenizer import get_tokenizer
 from .validation.vocab_validator import validate_dataset_tokens
 from .vocabulary.config import VocabConfig
@@ -47,6 +48,7 @@ class IOPipeline:
         train_dataset_pickle: str | None = None,
         test_dataset_pickle: str | None = None,
         dataset_load_preprocessor: DatasetLoadPreprocessor | None = None,
+        display_samples: int | None = None,
     ):
         """Initialize IOPipeline.
 
@@ -64,6 +66,9 @@ class IOPipeline:
             train_dataset_pickle: Optional path to training pickle
             test_dataset_pickle: Optional path to test pickle
             dataset_load_preprocessor: Optional load-time preprocessor (user-provided or library)
+            display_samples: If set and > 0, print this many train samples: raw (before load
+                preprocessor), which preprocessor is applied (if any), and after preprocessor.
+                0 or None to disable.
         """
         self.train_dataset_path = train_dataset_path
         self.test_dataset_path = test_dataset_path
@@ -80,6 +85,7 @@ class IOPipeline:
         self.train_dataset_pickle = train_dataset_pickle
         self.test_dataset_pickle = test_dataset_pickle
         self.dataset_load_preprocessor = dataset_load_preprocessor
+        self.display_samples = display_samples
         # Store config dicts for checkpoint saving
         self.lexer_config_dict: dict | None = None
         self.vocab_config_dict: dict | None = None
@@ -153,6 +159,7 @@ class IOPipeline:
         train_pickle = config.get("train_dataset_pickle")
         test_pickle = config.get("test_dataset_pickle")
         dataset_load_preprocessor = config.get("dataset_load_preprocessor")
+        display_samples = config.get("display_samples")
 
         # Create instance
         instance = cls(
@@ -171,6 +178,7 @@ class IOPipeline:
             train_dataset_pickle=train_pickle,
             test_dataset_pickle=test_pickle,
             dataset_load_preprocessor=dataset_load_preprocessor,
+            display_samples=display_samples,
         )
 
         # Store config dicts for checkpoint saving
@@ -267,6 +275,23 @@ class IOPipeline:
                 if test_use_pickle
                 else JsonlDefaultLoadPreprocessor()
             )
+        n_show = self.display_samples if self.display_samples is not None else 0
+        # When display_samples > 0 and plain txt: load and show raw (before any load preprocessor)
+        if n_show > 0 and not train_use_jsonl and not train_use_pickle and train_path:
+            raw_inputs, raw_targets = read_data_from_file(
+                train_path, max_samples=self.num_train_samples
+            )
+            n_raw = min(n_show, len(raw_inputs))
+            print(
+                f"[Display] Raw (before any load preprocessor): {len(raw_inputs)} samples, "
+                f"showing first {n_raw}:"
+            )
+            for i in range(n_raw):
+                inp = raw_inputs[i] if len(raw_inputs[i]) <= 50 else raw_inputs[i][:47] + "..."
+                tgt = raw_targets[i] if len(raw_targets[i]) <= 50 else raw_targets[i][:47] + "..."
+                print(f"  [{i}] input:  {inp!r}")
+                print(f"      target: {tgt!r}")
+            print()
         train_dataset = StandardDataset.load_file(
             train_path,
             self.preprocessor,
@@ -292,6 +317,32 @@ class IOPipeline:
             print("Validating test dataset tokens...", end=" ")
             self.validate_tokens(test_dataset)
             print("passed!")
+
+        # Display samples: preprocessor description (if any) and after-preprocessor samples
+        if n_show > 0:
+            if train_preprocessor is not None:
+                name = type(train_preprocessor).__name__
+                if hasattr(train_preprocessor, "preprocessors"):
+                    chain = ", ".join(
+                        type(p).__name__ for p in train_preprocessor.preprocessors
+                    )
+                    name = f"{name}({chain})"
+                print(f"[Display] Load preprocessor: {name}")
+            else:
+                print("[Display] No load preprocessor applied.")
+            n_after = min(n_show, len(train_dataset.input_texts))
+            print(
+                f"[Display] After load preprocessor: {len(train_dataset.input_texts)} samples, "
+                f"showing first {n_after}:"
+            )
+            for i in range(n_after):
+                inp = train_dataset.input_texts[i]
+                tgt = train_dataset.target_texts[i]
+                inp_short = inp if len(inp) <= 50 else inp[:47] + "..."
+                tgt_short = tgt if len(tgt) <= 50 else tgt[:47] + "..."
+                print(f"  [{i}] input:  {inp_short!r}")
+                print(f"      target: {tgt_short!r}")
+            print()
 
         # Step 2: Set collator that will transform the processed data into tokens (or token ids)
         #         This will be called every time at the beginning of each epoch

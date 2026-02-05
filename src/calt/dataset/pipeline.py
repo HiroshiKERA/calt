@@ -53,7 +53,7 @@ class DatasetPipeline:
         cls,
         config: DictConfig,
         problem_generator,
-        statistics_calculator,
+        statistics_calculator=None,
     ) -> "DatasetPipeline":
         """Create a DatasetPipeline from a DictConfig."""
         return cls(
