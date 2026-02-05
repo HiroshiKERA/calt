@@ -1,0 +1,18 @@
+# C/E expanded form: coefficient C<coeff>, exponent E<e_i> per term, " + " between terms, " | " between polys
+vocab:
+  range:
+    coefficients: ["C", -99, 99]  # coefficient range (cumsum can grow)
+    exponents: ["E", 0, 5]        # exponent per variable (max_degree=3, margin)
+  misc: ["+", "|"]
+  special_tokens: {}
+  flags:
+    include_base_vocab: true
+    include_base_special_tokens: true
+
+number_policy:
+  attach_sign: true
+  digit_group: 0
+  allow_float: false
+
+strict: true
+include_base_vocab: true
