@@ -30,12 +30,22 @@ def main(dryrun: bool):
 
     if dryrun:
         apply_dryrun_settings(cfg)
+        # dryrun でデータセット制限が効いているか確認用
+        print(
+            f"[Dryrun] cfg.data: num_train_samples={cfg.data.get('num_train_samples', 'NOT SET')}, "
+            f"num_test_samples={cfg.data.get('num_test_samples', 'NOT SET')}"
+        )
 
     save_dir = cfg.train.get("save_dir", cfg.train.get("output_dir", "./results"))
     os.makedirs(save_dir, exist_ok=True)
     OmegaConf.save(cfg, os.path.join(save_dir, "train.yaml"))
 
     io_pipeline = IOPipeline.from_config(cfg.data)
+    if dryrun:
+        print(
+            f"[Dryrun] io_pipeline: num_train_samples={io_pipeline.num_train_samples}, "
+            f"num_test_samples={io_pipeline.num_test_samples}"
+        )
 
     # --- Enable exactly one of the following (comment out the others) ---
     # Standard: Do nothing (target is the full cumulative sum)
@@ -48,19 +58,6 @@ def main(dryrun: bool):
     # io_pipeline.dataset_load_preprocessor = ReversedOrderLoadPreprocessor(delimiter=",")
 
     io_dict = io_pipeline.build()
-
-    # プリプロセッサ適用後のサンプルを数件表示（適用確認用）
-    train_ds = io_dict["train_dataset"]
-    n_show = min(5, len(train_ds.input_texts))
-    print(f"[Preprocessor check] train_dataset: {len(train_ds.input_texts)} samples, showing first {n_show}:")
-    for i in range(n_show):
-        inp = train_ds.input_texts[i]
-        tgt = train_ds.target_texts[i]
-        inp_short = inp if len(inp) <= 50 else inp[:47] + "..."
-        tgt_short = tgt if len(tgt) <= 50 else tgt[:47] + "..."
-        print(f"  [{i}] input:  {inp_short!r}")
-        print(f"      target: {tgt_short!r}")
-    print()
 
     model = ModelPipeline.from_io_dict(cfg.model, io_dict).build()
     trainer_pipeline = TrainerPipeline.from_io_dict(cfg.train, model, io_dict).build()
