@@ -7,7 +7,7 @@ model:
   d_model: 512
   encoder_ffn_dim: 2048
   decoder_ffn_dim: 2048
-  max_sequence_length: 512
+  max_sequence_length: 1024  # ZZ full can exceed 1024/2; model uses max_input_len*2
 
 train:
   save_dir: ./results/ZZ
