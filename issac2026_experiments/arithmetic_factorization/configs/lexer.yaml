@@ -1,6 +1,6 @@
 vocab:
   range:
-    numbers: ["", 0, 1000]
+    numbers: ["", 0, 9]
   misc: ["|"]  # Add separator token
   special_tokens: {}
   flags:
@@ -9,7 +9,7 @@ vocab:
 
 number_policy:
   attach_sign: true  # true = attach sign to number, false = separate sign as token
-  digit_group: 3
+  digit_group: 1
   allow_float: false
 
 strict: true

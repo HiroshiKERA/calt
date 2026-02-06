@@ -10,7 +10,7 @@ model:
   max_sequence_length: 512
 
 train:
-  save_dir: ./results/GF37
+  save_dir: ./results/GF31
   num_train_epochs: 100
   learning_rate: 0.0003
   weight_decay: 0.0
@@ -24,14 +24,14 @@ train:
   seed: 42
   wandb:
     project: calt
-    group: gf37_polynomial_multiplication
-    name: gf37_polynomial_multiplication
+    group: gf31_polynomial_multiplication
+    name: gf31_polynomial_multiplication
     no_wandb: False
 
 data:
-  train_dataset_path: ./data/GF37/train_raw.txt
-  test_dataset_path: ./data/GF37/test_raw.txt
-  lexer_config: ./configs/GF37/lexer.yaml
+  train_dataset_path: ./data/GF31/train_raw.txt
+  test_dataset_path: ./data/GF31/test_raw.txt
+  lexer_config: ./configs/GF31/lexer.yaml
   # Vocabulary validation options
   validate_train_tokens: true   # Validate training dataset tokens before training
   validate_test_tokens: true    # Validate test dataset tokens before training

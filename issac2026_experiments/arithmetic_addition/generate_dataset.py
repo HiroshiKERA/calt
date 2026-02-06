@@ -60,7 +60,7 @@ class ArithmeticAdditionGenerator:
         """
         Parse field_str into modulus p or None for ZZ.
         - ZZ -> p = None (use max_value for sampling range).
-        - GF7, GF(7), GF37, GF(37) -> p = 7, 37, etc.
+        - GF7, GF(7), GF31, GF(31) -> p = 7, 31, etc.
         """
         if field_str == "ZZ":
             return None

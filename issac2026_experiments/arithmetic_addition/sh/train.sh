@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Train arithmetic addition model.
 
-field_str_list=("ZZ" "GF7" "GF37" "GF97") # "ZZ" "GF7" "GF37" "GF97"
+field_str_list=("ZZ" "GF7" "GF31" "GF97") # "ZZ" "GF7" "GF31" "GF97"
 target_mode_list=("full" "last_element")
 
 for field_str in "${field_str_list[@]}"; do

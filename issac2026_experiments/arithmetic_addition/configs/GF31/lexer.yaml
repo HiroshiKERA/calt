@@ -1,6 +1,6 @@
 vocab:
   range:
-    numbers: ["", 0, 36]
+    numbers: ["", 0, 30]
   misc: ["+", "=", ","]
   special_tokens: {}
   flags:

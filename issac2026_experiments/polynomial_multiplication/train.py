@@ -53,7 +53,7 @@ def get_ring(data_cfg):
     "--target_mode",
     type=click.Choice(["full", "last_element"]),
     default="full",
-    help="Target format: 'full' = full C/E expanded form; 'last_element' = last polynomial only (not implemented yet).",
+    help="Target format: 'full' = full C/E expanded form; 'last_element' = last polynomial only.",
 )
 @click.option(
     "--dryrun",
@@ -62,8 +62,6 @@ def get_ring(data_cfg):
 )
 def main(train_config_path: str, data_config_path: str, target_mode: str, dryrun: bool):
     """Train a model for polynomial multiplication (C/E expanded form)."""
-    if target_mode != "full":
-        raise NotImplementedError(f"Only target_mode 'full' is supported for now, got {target_mode!r}")
     cfg = OmegaConf.load(train_config_path)
     data_cfg = OmegaConf.load(data_config_path)
 
@@ -84,6 +82,15 @@ def main(train_config_path: str, data_config_path: str, target_mode: str, dryrun
     io_pipeline = IOPipeline.from_config(cfg.data)
     io_pipeline.dataset_load_preprocessor = dataset_load_preprocessor
     io_dict = io_pipeline.build()
+
+    if target_mode == "last_element":
+        for key in ("train_dataset", "val_dataset", "test_dataset"):
+            if key in io_dict and io_dict[key] is not None:
+                ds = io_dict[key]
+                ds.target_texts = [
+                    t.rsplit(text_delimiter, 1)[-1].strip() if text_delimiter in t else t
+                    for t in ds.target_texts
+                ]
 
     # Show a few samples after preprocessor for verification
     train_ds = io_dict["train_dataset"]

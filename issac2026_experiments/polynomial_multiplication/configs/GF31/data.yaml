@@ -1,6 +1,6 @@
 sampler:
   symbols: "x,y"
-  field_str: "GF37"
+  field_str: "GF31"
   order: "lex"
   max_num_terms: 3
   max_degree: 2
@@ -12,7 +12,7 @@ problem_generator:
   max_polynomials: 3
 
 dataset:
-  save_dir: "./data/GF37"
+  save_dir: "./data/GF31"
   num_train_samples: 100000
   num_test_samples: 1000
   batch_size: 10000

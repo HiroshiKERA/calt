@@ -1,7 +1,7 @@
 # C/E expanded form: coefficient C<coeff>, exponent E<e_i> per term, " + " between terms, " | " between polys
 vocab:
   range:
-    coefficients: ["C", -99, 99]  # coefficient range (cumsum can grow)
+    coefficients: ["C", 0, 96]  # coefficient range (cumsum can grow)
     exponents: ["E", 0, 10]        # exponent per variable (max_degree=3, margin)
   misc: ["+", "|"]
   special_tokens: {}

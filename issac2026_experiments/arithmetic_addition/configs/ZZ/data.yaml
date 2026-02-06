@@ -3,7 +3,7 @@ problem_generator:
   min_length: 3
   max_length: 3
   min_value: 0 # min_value is inclusive
-  max_value: 5 # max_value is inclusive
+  max_value: 100 # max_value is inclusive
 
 dataset:
   save_dir: "./data/ZZ"

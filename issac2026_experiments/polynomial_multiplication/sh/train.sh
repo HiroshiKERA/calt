@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # Train polynomial multiplication model.
 
-field_str_list=("ZZ" "GF7" "GF37" "GF97")
-target_mode_list=("full")
+field_str_list=("ZZ" "GF7" "GF31" "GF97")
+target_mode_list=("full" "last_element")
 
 for field_str in "${field_str_list[@]}"; do
     for target_mode in "${target_mode_list[@]}"; do
