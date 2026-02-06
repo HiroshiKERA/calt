@@ -1,0 +1,30 @@
+# Groebner task: 2-variable polynomials F=[f1,f2] -> Groebner basis G of (F)
+
+# PolynomialSampler の設定（他の多項式タスクと同様に sampler セクションで指定）
+sampler:
+  symbols: "x,y"
+  field_str: "QQ"
+  order: "degrevlex"    # サンプリング時の単項式順序
+  max_num_terms: 5
+  max_degree: 4
+  min_degree: 1
+  max_coeff: 5
+  degree_sampling: "uniform"
+  term_sampling: "uniform"
+
+# GroebnerGenerator 固有の設定（今は F=[f1,f2] 固定だが、拡張しやすい形だけ用意）
+problem_generator:
+  num_polynomials: 2
+
+dataset:
+  save_dir: "./data/QQ"
+  num_train_samples: 100000
+  num_test_samples: 1000
+  batch_size: 10000
+  n_jobs: 32
+  root_seed: 42
+  verbose: true
+  backend: "sagemath"
+  save_text: true
+  save_json: false
+
