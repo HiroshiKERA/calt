@@ -26,12 +26,22 @@ from calt.trainer import TrainerPipeline, apply_dryrun_settings
     is_flag=True,
     help="Run in dryrun mode with reduced epochs and data for quick testing",
 )
-def main(config_path: str, target_mode: str, dryrun: bool):
+@click.option(
+    "--wandb_runname_postfix",
+    type=str,
+    default=None,
+    help="Postfix appended to wandb run name (e.g. 'full', 'last_element') for distinguishing runs.",
+)
+def main(config_path: str, target_mode: str, dryrun: bool, wandb_runname_postfix: str | None):
     """Train a model for arithmetic addition task."""
     cfg = OmegaConf.load(config_path)
 
     if dryrun:
         apply_dryrun_settings(cfg)
+
+    if wandb_runname_postfix and hasattr(cfg.train, "wandb") and hasattr(cfg.train.wandb, "name"):
+        base_name = cfg.train.wandb.name or "run"
+        cfg.train.wandb.name = f"{base_name}_{wandb_runname_postfix}"
 
     save_dir = cfg.train.get("save_dir", cfg.train.get("output_dir", "./results"))
     os.makedirs(save_dir, exist_ok=True)

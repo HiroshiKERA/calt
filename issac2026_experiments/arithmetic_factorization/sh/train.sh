@@ -4,4 +4,5 @@
 
 config_path="configs/train.yaml"
 
+# Single run; wandb_runname_postfix optional (omit for default run name)
 CUDA_VISIBLE_DEVICES=0 nohup python3 train.py --config_path "$config_path" > train.log 2>&1 &
