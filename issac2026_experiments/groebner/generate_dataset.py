@@ -14,9 +14,27 @@
 import click
 from omegaconf import OmegaConf
 import sage.misc.randstate as randstate  # type: ignore
+from sage.rings.rational_field import QQ  # type: ignore
 
 from calt.dataset import DatasetPipeline
 from calt.dataset.sagemath.utils.polynomial_sampler import PolynomialSampler
+
+
+def _has_large_rational_coefficients(polynomials, threshold: int = 100) -> bool:
+    """QQ の場合に，係数が「分子または分母の絶対値が threshold 以上」の有理数を含むか判定する."""
+
+    for p in polynomials:
+        # p.coefficients() は base_ring の要素（QQ の場合は有理数）を返す
+        for c in p.coefficients():
+            try:
+                num = c.numerator()
+                den = c.denominator()
+            except Exception:
+                # QQ 以外（GF, ZZ など）の係数型では何もしない
+                continue
+            if abs(int(num)) >= threshold or abs(int(den)) >= threshold:
+                return True
+    return False
 
 
 class GroebnerGenerator:
@@ -30,18 +48,34 @@ class GroebnerGenerator:
         randstate.set_random_seed(seed)
 
         R = self.sampler.get_ring()
-        # 多項式のリスト F をサンプル（デフォルトは 2 本）
-        F = self.sampler.sample(num_samples=self.num_polynomials)
-        I = R.ideal(F)
+        is_QQ = R.base_ring() == QQ
 
-        # Groebner 基底の計算
-        # libsingular:stdfglm は環やバージョン依存でエラーを吐きやすいので、
-        # まずは Sage のデフォルトアルゴリズムで計算する。
-        G = list(I.groebner_basis())
+        # QQ の場合のみ，「分子・分母が3桁以上の有理数係数を含むインスタンス」を捨てて再サンプルする
+        max_retries = 100
+        last_F = None
+        last_G = None
+        for _ in range(max_retries):
+            # 多項式のリスト F をサンプル（デフォルトは 2 本）
+            F = self.sampler.sample(num_samples=self.num_polynomials)
+            I = R.ideal(F)
 
-        # problem_str = " | ".join(str(f) for f in F)
-        # solution_str = " | ".join(str(g) for g in G)
-        return F, G
+            # Groebner 基底の計算
+            # libsingular:stdfglm は環やバージョン依存でエラーを吐きやすいので、
+            # まずは Sage のデフォルトアルゴリズムで計算する。
+            G = list(I.groebner_basis())
+
+            last_F, last_G = F, G
+
+            if not is_QQ:
+                # QQ 以外（GF7, ZZ など）はそのまま採用
+                break
+
+            # QQ のとき，F と G の係数をチェック
+            if not _has_large_rational_coefficients(list(F) + list(G), threshold=100):
+                break
+
+        # 失敗時も最後に得られた F, G を返す
+        return last_F, last_G
 
 @click.command()
 @click.option(
