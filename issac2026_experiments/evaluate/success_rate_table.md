@@ -12,3 +12,9 @@
 | arithmetic_addition | ZZ_dg1_last_element | 14.1% | 50048 | 完了 |
 | arithmetic_addition | ZZ_full | 29.6% | 50048 | 完了 |
 | arithmetic_addition | ZZ_last_element | 42.3% | 50048 | 完了 |
+| arithmetic_factorization | default | 11.8% | 50048 | 完了 |
+| arithmetic_factorization | reversed | — | — | 訓練途中 |
+| arithmetic_factorization | results_reversed | — | — | 訓練途中 |
+| arithmetic_factorization | results_reversed | — | — | 訓練途中 |
+| digit_product | default | 53.6% | 50048 | 完了 |
+| digit_product | reversed | 3.5% | 50048 | 完了 |

@@ -9,3 +9,9 @@ arithmetic_addition,ZZ_dg1_full,0.4310,50048,完了
 arithmetic_addition,ZZ_dg1_last_element,0.1410,50048,完了
 arithmetic_addition,ZZ_full,0.2960,50048,完了
 arithmetic_addition,ZZ_last_element,0.4230,50048,完了
+arithmetic_factorization,default,0.1180,50048,完了
+arithmetic_factorization,reversed,,,訓練途中
+arithmetic_factorization,results_reversed,,,訓練途中
+arithmetic_factorization,results_reversed,,,訓練途中
+digit_product,default,0.5360,50048,完了
+digit_product,reversed,0.0350,50048,完了
