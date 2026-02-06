@@ -15,3 +15,4 @@ arithmetic_factorization,results_reversed,,,訓練途中
 arithmetic_factorization,results_reversed,,,訓練途中
 digit_product,default,0.5360,50048,完了
 digit_product,reversed,0.0350,50048,完了
+groebner,GF7_degrevlex,0.3830,50048,完了

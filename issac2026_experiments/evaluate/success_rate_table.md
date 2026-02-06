@@ -18,3 +18,4 @@
 | arithmetic_factorization | results_reversed | — | — | 訓練途中 |
 | digit_product | default | 53.6% | 50048 | 完了 |
 | digit_product | reversed | 3.5% | 50048 | 完了 |
+| groebner | GF7_degrevlex | 38.3% | 50048 | 完了 |
