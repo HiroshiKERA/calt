@@ -1,0 +1,56 @@
+"""Train model for ReLU recurrence (L=10): y_1=x_1, y_i=ReLU(x_i+y_{i-1})."""
+
+import os
+
+import click
+from omegaconf import OmegaConf
+
+from calt.io import IOPipeline, ReversedOrderLoadPreprocessor
+from calt.models import ModelPipeline
+from calt.trainer import TrainerPipeline, apply_dryrun_settings
+
+
+@click.command()
+@click.option(
+    "--config_path",
+    type=click.Path(exists=True),
+    default="configs/train.yaml",
+    help="Path to train config YAML.",
+)
+@click.option("--dryrun", is_flag=True, help="Run in dryrun mode.")
+@click.option(
+    "--target_reversed",
+    is_flag=True,
+    help="Target sequence reversed (ReversedOrderLoadPreprocessor; for reverse vs non-reverse evaluation).",
+)
+def main(config_path: str, dryrun: bool, target_reversed: bool) -> None:
+    """Train a model for ReLU recurrence (L=10)."""
+    cfg = OmegaConf.load(config_path)
+    if dryrun:
+        apply_dryrun_settings(cfg)
+
+    save_dir = cfg.train.get("save_dir", cfg.train.get("output_dir", "./results"))
+    if target_reversed:
+        save_dir = save_dir.rstrip("/") + "/reversed"
+        cfg.train.save_dir = save_dir
+        if hasattr(cfg.train, "wandb") and hasattr(cfg.train.wandb, "name"):
+            base = cfg.train.wandb.name or "run"
+            cfg.train.wandb.name = f"{base}_reversed"
+    os.makedirs(save_dir, exist_ok=True)
+    OmegaConf.save(cfg, os.path.join(save_dir, "train.yaml"))
+
+    io_pipeline = IOPipeline.from_config(cfg.data)
+    if target_reversed:
+        io_pipeline.dataset_load_preprocessor = ReversedOrderLoadPreprocessor(delimiter=",")
+    io_dict = io_pipeline.build()
+    model = ModelPipeline.from_io_dict(cfg.model, io_dict).build()
+    trainer_pipeline = TrainerPipeline.from_io_dict(cfg.train, model, io_dict).build()
+
+    trainer_pipeline.train()
+    trainer_pipeline.save_model()
+    success_rate = trainer_pipeline.evaluate_and_save_generation()
+    print(f"Success rate: {100 * success_rate:.1f}%")
+
+
+if __name__ == "__main__":
+    main()

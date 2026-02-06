@@ -1,0 +1,17 @@
+# ReLU recurrence: L=10, y_1=x_1, y_i=ReLU(x_i+y_{i-1})
+problem_generator:
+  length: 10
+  x_min: -10
+  x_max: 10
+
+dataset:
+  save_dir: "./data"
+  num_train_samples: 100000
+  num_test_samples: 1000
+  batch_size: 10000
+  n_jobs: 32
+  root_seed: 42
+  verbose: true
+  backend: "sagemath"
+  save_text: true
+  save_json: true
