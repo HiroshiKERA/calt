@@ -1,6 +1,6 @@
 vocab:
   range:
-    numbers: ["", 0, 300]
+    numbers: ["", 0, 1000]  # max_length=6, max_value=100 -> cumulative sum up to 600
   misc: ["+", "=", ","]
   special_tokens: {}
   flags:

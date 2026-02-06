@@ -8,7 +8,7 @@ dataset:
   num_train_samples: 100000
   num_test_samples: 1000
   batch_size: 10000
-  n_jobs: 4
+  n_jobs: 32
   root_seed: 42
   verbose: true
   backend: "sagemath"

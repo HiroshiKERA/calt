@@ -11,7 +11,7 @@ model:
 
 train:
   save_dir: ./results/GF31
-  num_train_epochs: 100
+  num_train_epochs: 64
   learning_rate: 0.0001
   weight_decay: 0.01
   warmup_ratio: 0.1
@@ -20,10 +20,10 @@ train:
   lr_scheduler_type: linear
   max_grad_norm: 1.0
   optimizer: adamw_torch
-  num_workers: 2
+  num_workers: 4
   seed: 42
   wandb:
-    project: calt
+    project: calt-issac26
     group: gf31_addition
     name: gf31_addition
     no_wandb: False

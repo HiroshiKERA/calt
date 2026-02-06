@@ -11,19 +11,19 @@ model:
 
 train:
   save_dir: ./results/ZZ
-  num_train_epochs: 100
+  num_train_epochs: 16
   learning_rate: 0.0003
   weight_decay: 0.0
   warmup_ratio: 0.0
-  batch_size: 16
-  test_batch_size: 16
+  batch_size: 32
+  test_batch_size: 32
   lr_scheduler_type: linear
   max_grad_norm: 1.0
   optimizer: adamw_torch
-  num_workers: 2
+  num_workers: 4
   seed: 42
   wandb:
-    project: calt
+    project: calt-issac26
     group: integer_polynomial_multiplication
     name: integer_polynomial_multiplication
     no_wandb: False

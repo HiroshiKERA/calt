@@ -2,7 +2,7 @@
 vocab:
   range:
     coefficients: ["C", -99, 99]  # coefficient range (cumsum can grow)
-    exponents: ["E", 0, 10]        # exponent per variable (max_degree=3, margin)
+    exponents: ["E", 0, 20]        # exponent per variable (max_degree=3, max_polynomials=6 -> product degree up to 18)
   misc: ["+", "|"]
   special_tokens: {}
   flags:
@@ -11,7 +11,7 @@ vocab:
 
 number_policy:
   attach_sign: true
-  digit_group: 0
+  digit_group: 3
   allow_float: false
 
 strict: true
