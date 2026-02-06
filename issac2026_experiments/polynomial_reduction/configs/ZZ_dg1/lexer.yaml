@@ -1,0 +1,20 @@
+# ZZ, digit_group=1 variant for polynomial_reduction (C/E expanded form).
+
+vocab:
+  range:
+    coefficients: ["C", -99, 99]
+    exponents: ["E", 0, 10]
+  misc: ["+", "|"]
+  special_tokens: {}
+  flags:
+    include_base_vocab: true
+    include_base_special_tokens: true
+
+number_policy:
+  attach_sign: true
+  digit_group: 1
+  allow_float: false
+
+strict: true
+include_base_vocab: true
+

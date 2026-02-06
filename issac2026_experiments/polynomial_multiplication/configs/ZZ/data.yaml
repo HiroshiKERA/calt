@@ -1,7 +1,7 @@
 sampler:
   symbols: "x,y"
   field_str: "ZZ"
-  order: "lex"
+  order: "degrevlex"
   max_num_terms: 3
   max_degree: 3
   max_coeff: 5

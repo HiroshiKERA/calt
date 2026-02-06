@@ -11,12 +11,12 @@ model:
 
 train:
   save_dir: ./results/GF31
-  num_train_epochs: 16
+  num_train_epochs: 8
   learning_rate: 0.0003
   weight_decay: 0.0
   warmup_ratio: 0.0
-  batch_size: 32
-  test_batch_size: 32
+  batch_size: 16
+  test_batch_size: 16
   lr_scheduler_type: linear
   max_grad_norm: 1.0
   optimizer: adamw_torch

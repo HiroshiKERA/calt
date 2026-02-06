@@ -1,0 +1,11 @@
+task,pattern,success_rate,checkpoint_step,training_status
+arithmetic_addition,GF31_full,0.9140,50048,完了
+arithmetic_addition,GF31_last_element,0.0000,50048,完了
+arithmetic_addition,GF7_full,0.6990,50048,完了
+arithmetic_addition,GF7_last_element,1.0000,50048,完了
+arithmetic_addition,GF97_full,0.0010,50048,完了
+arithmetic_addition,GF97_last_element,0.0140,50048,完了
+arithmetic_addition,ZZ_dg1_full,0.4310,50048,完了
+arithmetic_addition,ZZ_dg1_last_element,0.1410,50048,完了
+arithmetic_addition,ZZ_full,0.2960,50048,完了
+arithmetic_addition,ZZ_last_element,0.4230,50048,完了

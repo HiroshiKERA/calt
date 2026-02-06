@@ -1,0 +1,16 @@
+# Prod task: L=10, input = pad(a,5)+pad(b,5), target = pad(a*b,10)
+problem_generator:
+  length: 10
+  max_digit_value: 9
+
+dataset:
+  save_dir: "./data"
+  num_train_samples: 100000
+  num_test_samples: 1000
+  batch_size: 10000
+  n_jobs: 32
+  root_seed: 42
+  verbose: true
+  backend: "sagemath"
+  save_text: true
+  save_json: true

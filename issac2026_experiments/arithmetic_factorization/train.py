@@ -3,7 +3,7 @@ import os
 import click
 from omegaconf import OmegaConf
 
-from calt.io import IOPipeline
+from calt.io import IOPipeline, ReversedOrderLoadPreprocessor
 from calt.models import ModelPipeline
 from calt.trainer import TrainerPipeline, apply_dryrun_settings
 
@@ -26,7 +26,17 @@ from calt.trainer import TrainerPipeline, apply_dryrun_settings
     default=None,
     help="Postfix appended to wandb run name for distinguishing runs.",
 )
-def main(dryrun: bool, config_path: str, wandb_runname_postfix: str | None):
+@click.option(
+    "--target_reversed",
+    is_flag=True,
+    help="Target = factors in reversed order (ReversedOrderLoadPreprocessor). Input is still n; only the order of factors in target is reversed (e.g. 2,3,5 -> 5,3,2).",
+)
+def main(
+    dryrun: bool,
+    config_path: str,
+    wandb_runname_postfix: str | None,
+    target_reversed: bool,
+):
     """Train a model for integer_factorization task."""
     cfg = OmegaConf.load(config_path)
 
@@ -38,10 +48,26 @@ def main(dryrun: bool, config_path: str, wandb_runname_postfix: str | None):
         cfg.train.wandb.name = f"{base_name}_{wandb_runname_postfix}"
 
     save_dir = cfg.train.get("save_dir", cfg.train.get("output_dir", "./results"))
+    if wandb_runname_postfix:
+        save_dir = save_dir.rstrip("/") + "_" + wandb_runname_postfix
+        cfg.train.save_dir = save_dir
+    if target_reversed:
+        save_dir = save_dir.rstrip("/") + "/reversed"
+        cfg.train.save_dir = save_dir
+        if hasattr(cfg.train, "wandb") and hasattr(cfg.train.wandb, "name"):
+            base_name = cfg.train.wandb.name or "run"
+            cfg.train.wandb.name = f"{base_name}_reversed"
     os.makedirs(save_dir, exist_ok=True)
+    # Save target_mode so load_from_checkpoint uses the same dataset preprocessor at eval time
+    cfg.data.target_mode = "reversed" if target_reversed else "full"
+    if cfg.data.target_mode == "reversed":
+        cfg.data.target_delimiter = ","
     OmegaConf.save(cfg, os.path.join(save_dir, "train.yaml"))
 
-    io_dict = IOPipeline.from_config(cfg.data).build()
+    io_pipeline = IOPipeline.from_config(cfg.data)
+    if target_reversed:
+        io_pipeline.dataset_load_preprocessor = ReversedOrderLoadPreprocessor(delimiter=",")
+    io_dict = io_pipeline.build()
     model = ModelPipeline.from_io_dict(cfg.model, io_dict).build()
     trainer_pipeline = TrainerPipeline.from_io_dict(cfg.train, model, io_dict).build()
 

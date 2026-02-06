@@ -5,17 +5,32 @@
 # Each task's train.sh starts background jobs (nohup ... &). This script
 # invokes them in order; all jobs run in parallel across tasks.
 
-# Arithmetic addition (ZZ, GF7, GF31, GF97 × full/last_element → 8 jobs)
-cd arithmetic_addition
+# # Arithmetic addition (ZZ, GF7, GF31, GF97 × full/last_element → 8 jobs)
+# cd arithmetic_addition
+# bash sh/train.sh
+# cd ..
+
+# # Arithmetic factorization (1 job)
+# cd arithmetic_factorization
+# bash sh/train.sh
+# cd ..
+
+# # Polynomial multiplication (ZZ, GF7, GF31, GF97 × full/last_element → 8 jobs)
+# cd polynomial_multiplication
+# bash sh/train.sh
+# cd ..
+
+# # Polynomial reduction (ZZ, GF7, GF31, GF97 × full/last_element → 8 jobs)
+cd polynomial_reduction
 bash sh/train.sh
 cd ..
 
-# Arithmetic factorization (1 job)
-cd arithmetic_factorization
-bash sh/train.sh
-cd ..
+# # Digit product (Prod, L=10): default + target_reversed → 2 jobs
+# cd digit_product
+# bash sh/train.sh
+# cd ..
 
-# Polynomial multiplication (ZZ, GF7, GF31, GF97 × full/last_element → 8 jobs)
-cd polynomial_multiplication
-bash sh/train.sh
-cd ..
+# # ReLU recurrence (L=10): default + target_reversed → 2 jobs
+# cd relu_recurrence
+# bash sh/train.sh
+# cd ..

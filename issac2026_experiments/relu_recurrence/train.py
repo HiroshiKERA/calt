@@ -37,6 +37,10 @@ def main(config_path: str, dryrun: bool, target_reversed: bool) -> None:
             base = cfg.train.wandb.name or "run"
             cfg.train.wandb.name = f"{base}_reversed"
     os.makedirs(save_dir, exist_ok=True)
+    # Save target_mode so load_from_checkpoint uses the same dataset preprocessor at eval time
+    cfg.data.target_mode = "reversed" if target_reversed else "full"
+    if cfg.data.target_mode == "reversed":
+        cfg.data.target_delimiter = ","
     OmegaConf.save(cfg, os.path.join(save_dir, "train.yaml"))
 
     io_pipeline = IOPipeline.from_config(cfg.data)

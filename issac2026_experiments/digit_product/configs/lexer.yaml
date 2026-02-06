@@ -1,0 +1,17 @@
+# Prod: digit sequences 0-9 only (no comma, no sign)
+vocab:
+  range:
+    numbers: ["", 0, 9]   # digits 0-9 as tokens
+  misc: []
+  special_tokens: {}
+  flags:
+    include_base_vocab: true
+    include_base_special_tokens: true
+
+number_policy:
+  attach_sign: false
+  digit_group: 1   # one digit per token
+  allow_float: false
+
+strict: true
+include_base_vocab: true

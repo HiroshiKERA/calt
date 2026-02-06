@@ -1,0 +1,21 @@
+sampler:
+  symbols: "x"
+  field_str: "GF31"
+  order: "degrevlex"
+  max_num_terms: 5
+  max_degree: 5
+
+problem_generator:
+  min_divisor_degree: 1
+
+dataset:
+  save_dir: "./data/GF31"
+  num_train_samples: 100000
+  num_test_samples: 1000
+  batch_size: 10000
+  n_jobs: 32
+  root_seed: 42
+  verbose: true
+  backend: "sagemath"
+  save_text: true
+  save_json: true

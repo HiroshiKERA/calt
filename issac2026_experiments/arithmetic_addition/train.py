@@ -44,7 +44,14 @@ def main(config_path: str, target_mode: str, dryrun: bool, wandb_runname_postfix
         cfg.train.wandb.name = f"{base_name}_{wandb_runname_postfix}"
 
     save_dir = cfg.train.get("save_dir", cfg.train.get("output_dir", "./results"))
+    if wandb_runname_postfix:
+        save_dir = save_dir.rstrip("/") + "_" + wandb_runname_postfix
+        cfg.train.save_dir = save_dir
     os.makedirs(save_dir, exist_ok=True)
+    # Save target_mode so load_from_checkpoint uses the same dataset preprocessor at eval time
+    cfg.data.target_mode = target_mode
+    if target_mode == "last_element":
+        cfg.data.target_delimiter = ","
     OmegaConf.save(cfg, os.path.join(save_dir, "train.yaml"))
 
     io_pipeline = IOPipeline.from_config(cfg.data)
