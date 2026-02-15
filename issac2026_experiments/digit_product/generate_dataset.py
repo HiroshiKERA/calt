@@ -5,11 +5,10 @@ Target: [c_1,...,c_L] = left-zero-padded digits of a*b.
 L=10: 5 digits for a, 5 for b; target 10 digits.
 """
 
-import numpy as np
 import click
 from omegaconf import OmegaConf
-from sage.misc.randstate import set_random_seed
 from sage.misc.prandom import randint
+from sage.misc.randstate import set_random_seed
 
 from calt.dataset import DatasetPipeline
 
@@ -58,7 +57,9 @@ class DigitProductGenerator:
         b = _sample_with_num_digits(num_digits_b, self.half)
         product = a * b
         input_str = _pad_digits(a, self.half) + _pad_digits(b, self.half)  # L digits
-        target_str = _pad_digits(product, self.length)  # L digits (product up to 10^L-1)
+        target_str = _pad_digits(
+            product, self.length
+        )  # L digits (product up to 10^L-1)
         return input_str, target_str
 
 
@@ -77,7 +78,9 @@ def main(config_path: str) -> None:
     cfg = OmegaConf.load(config_path)
     gen_cfg = OmegaConf.to_container(cfg.get("problem_generator", {}), resolve=True)
     if not gen_cfg:
-        raise ValueError("config must have 'problem_generator' with length (even, e.g. 10)")
+        raise ValueError(
+            "config must have 'problem_generator' with length (even, e.g. 10)"
+        )
     problem_generator = DigitProductGenerator(**gen_cfg)
     pipeline = DatasetPipeline.from_config(
         cfg.dataset,

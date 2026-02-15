@@ -1,14 +1,11 @@
-import math
-import random
-
-import numpy as np
 import click
+import numpy as np
+import sage.misc.randstate as randstate
 from omegaconf import OmegaConf
+from sage.all import prime_range
+from sage.misc.prandom import choice, randint
 
 from calt.dataset import DatasetPipeline
-import sage.misc.randstate as randstate
-from sage.misc.prandom import randint, choice
-from sage.all import prime_range
 
 
 class IntegerFactorizationGenerator:

@@ -12,8 +12,8 @@
 """
 
 import click
-from omegaconf import OmegaConf
 import sage.misc.randstate as randstate  # type: ignore
+from omegaconf import OmegaConf
 from sage.rings.rational_field import QQ  # type: ignore
 
 from calt.dataset import DatasetPipeline
@@ -57,12 +57,12 @@ class GroebnerGenerator:
         for _ in range(max_retries):
             # 多項式のリスト F をサンプル（デフォルトは 2 本）
             F = self.sampler.sample(num_samples=self.num_polynomials)
-            I = R.ideal(F)
+            ideal = R.ideal(F)
 
             # Groebner 基底の計算
             # libsingular:stdfglm は環やバージョン依存でエラーを吐きやすいので、
             # まずは Sage のデフォルトアルゴリズムで計算する。
-            G = list(I.groebner_basis())
+            G = list(ideal.groebner_basis())
 
             last_F, last_G = F, G
 
@@ -76,6 +76,7 @@ class GroebnerGenerator:
 
         # 失敗時も最後に得られた F, G を返す
         return last_F, last_G
+
 
 @click.command()
 @click.option(
@@ -103,4 +104,3 @@ def main(config_path: str) -> None:
 
 if __name__ == "__main__":
     main()
-

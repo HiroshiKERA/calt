@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from ..load_preprocessor import DatasetLoadPreprocessor, _to_str
+from ..load_preprocessor import _to_str
 
 
 class LastElementLoadPreprocessor:

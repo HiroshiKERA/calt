@@ -37,11 +37,11 @@ def _sample_one(seed: int):
         if len(p.monomials()) < 2:
             return None
     R = f.parent()
-    I = R.ideal([g1, g2, g3])
-    G = I.groebner_basis()
+    ideal = R.ideal([g1, g2, g3])
+    G = ideal.groebner_basis()
     if not G:
         return None
-    r = I.reduce(f)
+    r = ideal.reduce(f)
     return ((f, tuple(G)), (r,))
 
 

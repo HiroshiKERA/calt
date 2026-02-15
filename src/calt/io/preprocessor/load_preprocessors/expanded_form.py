@@ -8,14 +8,13 @@ Works with both SymPy (PolyElement) and SageMath polynomials.
 
 from typing import Any
 
-from ..load_preprocessor import DatasetLoadPreprocessor, _to_str
-
 
 def _poly_terms(poly: Any) -> list[tuple[tuple[int, ...], Any]]:
     """Return list of (exponent_tuple, coefficient) for SymPy or SageMath polynomial."""
     # SymPy PolyElement: .terms() returns ((monom, coeff), ...)
     try:
         from sympy.polys.rings import PolyElement
+
         if isinstance(poly, PolyElement):
             return [(monom, coeff) for monom, coeff in poly.terms()]
     except ImportError:

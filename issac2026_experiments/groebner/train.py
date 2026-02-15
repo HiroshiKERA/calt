@@ -9,7 +9,7 @@ from typing import Any
 
 import click
 from omegaconf import OmegaConf
-from sage.all import PolynomialRing, GF, QQ, RR, ZZ  # type: ignore
+from sage.all import GF, QQ, RR, ZZ, PolynomialRing  # type: ignore
 
 from calt.io import (
     ChainLoadPreprocessor,
@@ -17,6 +17,9 @@ from calt.io import (
     TextToSageLoadPreprocessor,
 )
 from calt.models import ModelPipeline
+from calt.trainer import TrainerPipeline, apply_dryrun_settings
+
+
 class _GroebnerLexOrderPreprocessor:
     """F,G (Sage 多項式リスト) を lex 順序に変換し、lex Groebner 基底を再計算する load preprocessor。
 
@@ -50,9 +53,6 @@ class _GroebnerLexOrderPreprocessor:
         return input_text, target_text
 
 
-from calt.trainer import TrainerPipeline, apply_dryrun_settings
-
-
 @click.command()
 @click.option(
     "--config_path",
@@ -60,7 +60,9 @@ from calt.trainer import TrainerPipeline, apply_dryrun_settings
     default="configs/train.yaml",
     help="Path to train config YAML (model, train, data).",
 )
-@click.option("--dryrun", is_flag=True, help="Run in dryrun mode with reduced settings.")
+@click.option(
+    "--dryrun", is_flag=True, help="Run in dryrun mode with reduced settings."
+)
 @click.option(
     "--data_config_path",
     type=click.Path(exists=True),
@@ -93,7 +95,11 @@ def main(
     cfg.train.save_dir = save_dir
 
     # wandb の run name も training_order で区別する
-    if hasattr(cfg.train, "wandb") and hasattr(cfg.train.wandb, "name") and cfg.train.wandb.name:
+    if (
+        hasattr(cfg.train, "wandb")
+        and hasattr(cfg.train.wandb, "name")
+        and cfg.train.wandb.name
+    ):
         base_name = cfg.train.wandb.name
         cfg.train.wandb.name = f"{base_name}_{suffix}"
 
@@ -149,4 +155,3 @@ def main(
 
 if __name__ == "__main__":
     main()
-

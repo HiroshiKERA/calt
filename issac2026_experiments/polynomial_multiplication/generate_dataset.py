@@ -1,14 +1,12 @@
-
+import click
+import sage.misc.randstate as randstate
 from omegaconf import OmegaConf
+from sage.misc.prandom import randint
+from sage.rings.polynomial.multi_polynomial_libsingular import MPolynomial_libsingular
+from statistics_calculator import PolyStatisticsCalculator
 
 from calt.dataset import DatasetPipeline
 from calt.dataset.sagemath.utils.polynomial_sampler import PolynomialSampler
-import sage.misc.randstate as randstate
-from sage.misc.prandom import randint
-from sage.rings.polynomial.multi_polynomial_libsingular import MPolynomial_libsingular
-import click
-
-from statistics_calculator import PolyStatisticsCalculator
 
 
 class CumulativePolyMultiplicationGenerator:
@@ -98,5 +96,7 @@ def main(config_path):
     )
     pipeline.run()
     print("Dataset generation completed")
+
+
 if __name__ == "__main__":
     main()

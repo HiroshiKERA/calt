@@ -188,6 +188,7 @@ class Trainer(HTrainer):
 
         if len(self.eval_dataset) == 0:
             import logging
+
             logging.getLogger(__name__).warning(
                 "eval_dataset is empty; skipping evaluate_and_save_generation."
             )

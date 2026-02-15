@@ -2,13 +2,12 @@ import os
 
 import click
 from omegaconf import OmegaConf
-from sage.all import GF, PolynomialRing, QQ, RR, ZZ
+from sage.all import GF, QQ, RR, ZZ, PolynomialRing
 
 from calt.io import (
     ChainLoadPreprocessor,
     ExpandedFormLoadPreprocessor,
     IOPipeline,
-    LastElementLoadPreprocessor,
     TextToSageLoadPreprocessor,
 )
 from calt.models import ModelPipeline
@@ -25,9 +24,7 @@ def get_ring(data_cfg):
     if field_str in ("ZZ", "QQ", "RR"):
         field = {"ZZ": ZZ, "QQ": QQ, "RR": RR}[field_str]
     elif field_str.startswith("GF"):
-        p = int(
-            field_str[3:-1] if field_str.startswith("GF(") else field_str[2:]
-        )
+        p = int(field_str[3:-1] if field_str.startswith("GF(") else field_str[2:])
         if p <= 1:
             raise ValueError(f"Field size must be > 1: {field_str!r}")
         field = GF(p)
@@ -80,7 +77,11 @@ def main(
     if dryrun:
         apply_dryrun_settings(cfg)
 
-    if wandb_runname_postfix and hasattr(cfg.train, "wandb") and hasattr(cfg.train.wandb, "name"):
+    if (
+        wandb_runname_postfix
+        and hasattr(cfg.train, "wandb")
+        and hasattr(cfg.train.wandb, "name")
+    ):
         base_name = cfg.train.wandb.name or "run"
         cfg.train.wandb.name = f"{base_name}_{wandb_runname_postfix}"
 
@@ -111,14 +112,18 @@ def main(
             if key in io_dict and io_dict[key] is not None:
                 ds = io_dict[key]
                 ds.target_texts = [
-                    t.rsplit(text_delimiter, 1)[-1].strip() if text_delimiter in t else t
+                    t.rsplit(text_delimiter, 1)[-1].strip()
+                    if text_delimiter in t
+                    else t
                     for t in ds.target_texts
                 ]
 
     # Show a few samples after preprocessor for verification
     train_ds = io_dict["train_dataset"]
     n_show = min(5, len(train_ds.input_texts))
-    print(f"[Preprocessor check] train_dataset: {len(train_ds.input_texts)} samples, showing first {n_show}:")
+    print(
+        f"[Preprocessor check] train_dataset: {len(train_ds.input_texts)} samples, showing first {n_show}:"
+    )
     for i in range(n_show):
         inp = train_ds.input_texts[i]
         tgt = train_ds.target_texts[i]

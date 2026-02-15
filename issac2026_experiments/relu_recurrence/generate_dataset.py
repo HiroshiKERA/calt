@@ -4,11 +4,10 @@ y_1 = x_1, and for i >= 2: y_i = ReLU(x_i + y_{i-1}).
 Input: x_1,...,x_L. Target: y_1,...,y_L.
 """
 
-import numpy as np
 import click
 from omegaconf import OmegaConf
-from sage.misc.randstate import set_random_seed
 from sage.misc.prandom import randint
+from sage.misc.randstate import set_random_seed
 
 from calt.dataset import DatasetPipeline
 
@@ -45,7 +44,10 @@ class ReLURecurrenceGenerator:
 
 
 def relu_stats_calc(problem: str, answer: str) -> dict:
-    return {"problem_len": len(problem.split(",")), "answer_len": len(answer.split(","))}
+    return {
+        "problem_len": len(problem.split(",")),
+        "answer_len": len(answer.split(",")),
+    }
 
 
 @click.command()
@@ -59,7 +61,9 @@ def main(config_path: str) -> None:
     cfg = OmegaConf.load(config_path)
     gen_cfg = OmegaConf.to_container(cfg.get("problem_generator", {}), resolve=True)
     if not gen_cfg:
-        raise ValueError("config must have 'problem_generator' with length, x_min, x_max")
+        raise ValueError(
+            "config must have 'problem_generator' with length, x_min, x_max"
+        )
     problem_generator = ReLURecurrenceGenerator(**gen_cfg)
     pipeline = DatasetPipeline.from_config(
         cfg.dataset,

@@ -45,7 +45,9 @@ def main(config_path: str, dryrun: bool, target_reversed: bool) -> None:
 
     io_pipeline = IOPipeline.from_config(cfg.data)
     if target_reversed:
-        io_pipeline.dataset_load_preprocessor = ReversedOrderLoadPreprocessor(delimiter=",")
+        io_pipeline.dataset_load_preprocessor = ReversedOrderLoadPreprocessor(
+            delimiter=","
+        )
     io_dict = io_pipeline.build()
     model = ModelPipeline.from_io_dict(cfg.model, io_dict).build()
     trainer_pipeline = TrainerPipeline.from_io_dict(cfg.train, model, io_dict).build()

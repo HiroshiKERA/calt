@@ -43,7 +43,11 @@ def main(
     if dryrun:
         apply_dryrun_settings(cfg)
 
-    if wandb_runname_postfix and hasattr(cfg.train, "wandb") and hasattr(cfg.train.wandb, "name"):
+    if (
+        wandb_runname_postfix
+        and hasattr(cfg.train, "wandb")
+        and hasattr(cfg.train.wandb, "name")
+    ):
         base_name = cfg.train.wandb.name or "run"
         cfg.train.wandb.name = f"{base_name}_{wandb_runname_postfix}"
 
@@ -66,7 +70,9 @@ def main(
 
     io_pipeline = IOPipeline.from_config(cfg.data)
     if target_reversed:
-        io_pipeline.dataset_load_preprocessor = ReversedOrderLoadPreprocessor(delimiter=",")
+        io_pipeline.dataset_load_preprocessor = ReversedOrderLoadPreprocessor(
+            delimiter=","
+        )
     io_dict = io_pipeline.build()
     model = ModelPipeline.from_io_dict(cfg.model, io_dict).build()
     trainer_pipeline = TrainerPipeline.from_io_dict(cfg.train, model, io_dict).build()

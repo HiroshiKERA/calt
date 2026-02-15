@@ -50,9 +50,9 @@ class PolynomialReductionLoadPreprocessor:
 def _get_quotients(f, r, G):
     """(f - r).lift(I) で商のリストを返す。I = R.ideal(G)。"""
     R = f.parent()
-    I = R.ideal(list(G))
+    ideal = R.ideal(list(G))
     try:
-        q = (f - r).lift(I)
+        q = (f - r).lift(ideal)
         return tuple(q) if q is not None and len(q) == len(G) else (R.zero(),) * len(G)
     except Exception:
         return (R.zero(),) * len(G)
@@ -72,9 +72,9 @@ def _to_lex(f, G):
     base = R_grevlex.base_ring()
     R_lex = PolynomialRing(base, names, order="lex")
     f_lex = R_lex(f)
-    I = R_grevlex.ideal(list(G))
+    ideal = R_grevlex.ideal(list(G))
     try:
-        G_lex = I.transformed_basis("fglm", R_lex)
+        G_lex = ideal.transformed_basis("fglm", R_lex)
     except (ValueError, TypeError, NotImplementedError):
         # Fallback: just change ring (not a lex GB)
         G_lex = [R_lex(g) for g in G]

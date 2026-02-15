@@ -4,16 +4,16 @@ Input: dividend f | divisor g.
 Output (full): quotient q | remainder r.
 Output (last_element at train time): remainder r only.
 """
-# Initialize Sage's polynomial ring stack first to avoid ImportError: PolynomialRing_generic
-import sage.all  # noqa: F401
 
+# Initialize Sage's polynomial ring stack first to avoid ImportError: PolynomialRing_generic
+import click
+import sage.all  # noqa: F401
+import sage.misc.randstate as randstate
+from omegaconf import OmegaConf
 from sage.rings.polynomial.multi_polynomial_libsingular import MPolynomial_libsingular
 
 from calt.dataset import DatasetPipeline
 from calt.dataset.sagemath.utils.polynomial_sampler import PolynomialSampler
-import sage.misc.randstate as randstate
-import click
-from omegaconf import OmegaConf
 
 
 class UnivariateQuoRemGenerator:
@@ -29,16 +29,18 @@ class UnivariateQuoRemGenerator:
         randstate.set_random_seed(seed)
         R = self.sampler.get_ring()
         if R.ngens() != 1:
-            raise ValueError("polynomial_reduction expects univariate ring (symbols='x')")
+            raise ValueError(
+                "polynomial_reduction expects univariate ring (symbols='x')"
+            )
         # Sampler is configured with min_degree >= min_divisor_degree and nonzero_instance=True,
         # so g is never 0 and has degree >= min_divisor_degree; no retry loop needed.
         f, g = self.sampler.sample(2)
 
         if f.degree() < g.degree():
-            f, g = g, f # swap f and g if f has lower degree
+            f, g = g, f  # swap f and g if f has lower degree
 
         q, r = f.quo_rem(g)
-        
+
         return (f, g), (q, r)
 
 
@@ -53,7 +55,9 @@ def main(config_path: str) -> None:
     cfg = OmegaConf.load(config_path)
     sampler_cfg = dict(OmegaConf.to_container(cfg.sampler, resolve=True))
     min_divisor_degree = int(cfg.problem_generator.get("min_divisor_degree", 1))
-    sampler_cfg["min_degree"] = min_divisor_degree  # ensures g has degree >= min_divisor_degree
+    sampler_cfg["min_degree"] = (
+        min_divisor_degree  # ensures g has degree >= min_divisor_degree
+    )
     sampler = PolynomialSampler(**sampler_cfg)
     problem_generator = UnivariateQuoRemGenerator(
         sampler=sampler,

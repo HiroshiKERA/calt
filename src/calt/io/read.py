@@ -161,7 +161,9 @@ def read_data_from_pickle(
         samples = pickle.load(f)
 
     if not isinstance(samples, list):
-        raise ValueError(f"Pickle file must contain a list of (problem, solution), got {type(samples)}")
+        raise ValueError(
+            f"Pickle file must contain a list of (problem, solution), got {type(samples)}"
+        )
     if max_samples is not None:
         samples = samples[:max_samples]
         logger.info(

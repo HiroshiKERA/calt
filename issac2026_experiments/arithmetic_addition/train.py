@@ -32,14 +32,20 @@ from calt.trainer import TrainerPipeline, apply_dryrun_settings
     default=None,
     help="Postfix appended to wandb run name (e.g. 'full', 'last_element') for distinguishing runs.",
 )
-def main(config_path: str, target_mode: str, dryrun: bool, wandb_runname_postfix: str | None):
+def main(
+    config_path: str, target_mode: str, dryrun: bool, wandb_runname_postfix: str | None
+):
     """Train a model for arithmetic addition task."""
     cfg = OmegaConf.load(config_path)
 
     if dryrun:
         apply_dryrun_settings(cfg)
 
-    if wandb_runname_postfix and hasattr(cfg.train, "wandb") and hasattr(cfg.train.wandb, "name"):
+    if (
+        wandb_runname_postfix
+        and hasattr(cfg.train, "wandb")
+        and hasattr(cfg.train.wandb, "name")
+    ):
         base_name = cfg.train.wandb.name or "run"
         cfg.train.wandb.name = f"{base_name}_{wandb_runname_postfix}"
 
@@ -57,7 +63,9 @@ def main(config_path: str, target_mode: str, dryrun: bool, wandb_runname_postfix
     io_pipeline = IOPipeline.from_config(cfg.data)
 
     if target_mode == "last_element":
-        io_pipeline.dataset_load_preprocessor = LastElementLoadPreprocessor(delimiter=",")
+        io_pipeline.dataset_load_preprocessor = LastElementLoadPreprocessor(
+            delimiter=","
+        )
     else:
         io_pipeline.dataset_load_preprocessor = None  # full cumulative
 
@@ -66,7 +74,9 @@ def main(config_path: str, target_mode: str, dryrun: bool, wandb_runname_postfix
     # プリプロセッサ適用後のサンプルを数件表示（適用確認用）
     train_ds = io_dict["train_dataset"]
     n_show = min(5, len(train_ds.input_texts))
-    print(f"[Preprocessor check] train_dataset: {len(train_ds.input_texts)} samples, showing first {n_show}:")
+    print(
+        f"[Preprocessor check] train_dataset: {len(train_ds.input_texts)} samples, showing first {n_show}:"
+    )
     for i in range(n_show):
         inp = train_ds.input_texts[i]
         tgt = train_ds.target_texts[i]

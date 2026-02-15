@@ -56,11 +56,15 @@ def _discover_save_dirs(task_dir: Path) -> list[tuple[str, str]]:
                 out.append((str(d.relative_to(task_dir)), d.name))
     # results_reversed (legacy top-level, e.g. arithmetic_factorization)
     res_rev = task_dir / "results_reversed"
-    if res_rev.exists() and ((res_rev / "train.yaml").exists() or (res_rev / "pytorch_model.bin").exists()):
+    if res_rev.exists() and (
+        (res_rev / "train.yaml").exists() or (res_rev / "pytorch_model.bin").exists()
+    ):
         out.append(("results_reversed", "results_reversed"))
     # results_* (groebner)
     for p in sorted(task_dir.glob("results_*")):
-        if p.is_dir() and ((p / "train.yaml").exists() or (p / "pytorch_model.bin").exists()):
+        if p.is_dir() and (
+            (p / "train.yaml").exists() or (p / "pytorch_model.bin").exists()
+        ):
             out.append((p.name, p.name))
     return out
 
@@ -70,9 +74,11 @@ def _latest_checkpoint(save_dir: Path) -> Path | None:
     checkpoints = list(save_dir.glob("checkpoint-*"))
     if not checkpoints:
         return None
+
     def step(p: Path) -> int:
         m = re.match(r"checkpoint-(\d+)$", p.name)
         return int(m.group(1)) if m else 0
+
     return max(checkpoints, key=step)
 
 
@@ -95,6 +101,7 @@ def _is_training_complete(task_dir: Path, save_dir_rel: str, eval_path: str) -> 
         return False
     try:
         from omegaconf import OmegaConf
+
         cfg = OmegaConf.load(train_yaml)
         num_epochs = float(getattr(cfg.train, "num_train_epochs", 0) or 0)
     except Exception:
@@ -137,17 +144,23 @@ def _write_tables(
             f.write(f"| {task} | {pattern} | {val} | {ckpt_str} | {status} |\n")
 
 
-def run_one_eval(task_name: str, rel_path: str, pattern: str, max_length: int) -> tuple[float | None, int | None]:
+def run_one_eval(
+    task_name: str, rel_path: str, pattern: str, max_length: int
+) -> tuple[float | None, int | None]:
     """Run eval for one (task, save_dir). cwd must be task dir. Returns (success_rate, step_used) or (None, None) on error."""
     import run_eval  # run_eval is in ROOT (issac2026_experiments)
 
     task_dir = Path(".").resolve()
     eval_path = _choose_eval_path(task_dir, rel_path)
     # save_dir = where train.yaml lives (eval_results will be written under it)
-    save_dir_rel = rel_path if "checkpoint-" not in eval_path else str(Path(eval_path).parent)
+    save_dir_rel = (
+        rel_path if "checkpoint-" not in eval_path else str(Path(eval_path).parent)
+    )
     out_dir = task_dir / save_dir_rel / "eval_results"
 
-    print(f"  [{pattern}] モデル: {eval_path} をロードし、全評価データで生成評価を実行します。")
+    print(
+        f"  [{pattern}] モデル: {eval_path} をロードし、全評価データで生成評価を実行します。"
+    )
     print(f"  [{pattern}] 結果の保存先: {out_dir}/")
     try:
         rate, step_used = run_eval.run_eval_for_checkpoint(
@@ -165,7 +178,9 @@ def main(max_length: int = 512) -> None:
     experiments_root = ROOT
 
     print("=" * 60)
-    print("全タスク・全パターンで生成評価 (evaluate_and_save_generation) を実行します。")
+    print(
+        "全タスク・全パターンで生成評価 (evaluate_and_save_generation) を実行します。"
+    )
     print(f"実行ディレクトリ: {experiments_root}")
     print(f"max_length: {max_length}")
     print(f"対象タスク: {TASK_DIRS}")
@@ -194,16 +209,28 @@ def main(max_length: int = 512) -> None:
                 continue
             os.chdir(task_dir)
             eval_path = _choose_eval_path(task_dir, rel_path)
-            save_dir_rel = rel_path if "checkpoint-" not in eval_path else str(Path(eval_path).parent)
+            save_dir_rel = (
+                rel_path
+                if "checkpoint-" not in eval_path
+                else str(Path(eval_path).parent)
+            )
             rate, step_used = run_one_eval(task_name, rel_path, pattern, max_length)
-            training_complete = _is_training_complete(task_dir, save_dir_rel, eval_path) if step_used is not None else False
+            training_complete = (
+                _is_training_complete(task_dir, save_dir_rel, eval_path)
+                if step_used is not None
+                else False
+            )
             rows.append((task_name, pattern, rate, step_used, training_complete))
             if rate is not None:
                 status = "完了" if training_complete else "訓練途中"
-                print(f"  [{pattern}] success_rate: {100 * rate:.1f}% (checkpoint-{step_used}, {status})")
+                print(
+                    f"  [{pattern}] success_rate: {100 * rate:.1f}% (checkpoint-{step_used}, {status})"
+                )
             # eval_results を evaluate/<task>/<pattern>/eval_results/ にもコピー（上書き）
             if step_used is not None and rate is not None:
-                src = task_dir / save_dir_rel / "eval_results" / f"step_{step_used}.json"
+                src = (
+                    task_dir / save_dir_rel / "eval_results" / f"step_{step_used}.json"
+                )
                 if src.exists():
                     dst_dir = SCRIPT_DIR / task_name / pattern / "eval_results"
                     dst_dir.mkdir(parents=True, exist_ok=True)
@@ -214,13 +241,18 @@ def main(max_length: int = 512) -> None:
             os.chdir(experiments_root)
 
     print("\n" + "=" * 60)
-    print(f"success_rate の表: {SCRIPT_DIR / 'success_rate_table.csv'}, {SCRIPT_DIR / 'success_rate_table.md'}（逐次更新済み）")
+    print(
+        f"success_rate の表: {SCRIPT_DIR / 'success_rate_table.csv'}, {SCRIPT_DIR / 'success_rate_table.md'}（逐次更新済み）"
+    )
     print("=" * 60)
-    print(f"完了: {len(rows)} 件処理（成功 {sum(1 for r in rows if r[2] is not None)} 件）")
+    print(
+        f"完了: {len(rows)} 件処理（成功 {sum(1 for r in rows if r[2] is not None)} 件）"
+    )
 
 
 if __name__ == "__main__":
     import argparse
+
     ap = argparse.ArgumentParser()
     ap.add_argument("--max_length", type=int, default=512)
     args = ap.parse_args()
