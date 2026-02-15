@@ -1,8 +1,8 @@
-from omegaconf import OmegaConf
 import random
 from functools import partial
 
 import sage.misc.randstate as randstate  # type: ignore
+from omegaconf import OmegaConf
 
 from calt.dataset import DatasetPipeline
 from calt.dataset.sagemath.utils.polynomial_sampler import PolynomialSampler
@@ -28,8 +28,10 @@ def polynomial_addition_generator(seed, field="ZZ", num_variables=3):
 
 if __name__ == "__main__":
     cfg = OmegaConf.load("configs/data.yaml")
-    
-    _polynomial_addition_generator = partial(polynomial_addition_generator, field="ZZ", num_variables=3)
+
+    _polynomial_addition_generator = partial(
+        polynomial_addition_generator, field="ZZ", num_variables=3
+    )
     pipeline = DatasetPipeline.from_config(
         cfg.dataset,
         problem_generator=_polynomial_addition_generator,

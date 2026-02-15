@@ -17,9 +17,7 @@ from .base import (
 from .preprocessor import (
     AbstractPreProcessor,
     DatasetLoadPreprocessor,
-    JsonlDefaultLoadPreprocessor,
     NumberPolicy,
-    PickleDefaultLoadPreprocessor,
     UnifiedLexer,
 )
 from .read import read_data_from_file
@@ -259,6 +257,7 @@ class IOPipeline:
                 JsonlDefaultLoadPreprocessor,
                 PickleDefaultLoadPreprocessor,
             )
+
             train_preprocessor = (
                 PickleDefaultLoadPreprocessor()
                 if train_use_pickle
@@ -270,6 +269,7 @@ class IOPipeline:
                 JsonlDefaultLoadPreprocessor,
                 PickleDefaultLoadPreprocessor,
             )
+
             test_preprocessor = (
                 PickleDefaultLoadPreprocessor()
                 if test_use_pickle
@@ -287,8 +287,16 @@ class IOPipeline:
                 f"showing first {n_raw}:"
             )
             for i in range(n_raw):
-                inp = raw_inputs[i] if len(raw_inputs[i]) <= 50 else raw_inputs[i][:47] + "..."
-                tgt = raw_targets[i] if len(raw_targets[i]) <= 50 else raw_targets[i][:47] + "..."
+                inp = (
+                    raw_inputs[i]
+                    if len(raw_inputs[i]) <= 50
+                    else raw_inputs[i][:47] + "..."
+                )
+                tgt = (
+                    raw_targets[i]
+                    if len(raw_targets[i]) <= 50
+                    else raw_targets[i][:47] + "..."
+                )
                 print(f"  [{i}] input:  {inp!r}")
                 print(f"      target: {tgt!r}")
             print()

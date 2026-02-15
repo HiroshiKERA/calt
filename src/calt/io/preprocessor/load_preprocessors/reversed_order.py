@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from ..load_preprocessor import DatasetLoadPreprocessor, _to_str
+from ..load_preprocessor import _to_str
 
 
 class ReversedOrderLoadPreprocessor:
@@ -55,7 +55,9 @@ class ReversedOrderLoadPreprocessor:
     def _solution_to_reversed_str(self, solution: Any) -> str:
         """solution (list or str) を反転した文字列で返す。"""
         if isinstance(solution, list) and solution:
-            parts = [_to_str(x) if not isinstance(x, str) else x for x in reversed(solution)]
+            parts = [
+                _to_str(x) if not isinstance(x, str) else x for x in reversed(solution)
+            ]
             return self.delimiter.join(parts)
         if isinstance(solution, str):
             return self._reverse_sequence(solution)

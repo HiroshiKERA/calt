@@ -2,7 +2,7 @@ import os
 
 import click
 from omegaconf import OmegaConf
-from sage.all import PolynomialRing, ZZ
+from sage.all import ZZ, PolynomialRing
 
 from calt.io import (
     ChainLoadPreprocessor,

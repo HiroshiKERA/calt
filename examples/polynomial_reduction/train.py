@@ -1,13 +1,12 @@
 import os
 
 import click
+from load_preprocessor import PolynomialReductionLoadPreprocessor
 from omegaconf import OmegaConf
 
 from calt.io import IOPipeline
 from calt.models import ModelPipeline
 from calt.trainer import TrainerPipeline, apply_dryrun_settings
-
-from load_preprocessor import PolynomialReductionLoadPreprocessor
 
 
 @click.command()
@@ -17,7 +16,9 @@ from load_preprocessor import PolynomialReductionLoadPreprocessor
     help="Run in dryrun mode with reduced epochs and data for quick testing",
 )
 @click.option("--order", type=click.Choice(["grevlex", "lex"]), default="grevlex")
-@click.option("--pattern", type=int, default=1, help="1=remainder only, 2=quotients|remainder")
+@click.option(
+    "--pattern", type=int, default=1, help="1=remainder only, 2=quotients|remainder"
+)
 def main(dryrun: bool, order: str, pattern: int):
     """Train a model for polynomial_reduction task."""
     cfg = OmegaConf.load("configs/train.yaml")
