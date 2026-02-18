@@ -7,29 +7,29 @@ class BaseStatisticsCalculator(ABC):
     Abstract base class for sample-level statistics calculators.
 
     This class defines the interface for calculators that compute
-    statistics for individual samples (problems and solutions).
+    statistics for individual samples (problems and answers).
     """
 
     @abstractmethod
     def __call__(
-        self, problem: Any, solution: Any
+        self, problem: Any, answer: Any
     ) -> dict[str, dict[str, int | float]]:
         """
         Calculate statistics for a single sample.
 
         Args:
             problem: The problem data
-            solution: The solution data
+            answer: The answer data
 
         Returns:
-            Dictionary with keys "problem" and "solution", each mapping to a sub-dictionary
+            Dictionary with keys "problem" and "answer", each mapping to a sub-dictionary
             containing descriptive statistics. The structure should be:
             {"problem": {"metric1": value1, "metric2": value2, ...},
-             "solution": {"metric1": value1, "metric2": value2, ...}}
+             "answer": {"metric1": value1, "metric2": value2, ...}}
 
             Example:
             {"problem": {"total_degree": 2, "num_polynomials": 3},
-             "solution": {"total_degree": 3, "num_polynomials": 3}}
+             "answer": {"total_degree": 3, "num_polynomials": 3}}
         """
         pass
 
@@ -152,9 +152,9 @@ class MemoryEfficientStatisticsCalculator:
                                 "category2": {"metric1": value1, ...}}
                                Example:
                                [{"problem": {"total_degree": 2, "num_polynomials": 3},
-                                 "solution": {"total_degree": 3, "num_polynomials": 3}},
+                                 "answer": {"total_degree": 3, "num_polynomials": 3}},
                                 {"problem": {"total_degree": 5, "num_polynomials": 4},
-                                 "solution": {"total_degree": 8, "num_polynomials": 4}},
+                                 "answer": {"total_degree": 8, "num_polynomials": 4}},
                                 ...]
         """
         # Update runtime statistics
@@ -166,7 +166,7 @@ class MemoryEfficientStatisticsCalculator:
             # Update each numeric sample statistic incrementally
             for category, category_stats in stats.items():
                 if isinstance(category_stats, dict):
-                    # Handle nested structure like {"problem": {...}, "solution": {...}}
+                    # Handle nested structure like {"problem": {...}, "answer": {...}}
                     if category not in self.sample_stats:
                         self.sample_stats[category] = {}
 
@@ -202,7 +202,7 @@ class MemoryEfficientStatisticsCalculator:
                 "samples_per_second": float,
                 "generation_time": {"mean": float, "std": float, "min": float, "max": float},
                 "problem_stats": {"metric1": {"mean": float, "std": float, "min": float, "max": float}, ...},
-                "solution_stats": {"metric1": {"mean": float, "std": float, "min": float, "max": float}, ...}
+                "answer_stats": {"metric1": {"mean": float, "std": float, "min": float, "max": float}, ...}
             }
         """
         runtime_stats = self.runtime_stats.get_statistics()
@@ -222,7 +222,7 @@ class MemoryEfficientStatisticsCalculator:
         # Add sample statistics by category
         for category, category_stats in self.sample_stats.items():
             if isinstance(category_stats, dict):
-                # Handle nested structure like {"problem": {...}, "solution": {...}}
+                # Handle nested structure like {"problem": {...}, "answer": {...}}
                 overall_stats[f"{category}_stats"] = {
                     stat_name: stat_calc.get_statistics()
                     for stat_name, stat_calc in category_stats.items()

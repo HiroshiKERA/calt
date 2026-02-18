@@ -7,7 +7,7 @@ and defining tasks.
 
 The library is organised around three main pipelines:
 
-- **Dataset pipeline** – generate paired problems/solutions with SageMath or SymPy backends.
+- **Dataset pipeline** – generate paired problems/answers with SageMath or SymPy backends.
 - **IO pipeline** – tokenise text and build datasets and collators from configuration.
 - **Trainer pipeline** – build and run HuggingFace `Trainer` instances from YAML configs.
 

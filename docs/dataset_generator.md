@@ -1,6 +1,6 @@
 # Dataset Generator
 
-A unified interface with SageMath and SymPy backends for large-scale dataset generation. It produces paired problems and solutions, supports batch writing, and computes incremental statistics.
+A unified interface with SageMath and SymPy backends for large-scale dataset generation. It produces paired problems and answers, supports batch writing, and computes incremental statistics.
 
 ## High-level API
 
@@ -40,7 +40,7 @@ from calt.dataset import DatasetPipeline
 cfg = OmegaConf.load("configs/data.yaml")
 pipeline = DatasetPipeline.from_config(
     cfg.dataset,
-    problem_generator=my_problem_generator,
+    instance_generator=my_instance_generator,
     statistics_calculator=None,
 )
 pipeline.run()

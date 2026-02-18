@@ -34,7 +34,7 @@ if __name__ == "__main__":
     )
     pipeline = DatasetPipeline.from_config(
         cfg.dataset,
-        problem_generator=_polynomial_addition_generator,
+        instance_generator=_polynomial_addition_generator,
     )
     pipeline.run()
     print("Dataset generation completed")

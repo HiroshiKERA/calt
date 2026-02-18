@@ -14,7 +14,7 @@ It offers a basic Transformer model and training, and non-experts of deep learni
 For example, users define the following code for the polynomial addition task.
 
 ```python
-class SumProblemGenerator:
+class PolynomialAdditionGenerator:
     # Task - input: F=[f_1, ..., f_s], target: G=[g:= f_1+...+f_s]
     def __init__(
         self, sampler: PolynomialSampler, max_polynomials: int, min_polynomials: int

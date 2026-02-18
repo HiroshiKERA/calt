@@ -12,8 +12,8 @@ from ..utils.dataset_writer import DatasetWriter
 from ..utils.statistics_calculator import MemoryEfficientStatisticsCalculator
 
 # Type aliases for better readability
-ProblemOrSolution = Any | list[Any] | list[list[Any]] | list[Any | list[Any]]
-"""Type alias for problems and solutions in their original format.
+ProblemOrAnswer = Any | list[Any] | list[list[Any]] | list[Any | list[Any]]
+"""Type alias for problems and answers in their original format.
 Supports single values, simple lists, nested lists, and mixed structures.
 
 Polynomial examples:
@@ -33,8 +33,8 @@ StatisticsDict = dict[str, dict[str, int | float]]
 """Type alias for statistics dictionary containing nested metrics.
 Example: {"runtime": {"mean": 0.5, "std": 0.1}, "complexity": {"max": 10, "min": 1}}"""
 
-StringProblemOrSolution = str | list[str] | list[list[str]] | list[str | list[str]]
-"""Type alias for string-formatted problems and solutions.
+StringProblemOrAnswer = str | list[str] | list[list[str]] | list[str | list[str]]
+"""Type alias for string-formatted problems and answers.
 Supports single strings, simple lists, nested lists, and mixed structures.
 Maximum nesting depth is 2 levels.
 
@@ -80,7 +80,7 @@ logger = logging.getLogger(__name__)
 
 
 class DatasetGenerator:
-    """Base class for problem generators"""
+    """Base class for instance generators"""
 
     def __init__(
         self,
@@ -90,7 +90,7 @@ class DatasetGenerator:
         root_seed: int = 42,
     ):
         """
-        Initialize problem generator.
+        Initialize instance generator.
 
         Args:
             backend: Backend for parallel processing
@@ -140,29 +140,29 @@ class DatasetGenerator:
         self,
         sample_index: int,
         tag: str,
-        problem_generator: Callable,
+        instance_generator: Callable,
         statistics_calculator: Callable | None = None,
     ) -> tuple[
-        StringProblemOrSolution, StringProblemOrSolution, StatisticsDict | None, float
+        StringProblemOrAnswer, StringProblemOrAnswer, StatisticsDict | None, float
     ]:
-        """Generate a single sample using the provided problem generator."""
+        """Generate a single sample using the provided instance generator."""
         # Generate a unique seed for this job
         seed = self._generate_seed(sample_index, tag)
 
         start_time = perf_counter()
-        problem, solution = problem_generator(seed)
+        problem, answer = instance_generator(seed)
         run_time = perf_counter() - start_time
 
         if statistics_calculator is not None:
-            sample_stats = statistics_calculator(problem, solution)
+            sample_stats = statistics_calculator(problem, answer)
         else:
             sample_stats = None
 
-        # Convert problem and solution to string format, handling nested structures
+        # Convert problem and answer to string format, handling nested structures
         problem_str = self._convert_nested_structure(problem)
-        solution_str = self._convert_nested_structure(solution)
+        answer_str = self._convert_nested_structure(answer)
 
-        return problem_str, solution_str, sample_stats, run_time
+        return problem_str, answer_str, sample_stats, run_time
 
     def _convert_poly_to_str(self, poly_str: str) -> str:
         """
@@ -191,10 +191,10 @@ class DatasetGenerator:
         return str(obj)
 
     def _convert_nested_structure(
-        self, obj: ProblemOrSolution
-    ) -> StringProblemOrSolution:
+        self, obj: ProblemOrAnswer
+    ) -> StringProblemOrAnswer:
         """
-        Convert nested structure (problem or solution) to string format.
+        Convert nested structure (problem or answer) to string format.
         Handles both simple values, lists, and mixed nested lists.
 
         Args:
@@ -231,7 +231,7 @@ class DatasetGenerator:
         self,
         tag: str,
         num_samples: int,
-        problem_generator: Callable,
+        instance_generator: Callable,
         statistics_calculator: Callable | None = None,
         dataset_writer: DatasetWriter | None = None,
         batch_size: int = 100000,
@@ -279,7 +279,7 @@ class DatasetGenerator:
                     delayed(self._generate_sample)(
                         batch_start + i,
                         tag,
-                        problem_generator,
+                        instance_generator,
                         statistics_calculator,
                     )
                     for i in range(current_batch_size)
@@ -293,13 +293,13 @@ class DatasetGenerator:
                 raise
 
             # Unzip the results for current batch
-            problem_strs, solution_strs, sample_stats, run_times = zip(*results)
+            problem_strs, answer_strs, sample_stats, run_times = zip(*results)
 
             if self.verbose:
                 self.logger.info("Parallel processing completed")
 
             # Store batch results for statistics only
-            batch_samples = list(zip(problem_strs, solution_strs))
+            batch_samples = list(zip(problem_strs, answer_strs))
 
             # Update statistics incrementally
             incremental_stats.update_batch(
@@ -316,7 +316,7 @@ class DatasetGenerator:
                     self.logger.info(f"Batch {batch_idx + 1} saved to file")
 
             # Clear batch data from memory to prevent memory buildup
-            del batch_samples, problem_strs, solution_strs, sample_stats, run_times
+            del batch_samples, problem_strs, answer_strs, sample_stats, run_times
 
             if self.verbose:
                 self.logger.info(f"Batch {batch_idx + 1}/{num_batches} completed")
@@ -340,7 +340,7 @@ class DatasetGenerator:
     def run(
         self,
         dataset_sizes: dict[str, int],
-        problem_generator: Callable,
+        instance_generator: Callable,
         statistics_calculator: Callable | None = None,
         dataset_writer: DatasetWriter | None = None,
         batch_size: int = 100000,
@@ -368,10 +368,10 @@ class DatasetGenerator:
                           Any string can be used as dataset name (e.g., "train", "test", "validation").
                           Duplicate names are not allowed.
                           Example: {"train": 100000, "test": 1000} or {"train": 100000, "validation": 5000}
-            problem_generator: Function that generates (problem, solution) pair given a seed.
+            instance_generator: Function that generates (problem, answer) pair given a seed.
                              Must accept a single integer seed parameter.
             statistics_calculator: Optional function to calculate sample-specific statistics.
-                                 Must accept (problem, solution) and return dict or None.
+                                 Must accept (problem, answer) and return dict or None.
             dataset_writer: DatasetWriter object for saving datasets to files.
                           If None, a new DatasetWriter will be created using save_dir, save_text, and save_json parameters.
             batch_size: Number of samples to process in each batch. Larger batches
@@ -379,12 +379,12 @@ class DatasetGenerator:
             save_dir: Base directory for saving datasets. Used only if dataset_writer is None.
                      If None, uses current working directory.
             save_text: Whether to save raw text files. Used only if dataset_writer is None.
-                      Text files use "#" as separator between problem and solution.
+                      Text files use "#" as separator between problem and answer.
             save_json: Whether to save JSON Lines files. Used only if dataset_writer is None.
                       JSON Lines files preserve the original nested structure format.
 
         Raises:
-            ValueError: If dataset_sizes is invalid or problem_generator is None
+            ValueError: If dataset_sizes is invalid or instance_generator is None
             Exception: If parallel processing fails
 
         Note:
@@ -395,14 +395,14 @@ class DatasetGenerator:
             - If dataset_writer is provided, save_dir, save_text, and save_json parameters are ignored
 
         Examples:
-            >>> # Define problem generator function
-            >>> def polynomial_generator(seed):
+            >>> # Define instance generator function
+            >>> def instance_generator(seed):
             ...     import random
             ...     random.seed(seed)
             ...     # Generate random polynomial problem
             ...     problem = [random.randint(1, 1000) for _ in range(random.randint(1, 10))]
-            ...     solution = sum(problem)
-            ...     return problem, solution
+            ...     answer = sum(problem)
+            ...     return problem, answer
             >>>
             >>> # Initialize dataset generator
             >>> generator = DatasetGenerator(n_jobs=-1, verbose=True)
@@ -410,7 +410,7 @@ class DatasetGenerator:
             >>> # Method 1: Automatic DatasetWriter creation
             >>> generator.run(
             ...     dataset_sizes={"train": 10000, "test": 1000, "validation": 500},
-            ...     problem_generator=polynomial_generator,
+            ...     instance_generator=instance_generator,
             ...     save_dir="./datasets",
             ...     save_text=True,
             ...     save_json=True,
@@ -422,7 +422,7 @@ class DatasetGenerator:
             >>> writer = DatasetWriter(save_dir="./datasets", save_text=True, save_json=True)
             >>> generator.run(
             ...     dataset_sizes={"train": 10000, "test": 1000},
-            ...     problem_generator=polynomial_generator,
+            ...     instance_generator=instance_generator,
             ...     dataset_writer=writer,
             ...     batch_size=100
             ... )
@@ -430,13 +430,13 @@ class DatasetGenerator:
             >>> # Method 3: Generate datasets separately (if needed)
             >>> generator.run(
             ...     dataset_sizes={"train": 10000},
-            ...     problem_generator=polynomial_generator,
+            ...     instance_generator=instance_generator,
             ...     save_dir="./datasets",
             ...     batch_size=100
             ... )
             >>> generator.run(
             ...     dataset_sizes={"test": 1000, "validation": 500},
-            ...     problem_generator=polynomial_generator,
+            ...     instance_generator=instance_generator,
             ...     save_dir="./datasets",
             ...     batch_size=100
             ... )
@@ -454,7 +454,7 @@ class DatasetGenerator:
 
         # Prepare common arguments
         common_args = {
-            "problem_generator": problem_generator,
+            "instance_generator": instance_generator,
             "statistics_calculator": statistics_calculator,
             "dataset_writer": dataset_writer,
             "batch_size": batch_size,
@@ -467,8 +467,8 @@ class DatasetGenerator:
         if not dataset_sizes:
             raise ValueError("dataset_sizes cannot be empty")
 
-        if problem_generator is None:
-            raise ValueError("problem_generator must be provided")
+        if instance_generator is None:
+            raise ValueError("instance_generator must be provided")
 
         # Check for duplicate dataset names
         if len(dataset_sizes) != len(set(dataset_sizes.keys())):

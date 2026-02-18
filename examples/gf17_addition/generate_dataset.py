@@ -52,7 +52,7 @@ if __name__ == "__main__":
     cfg = OmegaConf.load("configs/data.yaml")
     pipeline = DatasetPipeline.from_config(
         cfg.dataset,
-        problem_generator=gf17_addition_generator,
+        instance_generator=gf17_addition_generator,
         statistics_calculator=gf17_addition_stats_calc,
     )
     pipeline.run()

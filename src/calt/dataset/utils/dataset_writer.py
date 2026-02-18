@@ -11,8 +11,8 @@ StatisticsDict = dict[str, dict[str, int | float]]
 """Type alias for statistics dictionary containing nested metrics.
 Example: {"runtime": {"mean": 0.5, "std": 0.1}, "complexity": {"max": 10, "min": 1}}"""
 
-StringProblemOrSolution = str | list[str] | list[list[str]] | list[str | list[str]]
-"""Type alias for string-formatted problems and solutions.
+StringProblemOrAnswer = str | list[str] | list[list[str]] | list[str | list[str]]
+"""Type alias for string-formatted problems and answers.
 Supports single strings, simple lists, nested lists, and mixed structures.
 Maximum nesting depth is 2 levels.
 
@@ -29,13 +29,13 @@ Arithmetic examples:
     - Mixed: ["2", ["3", "5"]]
 """
 
-StringSample = tuple[StringProblemOrSolution, StringProblemOrSolution]
-"""Type alias for a single problem-solution pair in string format.
+StringSample = tuple[StringProblemOrAnswer, StringProblemOrAnswer]
+"""Type alias for a single problem-answer pair in string format.
 Example: ("x^2 + 2*x + 1", "(x + 1)^2") or (["x + y", "x - y"], ["2*x", "2*y"])"""
 
 StringSampleList = list[StringSample]
-"""Type alias for a list of problem-solution pairs in string format.
-Example: [("problem1", "solution1"), ("problem2", "solution2")]"""
+"""Type alias for a list of problem-answer pairs in string format.
+Example: [("problem1", "answer1"), ("problem2", "answer2")]"""
 
 
 class TimedeltaDumper(yaml.SafeDumper):
@@ -51,7 +51,7 @@ def timedelta_representer(dumper: TimedeltaDumper, data: timedelta) -> yaml.Scal
 
 class DatasetWriter:
     """
-    Dataset writer for saving problem-solution pairs in multiple formats.
+    Dataset writer for saving problem-answer pairs in multiple formats.
 
     This class handles saving datasets with nested structure support up to 2 levels.
     It can save data in pickle (binary), raw text, and JSON Lines formats.
@@ -81,7 +81,7 @@ class DatasetWriter:
         Args:
             save_dir: Base directory for saving datasets. If None, uses current working directory.
             save_text: Whether to save raw text files. Text files use "#" as separator
-                      between problem and solution, with nested structures joined by separators.
+                      between problem and answer, with nested structures joined by separators.
             save_json: Whether to save JSON Lines files. JSON Lines files preserve the original
                       nested structure format, with one sample per line.
 
@@ -143,7 +143,7 @@ class DatasetWriter:
         self.save_dir.mkdir(parents=True, exist_ok=True)
         return self.save_dir
 
-    def _validate_nested_structure(self, obj: StringProblemOrSolution) -> None:
+    def _validate_nested_structure(self, obj: StringProblemOrAnswer) -> None:
         """
         Validate that the object has at most 2 levels of nesting and contains only strings.
 
@@ -197,7 +197,7 @@ class DatasetWriter:
                 f"Found type {type(obj).__name__}: {obj}"
             )
 
-    def _join_with_separators(self, obj: StringProblemOrSolution) -> str:
+    def _join_with_separators(self, obj: StringProblemOrAnswer) -> str:
         """
         Join object elements with appropriate separators.
 
@@ -237,18 +237,18 @@ class DatasetWriter:
 
     def _format_sample_strings(
         self,
-        problem_str: StringProblemOrSolution,
-        solution_str: StringProblemOrSolution,
+        problem_str: StringProblemOrAnswer,
+        answer_str: StringProblemOrAnswer,
     ) -> str:
         """
-        Format problem and solution to string representation with separators.
+        Format problem and answer to string representation with separators.
 
         Args:
             problem_str: Problem in string format (can be nested)
-            solution_str: Solution in string format (can be nested)
+            answer_str: Answer in string format (can be nested)
 
         Returns:
-            Formatted string with problem and solution separated by " # "
+            Formatted string with problem and answer separated by " # " (problem # answer)
 
         Examples:
             >>> writer._format_sample_strings("x", "y")
@@ -259,36 +259,36 @@ class DatasetWriter:
             "a | b || c # d | e || f"
         """
         problem_formatted = self._join_with_separators(problem_str)
-        solution_formatted = self._join_with_separators(solution_str)
-        return f"{problem_formatted} # {solution_formatted}"
+        answer_formatted = self._join_with_separators(answer_str)
+        return f"{problem_formatted} # {answer_formatted}"
 
     def _get_json_data(
         self,
-        problem_str: StringProblemOrSolution,
-        solution_str: StringProblemOrSolution,
-    ) -> dict[str, StringProblemOrSolution]:
+        problem_str: StringProblemOrAnswer,
+        answer_str: StringProblemOrAnswer,
+    ) -> dict[str, StringProblemOrAnswer]:
         """
-        Format problem and solution to JSON format.
+        Format problem and answer to JSON format.
 
         This method creates a dictionary structure suitable for JSON serialization.
         The original nested structure is preserved exactly as provided.
 
         Args:
             problem_str: Problem in string format (can be nested)
-            solution_str: Solution in string format (can be nested)
+            answer_str: Answer in string format (can be nested)
 
         Returns:
-            Dictionary with "problem" and "solution" keys preserving original structure
+            Dictionary with "problem" and "answer" keys preserving original structure
 
         Examples:
             >>> writer._get_json_data("x^2 + 1", "x^2")
-            {"problem": "x^2 + 1", "solution": "x^2"}
+            {"problem": "x^2 + 1", "answer": "x^2"}
             >>> writer._get_json_data(["x + y", "x - y"], ["2*x", "2*y"])
-            {"problem": ["x + y", "x - y"], "solution": ["2*x", "2*y"]}
+            {"problem": ["x + y", "x - y"], "answer": ["2*x", "2*y"]}
             >>> writer._get_json_data([["x", "y"], ["z"]], [["a", "b"], ["c"]])
-            {"problem": [["x", "y"], ["z"]], "solution": [["a", "b"], ["c"]]}
+            {"problem": [["x", "y"], ["z"]], "answer": [["a", "b"], ["c"]]}
         """
-        return {"problem": problem_str, "solution": solution_str}
+        return {"problem": problem_str, "answer": answer_str}
 
     def open(self, tag: str) -> None:
         """
@@ -434,7 +434,7 @@ class DatasetWriter:
         3. JSON Lines (.jsonl) - Structured format preserving nested structure (if save_json=True)
 
         Args:
-            samples: List of (problem, solution) pairs in string format
+            samples: List of (problem, answer) pairs in string format
             tag: Dataset tag (e.g., "train", "test", "validation", "dev", "eval")
             batch_idx: Batch index for incremental saving. Use 0 for first batch,
                       subsequent batches will append to existing files.
@@ -443,7 +443,7 @@ class DatasetWriter:
             ValueError: If tag is invalid or samples contain invalid nested structures
 
         Examples:
-            >>> # Simple string samples (single problem-solution pairs)
+            >>> # Simple string samples (single problem-answer pairs)
             >>> writer = DatasetWriter(save_dir="./datasets", save_text=True, save_json=True)
             >>> samples = [
             ...     ("x^2 + 2*x + 1", "(x + 1)^2"),
@@ -452,7 +452,7 @@ class DatasetWriter:
             >>> # Creates: train_data.pkl, train_raw.txt, train_data.jsonl
             >>> writer.save_batch(samples, tag="train", batch_idx=0)
             >>>
-            >>> # 1 level nested structure samples (multiple problems/solutions)
+            >>> # 1 level nested structure samples (multiple problems/answers)
             >>> samples = [
             ...     (["x + y", "x - y"], ["2*x", "2*y"]),
             ...     (["x^2 + y^2", "x^2 - y^2"], ["2*x^2", "2*y^2"]),
@@ -502,15 +502,15 @@ class DatasetWriter:
 
         # Save raw text data (optional)
         if self.save_text:
-            for problem_str, solution_str in samples:
-                formatted_line = self._format_sample_strings(problem_str, solution_str)
+            for problem_str, answer_str in samples:
+                formatted_line = self._format_sample_strings(problem_str, answer_str)
                 self._file_handles[tag]["text"].write(f"{formatted_line}\n")
             self._file_handles[tag]["text"].flush()
 
         # Save JSON Lines data (optional)
         if self.save_json:
-            for problem_str, solution_str in samples:
-                json_data = self._get_json_data(problem_str, solution_str)
+            for problem_str, answer_str in samples:
+                json_data = self._get_json_data(problem_str, answer_str)
                 json_line = json.dumps(json_data, ensure_ascii=False)
                 self._file_handles[tag]["json"].write(f"{json_line}\n")
             self._file_handles[tag]["json"].flush()
@@ -556,9 +556,9 @@ class DatasetWriter:
             raw_path = dataset_dir / f"{tag}_raw.txt"
             mode = "w" if batch_idx == 0 else "a"
             with open(raw_path, mode) as f:
-                for problem_str, solution_str in samples:
+                for problem_str, answer_str in samples:
                     formatted_line = self._format_sample_strings(
-                        problem_str, solution_str
+                        problem_str, answer_str
                     )
                     f.write(f"{formatted_line}\n")
 
@@ -567,8 +567,8 @@ class DatasetWriter:
             json_path = dataset_dir / f"{tag}_data.jsonl"
             mode = "w" if batch_idx == 0 else "a"
             with open(json_path, mode) as f:
-                for problem_str, solution_str in samples:
-                    json_data = self._get_json_data(problem_str, solution_str)
+                for problem_str, answer_str in samples:
+                    json_data = self._get_json_data(problem_str, answer_str)
                     json_line = json.dumps(json_data, ensure_ascii=False)
                     f.write(f"{json_line}\n")
 
@@ -613,7 +613,7 @@ class DatasetWriter:
             tag: Dataset tag (e.g., "train", "test", "validation", "dev", "eval")
 
         Returns:
-            List of (problem, solution) pairs in string format
+            List of (problem, answer) pairs in string format
 
         Raises:
             ValueError: If tag is invalid
@@ -622,8 +622,8 @@ class DatasetWriter:
         Examples:
             >>> samples = writer.load_dataset("train")
             >>> print(f"Loaded {len(samples)} samples")
-            >>> for problem, solution in samples[:3]:
-            ...     print(f"Problem: {problem}, Solution: {solution}")
+            >>> for problem, answer in samples[:3]:
+            ...     print(f"Problem: {problem}, Answer: {answer}")
         """
         self._validate_tag(tag)
         pickle_path = self.save_dir / f"{tag}_data.pkl"
@@ -642,7 +642,8 @@ class DatasetWriter:
             tag: Dataset tag (e.g., "train", "test", "validation", "dev", "eval")
 
         Returns:
-            List of (problem, solution) pairs in string format
+            List of (problem, answer) pairs in string format. Accepts JSON lines
+            with either "answer" or "solution" key (for backward compatibility).
 
         Raises:
             ValueError: If tag is invalid
@@ -651,8 +652,8 @@ class DatasetWriter:
         Examples:
             >>> samples = writer.load_dataset_jsonl("train")
             >>> print(f"Loaded {len(samples)} samples")
-            >>> for problem, solution in samples[:3]:
-            ...     print(f"Problem: {problem}, Solution: {solution}")
+            >>> for problem, answer in samples[:3]:
+            ...     print(f"Problem: {problem}, Answer: {answer}")
         """
         self._validate_tag(tag)
         jsonl_path = self.save_dir / f"{tag}_data.jsonl"
@@ -668,9 +669,14 @@ class DatasetWriter:
                     continue
                 try:
                     data = json.loads(line)
-                    problem = data["problem"]
-                    solution = data["solution"]
-                    samples.append((problem, solution))
+                    problem = data.get("problem")
+                    answer = data.get("answer") or data.get("solution")
+                    if problem is None or answer is None:
+                        self.logger.warning(
+                            f"Line {line_num}: missing 'problem' or 'answer'/'solution' key"
+                        )
+                        continue
+                    samples.append((problem, answer))
                 except (json.JSONDecodeError, KeyError) as e:
                     self.logger.warning(f"Error parsing line {line_num}: {e}")
                     continue

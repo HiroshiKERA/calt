@@ -18,7 +18,7 @@ class FormatChecker:
     """Format checker for SageMath dataset validation.
 
     This class validates that generated datasets are in the correct SageMath format
-    before they are used as input to models. It ensures that all problems and solutions
+    before they are used as input to models.     It ensures that all problems and answers
     can be properly parsed and cast to SageMath's mathematical structures.
 
     The checker is designed to catch format errors early in the data pipeline,
@@ -105,7 +105,7 @@ class FormatChecker:
     def check_format(self, dataset: list[str], num_samples: int | None = None) -> bool:
         """Check if the dataset follows the correct SageMath format.
 
-        This method validates that all problems and solutions in the dataset can be
+        This method validates that all problems and answers in the dataset can be
         properly parsed and cast to SageMath's mathematical structures (PolynomialRing, RR, QQ, ZZ).
         It is designed to be run before using the dataset for model training or evaluation
         to ensure data quality and prevent runtime errors.
@@ -184,23 +184,23 @@ class FormatChecker:
                     )
                     break
 
-                # Parse the line to extract problem and solution
+                # Parse the line to extract problem and answer (format: problem # answer)
                 parsed_result = self._parse_line(line)
                 if parsed_result is None:
                     logger.error(f"Line {line_num}: Failed to parse line")
                     return False
 
-                problem, solution = parsed_result
+                problem, answer = parsed_result
 
                 # Validate problem format
                 if not self._validate_expression(problem):
                     logger.error(f"Line {line_num}: Invalid problem format - {problem}")
                     return False
 
-                # Validate solution format
-                if not self._validate_expression(solution):
+                # Validate answer format
+                if not self._validate_expression(answer):
                     logger.error(
-                        f"Line {line_num}: Invalid solution format - {solution}"
+                        f"Line {line_num}: Invalid answer format - {answer}"
                     )
                     return False
 
@@ -213,29 +213,29 @@ class FormatChecker:
             return False
 
     def _parse_line(self, line: str) -> tuple[list[str], list[str]] | None:
-        """Parse a line in the format "problem # solution".
+        """Parse a line in the format "problem # answer".
 
         Args:
             line (str): Input line to parse.
 
         Returns:
-            tuple[list[str], list[str]] | None: Tuple of (problem, solution) where each is a list of strings, or ``None`` if parsing fails.
+            tuple[list[str], list[str]] | None: Tuple of (problem, answer) where each is a list of strings, or ``None`` if parsing fails.
         """
         if "#" not in line:
             logger.error(f"Line must contain '#' separator: {line}")
             return None
 
         try:
-            problem_part, solution_part = line.split("#", 1)
+            problem_part, answer_part = line.split("#", 1)
             problem = self._parse_expression(problem_part.strip())
-            solution = self._parse_expression(solution_part.strip())
-            return problem, solution
+            answer = self._parse_expression(answer_part.strip())
+            return problem, answer
         except Exception as e:
             logger.error(f"Error parsing line: {line}, error: {e}")
             return None
 
     def _parse_expression(self, expr: str) -> list[str]:
-        """Parse an expression part (problem or solution) into a flat list.
+        """Parse an expression part (problem or answer) into a flat list.
 
         Handles formats like:
         - "x + 1" -> ["x + 1"] (single expression)

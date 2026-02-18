@@ -1,12 +1,14 @@
 """Load preprocessor: convert polynomials from pickle to C/E expanded form.
 
 Converts each polynomial to "C<coeff> E<e1> E<e2> ..." per term, joined by " + ".
-Multiple polynomials (e.g. problem/solution as lists) are joined by " || ".
+Multiple polynomials (e.g. problem/answer as lists) are joined by " || ".
 
 Works with both SymPy (PolyElement) and SageMath polynomials.
 """
 
 from typing import Any
+
+from ..load_preprocessor import _get_answer_from_source
 
 
 def _poly_terms(poly: Any) -> list[tuple[tuple[int, ...], Any]]:
@@ -54,7 +56,7 @@ def poly_to_expanded_form(poly: Any) -> str:
 
 
 def obj_to_expanded_form(obj: Any, delimiter: str = " || ") -> str:
-    """Convert problem/solution (single poly or list of polys) to expanded form string.
+    """Convert problem/answer (single poly or list of polys) to expanded form string.
 
     - Single polynomial -> one "C... E... + ..." string.
     - List of polynomials -> each converted and joined by delimiter (default " || ").
@@ -67,9 +69,9 @@ def obj_to_expanded_form(obj: Any, delimiter: str = " || ") -> str:
 class ExpandedFormLoadPreprocessor:
     """Convert pickle-loaded polynomials to C/E expanded form (input_text, target_text).
 
-    Expects source to be a dict with "problem" and "solution" (as from pickle or JSONL
-    that stored raw polynomial objects). Problem and solution can be a single polynomial
-    or a list of polynomials. Each polynomial is converted to:
+    Expects source to be a dict with "problem" and "answer" (or "solution") (as from
+    pickle or JSONL that stored raw polynomial objects). Problem and answer can be a
+    single polynomial or a list of polynomials. Each polynomial is converted to:
     "C<coeff> E<e1> E<e2> ... + C<coeff> E<e1> ..."
     Multiple polynomials are joined by delimiter (default " || ").
     """
@@ -84,9 +86,11 @@ class ExpandedFormLoadPreprocessor:
                 f"got {type(source).__name__}"
             )
         problem = source.get("problem")
-        solution = source.get("solution")
-        if problem is None or solution is None:
-            raise ValueError("Source must have 'problem' and 'solution' keys")
+        answer = _get_answer_from_source(source)
+        if problem is None or answer is None:
+            raise ValueError(
+                "Source must have 'problem' and 'answer' (or 'solution') keys"
+            )
         input_text = obj_to_expanded_form(problem, delimiter=self.delimiter)
-        target_text = obj_to_expanded_form(solution, delimiter=self.delimiter)
+        target_text = obj_to_expanded_form(answer, delimiter=self.delimiter)
         return input_text, target_text

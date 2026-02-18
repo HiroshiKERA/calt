@@ -14,7 +14,7 @@ class DatasetPipeline:
         >>> cfg = OmegaConf.load("configs/dataset.yaml")
         >>> pipeline = DatasetPipeline.from_config(
         ...     cfg.dataset,
-        ...     problem_generator=my_problem_generator,
+        ...     instance_generator=my_instance_generator,
         ...     statistics_calculator=my_stats_fn,
         ... )
         >>> pipeline.run()
@@ -22,7 +22,7 @@ class DatasetPipeline:
 
     def __init__(
         self,
-        problem_generator,
+        instance_generator,
         statistics_calculator,
         save_dir: str,
         save_text: bool,
@@ -35,7 +35,7 @@ class DatasetPipeline:
         verbose: bool,
         backend: str = "sagemath",
     ) -> None:
-        self.problem_generator = problem_generator
+        self.instance_generator = instance_generator
         self.statistics_calculator = statistics_calculator
         self.save_dir = save_dir
         self.save_text = save_text
@@ -52,12 +52,12 @@ class DatasetPipeline:
     def from_config(
         cls,
         config: DictConfig,
-        problem_generator,
+        instance_generator,
         statistics_calculator=None,
     ) -> "DatasetPipeline":
         """Create a DatasetPipeline from a DictConfig."""
         return cls(
-            problem_generator=problem_generator,
+            instance_generator=instance_generator,
             statistics_calculator=statistics_calculator,
             save_dir=config.save_dir,
             save_text=getattr(config, "save_text", True),
@@ -96,7 +96,7 @@ class DatasetPipeline:
                 "test": self.num_test_samples,
             },
             batch_size=self.batch_size,  # set batch size
-            problem_generator=self.problem_generator,
+            instance_generator=self.instance_generator,
             statistics_calculator=self.statistics_calculator,
             dataset_writer=dataset_writer,
         )

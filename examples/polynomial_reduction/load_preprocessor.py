@@ -5,6 +5,8 @@
 
 from typing import Any
 
+from calt.io.preprocessor.load_preprocessor import _get_answer_from_source
+
 
 class PolynomialReductionLoadPreprocessor:
     """Convert (f, G), (r,) to (input_text, target_text).
@@ -23,11 +25,13 @@ class PolynomialReductionLoadPreprocessor:
         if not isinstance(source, dict):
             raise TypeError("PolynomialReductionLoadPreprocessor expects dict source")
         problem = source.get("problem")
-        solution = source.get("solution")
-        if problem is None or solution is None:
-            raise ValueError("Source must have 'problem' and 'solution' keys")
+        answer = _get_answer_from_source(source)
+        if problem is None or answer is None:
+            raise ValueError(
+                "Source must have 'problem' and 'answer' (or 'solution') keys"
+            )
         (f, G) = problem
-        (r,) = solution
+        (r,) = answer
 
         if self.order == "lex":
             f, G = _to_lex(f, G)
