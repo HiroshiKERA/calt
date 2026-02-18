@@ -69,4 +69,3 @@ def test_generate_stops_per_sequence_after_eos():
         [config.bos_token_id, config.eos_token_id, config.pad_token_id],
         [config.bos_token_id, 5, config.eos_token_id],
     ]
-
