@@ -1,7 +1,7 @@
 """Simplified tests for training pipeline.
 
 This module tests that training pipeline can be set up and run with minimal configuration.
-Uses a single example to keep tests fast and lightweight.
+Parametrized over generic (Transformer) and BART models to cover generation-related flows.
 """
 
 import os
@@ -18,11 +18,14 @@ from calt.trainer import TrainerPipeline
 # Get the examples directory path
 EXAMPLES_DIR = Path(__file__).parent.parent.parent / "examples"
 
-# Use a single simple example for testing
-TEST_EXAMPLE = "gf17_addition"
-
 # Get sample data directory
 SAMPLE_DATA_DIR = Path(__file__).parent / "sample_data"
+
+# (example_dir, model_type): generic = Transformer, bart = BART
+TRAIN_PIPELINE_PARAMS = [
+    ("gf17_addition", "generic"),
+    ("eigvec_3x3", "bart"),
+]
 
 
 def get_sample_data_path(example_dir: str) -> Path:
@@ -30,22 +33,23 @@ def get_sample_data_path(example_dir: str) -> Path:
     return SAMPLE_DATA_DIR / example_dir
 
 
-def test_training_pipeline_setup():
+@pytest.mark.parametrize("example_dir,model_type", TRAIN_PIPELINE_PARAMS)
+def test_training_pipeline_setup(example_dir: str, model_type: str):
     """Test that training pipeline can be set up with minimal config."""
-    example_path = EXAMPLES_DIR / TEST_EXAMPLE
+    example_path = EXAMPLES_DIR / example_dir
     config_path = example_path / "configs" / "train.yaml"
 
     if not config_path.exists():
         pytest.skip(f"Config file not found: {config_path}")
 
     # Check if sample data exists
-    sample_data_path = get_sample_data_path(TEST_EXAMPLE)
+    sample_data_path = get_sample_data_path(example_dir)
     train_sample = sample_data_path / "train_raw.txt"
     test_sample = sample_data_path / "test_raw.txt"
 
     if not train_sample.exists() or not test_sample.exists():
         pytest.skip(
-            f"Sample data not found for {TEST_EXAMPLE}. "
+            f"Sample data not found for {example_dir}. "
             f"Sample data should be in {sample_data_path}"
         )
 
@@ -55,6 +59,9 @@ def test_training_pipeline_setup():
 
         # Load config
         cfg = OmegaConf.load("configs/train.yaml")
+
+        # Override model_type for this parametrized run
+        cfg.model.model_type = model_type
 
         # Override dataset paths to use sample data
         cfg.data.train_dataset_path = str(train_sample.resolve())
@@ -88,22 +95,23 @@ def test_training_pipeline_setup():
         os.chdir(original_cwd)
 
 
-def test_training_pipeline_minimal_run():
+@pytest.mark.parametrize("example_dir,model_type", TRAIN_PIPELINE_PARAMS)
+def test_training_pipeline_minimal_run(example_dir: str, model_type: str):
     """Test that training pipeline can run with minimal training steps."""
-    example_path = EXAMPLES_DIR / TEST_EXAMPLE
+    example_path = EXAMPLES_DIR / example_dir
     config_path = example_path / "configs" / "train.yaml"
 
     if not config_path.exists():
         pytest.skip(f"Config file not found: {config_path}")
 
     # Check if sample data exists
-    sample_data_path = get_sample_data_path(TEST_EXAMPLE)
+    sample_data_path = get_sample_data_path(example_dir)
     train_sample = sample_data_path / "train_raw.txt"
     test_sample = sample_data_path / "test_raw.txt"
 
     if not train_sample.exists() or not test_sample.exists():
         pytest.skip(
-            f"Sample data not found for {TEST_EXAMPLE}. "
+            f"Sample data not found for {example_dir}. "
             f"Sample data should be in {sample_data_path}"
         )
 
@@ -114,6 +122,9 @@ def test_training_pipeline_minimal_run():
 
             # Load config
             cfg = OmegaConf.load("configs/train.yaml")
+
+            # Override model_type for this parametrized run
+            cfg.model.model_type = model_type
 
             # Override dataset paths to use sample data
             cfg.data.train_dataset_path = str(train_sample.resolve())

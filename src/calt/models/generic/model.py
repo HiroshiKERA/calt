@@ -352,6 +352,7 @@ class Transformer(PreTrainedModel):
         decoder_input_ids = torch.full(
             (batch_size, 1), self.config.bos_token_id, device=device
         )
+        finished = torch.zeros(batch_size, dtype=torch.bool, device=device)
 
         for _ in range(max_length):
             decoder_embeddings = self._compute_embeddings(decoder_input_ids)
@@ -373,9 +374,13 @@ class Transformer(PreTrainedModel):
             else:
                 next_token = torch.argmax(next_token_logits, dim=-1, keepdim=True)
 
+            # Keep finished sequences closed by emitting PAD after EOS.
+            next_token[finished.unsqueeze(1)] = pad_token_id
+            newly_finished = next_token.squeeze(1) == eos_token_id
+            finished = finished | newly_finished
             decoder_input_ids = torch.cat([decoder_input_ids, next_token], dim=1)
 
-            if (next_token == eos_token_id).all():
+            if finished.all():
                 break
 
         return decoder_input_ids
