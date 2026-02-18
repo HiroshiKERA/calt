@@ -10,11 +10,14 @@ This module introduces `Trainer`, an extension of
 """
 
 import json
+import logging
 import os
 
 import numpy as np
 import torch
 from transformers import Trainer as HTrainer
+
+logger = logging.getLogger(__name__)
 
 
 class Trainer(HTrainer):
@@ -136,9 +139,6 @@ class Trainer(HTrainer):
         # Also save generation results during evaluation
         # Get current step number if available
         step = getattr(self.state, "global_step", None)
-        import logging
-
-        logger = logging.getLogger(__name__)
         logger.info(
             f"Running evaluate_and_save_generation (step={step}, metric_key_prefix={metric_key_prefix})"
         )
@@ -187,9 +187,7 @@ class Trainer(HTrainer):
             raise ValueError("Trainer: evaluation requires an eval_dataset.")
 
         if len(self.eval_dataset) == 0:
-            import logging
-
-            logging.getLogger(__name__).warning(
+            logger.warning(
                 "eval_dataset is empty; skipping evaluate_and_save_generation."
             )
             return 0.0
@@ -233,9 +231,10 @@ class Trainer(HTrainer):
             all_generated_texts.extend(current_generated_texts)
 
             if labels is not None:
-                labels[labels == -100] = tokenizer.pad_token_id
+                labels_for_decode = labels.clone()
+                labels_for_decode[labels_for_decode == -100] = tokenizer.pad_token_id
                 current_reference_texts = tokenizer.batch_decode(
-                    labels,
+                    labels_for_decode,
                     skip_special_tokens=True,
                     clean_up_tokenization_spaces=True,
                 )
