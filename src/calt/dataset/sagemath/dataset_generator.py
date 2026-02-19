@@ -140,9 +140,7 @@ class DatasetGenerator:
         # Convert first 16 bytes to integer (128 bits) for better collision resistance
         return int.from_bytes(hash_obj.digest()[:16], byteorder="big")
 
-    def _convert_nested_structure(
-        self, obj: ProblemOrAnswer
-    ) -> StringProblemOrAnswer:
+    def _convert_nested_structure(self, obj: ProblemOrAnswer) -> StringProblemOrAnswer:
         """
         Convert nested structure (problem or answer) to string format.
         Handles both simple values, lists, and mixed nested lists.

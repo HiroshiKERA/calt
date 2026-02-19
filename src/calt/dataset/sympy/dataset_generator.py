@@ -190,9 +190,7 @@ class DatasetGenerator:
             return self._convert_poly_to_str(str(obj))
         return str(obj)
 
-    def _convert_nested_structure(
-        self, obj: ProblemOrAnswer
-    ) -> StringProblemOrAnswer:
+    def _convert_nested_structure(self, obj: ProblemOrAnswer) -> StringProblemOrAnswer:
         """
         Convert nested structure (problem or answer) to string format.
         Handles both simple values, lists, and mixed nested lists.

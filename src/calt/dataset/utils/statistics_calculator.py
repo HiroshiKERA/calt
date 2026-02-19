@@ -11,9 +11,7 @@ class BaseStatisticsCalculator(ABC):
     """
 
     @abstractmethod
-    def __call__(
-        self, problem: Any, answer: Any
-    ) -> dict[str, dict[str, int | float]]:
+    def __call__(self, problem: Any, answer: Any) -> dict[str, dict[str, int | float]]:
         """
         Calculate statistics for a single sample.
 

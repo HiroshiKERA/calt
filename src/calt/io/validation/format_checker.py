@@ -199,9 +199,7 @@ class FormatChecker:
 
                 # Validate answer format
                 if not self._validate_expression(answer):
-                    logger.error(
-                        f"Line {line_num}: Invalid answer format - {answer}"
-                    )
+                    logger.error(f"Line {line_num}: Invalid answer format - {answer}")
                     return False
 
                 samples_checked += 1
