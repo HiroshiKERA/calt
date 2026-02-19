@@ -1,7 +1,7 @@
 """Load preprocessor: parse text line into SageMath polynomial lists (dict).
 
-Expects lines like "poly1 | poly2 | poly3 # poly4 | poly5 | poly6" (problem # solution).
-Returns dict with "problem" and "solution" (lists of SageMath polynomials) so that
+Expects lines like "poly1 | poly2 | poly3 # poly4 | poly5 | poly6" (problem # answer).
+Returns dict with "problem" and "answer" (lists of SageMath polynomials) so that
 ExpandedFormLoadPreprocessor can be chained after it.
 """
 
@@ -11,9 +11,9 @@ from typing import Any, Callable
 class TextToSageLoadPreprocessor:
     """Parse text line into SageMath polynomial lists (dict for chaining).
 
-    Expects source to be a string line: "poly1 | poly2 # poly3 | poly4" (problem # solution).
+    Expects source to be a string line: "poly1 | poly2 # poly3 | poly4" (problem # answer).
     Splits by delimiter to get polynomial strings, parses each with ring(poly_str),
-    returns {"problem": [poly, ...], "solution": [poly, ...]} for use with
+    returns {"problem": [poly, ...], "answer": [poly, ...]} for use with
     ExpandedFormLoadPreprocessor (e.g. via ChainLoadPreprocessor).
 
     Args:
@@ -48,9 +48,9 @@ class TextToSageLoadPreprocessor:
         line = source.strip()
         if "#" not in line:
             raise ValueError(
-                f"Text line must contain ' # ' separating problem and solution: {line[:80]!r}..."
+                f"Text line must contain ' # ' separating problem and answer: {line[:80]!r}..."
             )
-        problem_part, solution_part = line.split("#", 1)
+        problem_part, answer_part = line.split("#", 1)
         problem = self._parse_part(problem_part)
-        solution = self._parse_part(solution_part)
-        return {"problem": problem, "solution": solution}
+        answer = self._parse_part(answer_part)
+        return {"problem": problem, "answer": answer}

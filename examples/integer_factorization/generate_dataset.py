@@ -51,7 +51,7 @@ if __name__ == "__main__":
     cfg = OmegaConf.load("configs/data.yaml")
     pipeline = DatasetPipeline.from_config(
         cfg.dataset,
-        problem_generator=integer_factorization_generator,
+        instance_generator=integer_factorization_generator,
         statistics_calculator=integer_factor_stats_calc,
     )
     pipeline.run()

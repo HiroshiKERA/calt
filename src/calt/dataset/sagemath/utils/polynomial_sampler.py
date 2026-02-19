@@ -17,7 +17,32 @@ from sage.rings.polynomial.multi_polynomial_libsingular import MPolynomial_libsi
 
 
 class PolynomialSampler:
-    """Generator for random polynomials with specific constraints"""
+    """Generator for random polynomials with specific constraints.
+
+    The sampler builds polynomials by first choosing a target degree and number
+    of terms (within min/max bounds), then selecting that many distinct
+    monomials and assigning random coefficients from the base ring. Ring and
+    constraints can be given either as (symbols, field_str, order) or as a
+    pre-built PolynomialRing.
+
+    Behavior summary
+    -----------------
+
+    **degree_sampling** controls how monomial degrees are chosen:
+
+    - ``'uniform'``: For each term, a degree in [min_degree, max_degree] is
+      chosen uniformly at random, then a monomial of that degree is chosen.
+      The resulting polynomial's degree distribution is more uniform over the
+      range.
+    - ``'fixed'``: Monomials are chosen uniformly from all monomials of degree
+      at most max_degree. Because there are more such monomials at higher
+      degrees, the polynomial tends to have total degree equal to max_degree.
+
+    **Degree and number of terms**: Every returned polynomial has total
+    degree >= min_degree. The guarantees on total degree and number of
+    terms depend on ``strictly_conditioned`` and ``nonzero_coeff``; see
+    the constructor parameters for details.
+    """
 
     def __init__(
         self,
@@ -34,28 +59,62 @@ class PolynomialSampler:
         num_bound: int | None = None,  # Used for QQ
         strictly_conditioned: bool = True,
         nonzero_instance: bool = True,
-        nonzero_coeff: bool = False,  # Whether to exclude zero coefficients
+        nonzero_coeff: bool = True,
         max_attempts: int = 1000,
     ):
         """
-        Initialize polynomial sampler
+        Initialize polynomial sampler.
 
         Args:
-            symbols: Symbols of polynomial ring (required if ring is None)
-            field_str: Field of polynomial ring (required if ring is None)
-            order: Order of polynomial ring (required if ring is None)
-            ring: PolynomialRing object (alternative to symbols/field_str/order)
-            max_num_terms: Maximum number of terms in polynomial. If None, all possible terms are allowed.
-            max_degree: Maximum degree of polynomial
-            min_degree: Minimum degree of polynomial
-            max_coeff: Maximum coefficient value (used for RR and ZZ)
-            num_bound: Maximum absolute value of coefficients (used for QQ)
-            degree_sampling: How to sample degree ('uniform' or 'fixed')
-            term_sampling: How to sample number of terms ('uniform' or 'fixed')
-            strictly_conditioned: Whether to strictly enforce conditions
-            nonzero_instance: Whether to enforce non-zero instance
-            nonzero_coeff: Whether to exclude zero coefficients during coefficient generation
-            max_attempts: Maximum number of attempts to generate a polynomial satisfying conditions
+            symbols: Variable names for the polynomial ring
+                (required if ring is None).
+            field_str: Base ring specifier: "QQ", "RR", "ZZ", or "GF(p)"
+                for a prime finite field (required if ring is None).
+            order: Term order of the ring, e.g. "degrevlex"
+                (required if ring is None).
+            ring: Pre-built PolynomialRing
+                (alternative to symbols/field_str/order).
+            max_num_terms: Upper bound on number of terms. If None, all
+                monomials of the chosen degree are allowed.
+            max_degree: Maximum total degree of the polynomial.
+            min_degree: Minimum total degree; every returned polynomial
+                has total degree >= min_degree.
+            max_coeff: Bound on coefficient absolute value for RR and ZZ.
+            num_bound: Bound on numerator/denominator absolute value
+                for QQ.
+            degree_sampling: ``'uniform'`` or ``'fixed'``; see class
+                docstring (Behavior summary).
+            term_sampling: ``'uniform'``: number of terms chosen uniformly
+                in [1, max_num_terms]; ``'fixed'``: use max_num_terms.
+            strictly_conditioned: Controls when a generated polynomial
+                is accepted.
+
+                - If True:
+                    - Return only when total degree equals the degree
+                      selected for this sample and number of terms
+                      equals the number of terms selected for this
+                      sample. (Those values are chosen by
+                      degree_sampling and term_sampling; degree is in
+                      [min_degree, max_degree], and number of terms is
+                      at most max_num_terms.)
+                    - If nonzero_coeff=False, some polynomials have
+                      fewer than num_terms terms (zero coefficients);
+                      those are rejected and generation is retried.
+                      RuntimeError is raised if no success within
+                      max_attempts.
+                - If False:
+                    - Return the first polynomial with total degree >=
+                      min_degree and (if nonzero_instance) non-zero.
+                    - Number of terms may be less than the chosen
+                      num_terms when nonzero_coeff=False.
+            nonzero_instance: If True, the zero polynomial is never
+                returned.
+            nonzero_coeff: If True, no coefficient is zero (default);
+                gives a predictable number of terms and fewer retries
+                when strictly_conditioned is True.
+            max_attempts: Maximum trials per polynomial when
+                strictly_conditioned is True; RuntimeError is raised if
+                no success.
         """
         # Validate input parameters
         if ring is not None:
@@ -93,7 +152,7 @@ class PolynomialSampler:
         self.max_attempts = max_attempts
 
     def get_field(self):
-        """Convert field_str to actual sympy domain object"""
+        """Convert field_str to the SageMath base ring (QQ, RR, ZZ, or GF(p))."""
         if self.ring is not None:
             return self.ring.base_ring()
 
@@ -122,13 +181,13 @@ class PolynomialSampler:
 
     def get_ring(self) -> PolynomialRing:
         """
-        Generate polynomial ring
+        Return the polynomial ring (the configured ring if set, otherwise one built from symbols/field_str/order).
 
         Returns:
-            PolynomialRing: Generated polynomial ring
+            PolynomialRing: The polynomial ring.
 
         Raises:
-            ValueError: If polynomial ring creation fails with informative error message
+            ValueError: If polynomial ring creation fails with informative error message.
         """
         if self.ring is not None:
             return self.ring
@@ -344,9 +403,18 @@ class PolynomialSampler:
         size: tuple[int, int],
         density: float = 1.0,
         matrix_type: str | None = None,
-        max_attempts: int = 100,
     ) -> matrix:
-        """Generate a matrix of random polynomials"""
+        """
+        Generate a matrix of random polynomials.
+
+        Args:
+            size: (rows, cols) shape of the matrix.
+            density: Probability that each entry is non-zero (entries may be zeroed at random).
+            matrix_type: If "unimodular_upper_triangular", set diagonal to 1 and strict lower part to 0.
+
+        Returns:
+            A matrix over the polynomial ring with entries sampled by this sampler.
+        """
         rows, cols = size
         num_entries = prod(size)
         R = self.get_ring()
@@ -375,8 +443,8 @@ class PolynomialSampler:
         return M
 
 
-def compute_max_coefficient(poly: MPolynomial_libsingular) -> int:
-    """Compute maximum absolute coefficient value in a polynomial"""
+def compute_max_coefficient(poly: MPolynomial_libsingular) -> int | float:
+    """Compute maximum absolute coefficient value in a polynomial. Returns int for QQ/ZZ, float-like for RR."""
     coeffs = poly.coefficients()
     field = poly.base_ring()
 
@@ -389,6 +457,6 @@ def compute_max_coefficient(poly: MPolynomial_libsingular) -> int:
         return max(max(abs(c.numerator()), abs(c.denominator())) for c in coeffs)
 
 
-def compute_matrix_max_coefficient(M: matrix) -> int:
-    """Compute maximum absolute coefficient value in a polynomial matrix"""
+def compute_matrix_max_coefficient(M: matrix) -> int | float:
+    """Compute maximum absolute coefficient value over all entries of a polynomial matrix. Type as in compute_max_coefficient."""
     return max(compute_max_coefficient(p) for p in M.list())

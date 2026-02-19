@@ -1,6 +1,6 @@
 """Generate polynomial reduction dataset: f, g1..g3 (ZZ, 3 vars, 2--5 terms).
 
-Gröbner basisは常に存在し、I.reduce(f) で簡約は常に成功する。商は使わず余りだけ保存。
+A Gröbner basis always exists and reduction via I.reduce(f) always succeeds. Only the remainder is stored (quotients are not used).
 """
 
 import hashlib

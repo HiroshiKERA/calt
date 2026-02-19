@@ -28,7 +28,7 @@ def main(dryrun: bool):
 
     if dryrun:
         apply_dryrun_settings(cfg)
-        # dryrun でデータセット制限が効いているか確認用
+        # For verifying dataset limits in dryrun mode
         print(
             f"[Dryrun] cfg.data: num_train_samples={cfg.data.get('num_train_samples', 'NOT SET')}, "
             f"num_test_samples={cfg.data.get('num_test_samples', 'NOT SET')}"

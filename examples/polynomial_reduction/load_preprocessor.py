@@ -1,16 +1,18 @@
 """Load preprocessor for polynomial reduction: grevlex/lex, pattern 1 (remainder only) or 2 (quotients + remainder).
 
-データは (f, G), (r,) で保存。pattern 2 のときはロード時に (f - r).lift(I) で商を計算。
+Data is stored as (f, G), (r,). For pattern 2, quotients are computed at load time via (f - r).lift(I).
 """
 
 from typing import Any
+
+from calt.io.preprocessor.load_preprocessor import _get_answer_from_source
 
 
 class PolynomialReductionLoadPreprocessor:
     """Convert (f, G), (r,) to (input_text, target_text).
 
     - order: "grevlex" (use as-is) or "lex" (convert f to lex ring, G via FGLM to lex GB).
-    - pattern: 1 = target is remainder only; 2 = target is quotients | remainder (商は lift で算出).
+    - pattern: 1 = target is remainder only; 2 = target is quotients | remainder (quotients computed via lift).
     """
 
     INNER_SEP = " | "
@@ -23,11 +25,13 @@ class PolynomialReductionLoadPreprocessor:
         if not isinstance(source, dict):
             raise TypeError("PolynomialReductionLoadPreprocessor expects dict source")
         problem = source.get("problem")
-        solution = source.get("solution")
-        if problem is None or solution is None:
-            raise ValueError("Source must have 'problem' and 'solution' keys")
+        answer = _get_answer_from_source(source)
+        if problem is None or answer is None:
+            raise ValueError(
+                "Source must have 'problem' and 'answer' (or 'solution') keys"
+            )
         (f, G) = problem
-        (r,) = solution
+        (r,) = answer
 
         if self.order == "lex":
             f, G = _to_lex(f, G)
@@ -48,7 +52,7 @@ class PolynomialReductionLoadPreprocessor:
 
 
 def _get_quotients(f, r, G):
-    """(f - r).lift(I) で商のリストを返す。I = R.ideal(G)。"""
+    """Return the list of quotients via (f - r).lift(I), where I = R.ideal(G)."""
     R = f.parent()
     ideal = R.ideal(list(G))
     try:

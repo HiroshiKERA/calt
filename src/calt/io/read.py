@@ -80,18 +80,18 @@ def read_data_from_file(
 def read_data_from_jsonl(
     data_path: str, max_samples: int | None = None
 ) -> list[tuple[object, object]]:
-    """Read problem-solution pairs from a JSON Lines file.
+    """Read problem-answer pairs from a JSON Lines file.
 
-    Each line must be a JSON object with "problem" and "solution" keys.
-    Returns raw parsed data (problem/solution may be str, list, or dict)
-    for use with a DatasetLoadPreprocessor.
+    Each line must be a JSON object with "problem" and "answer" keys (or "solution"
+    for backward compatibility). Returns raw parsed data (problem/answer may be str,
+    list, or dict) for use with a DatasetLoadPreprocessor.
 
     Args:
         data_path: Path to the .jsonl file.
         max_samples: Maximum number of samples to read. Use -1 or None for all.
 
     Returns:
-        List of (problem, solution) pairs as parsed from JSON (not yet stringified).
+        List of (problem, answer) pairs as parsed from JSON (not yet stringified).
     """
     if max_samples == -1:
         max_samples = None
@@ -110,10 +110,15 @@ def read_data_from_jsonl(
                 continue
             try:
                 data = json.loads(line)
-                problem = data["problem"]
-                solution = data["solution"]
-                samples.append((problem, solution))
-            except (json.JSONDecodeError, KeyError) as e:
+                problem = data.get("problem")
+                answer = data.get("answer") or data.get("solution")
+                if problem is None or answer is None:
+                    logger.warning(
+                        f"Skip line {line_num} in {data_path}: missing 'problem' or 'answer'/'solution' key"
+                    )
+                    continue
+                samples.append((problem, answer))
+            except json.JSONDecodeError as e:
                 logger.warning(f"Skip line {line_num} in {data_path}: {e}")
                 continue
             if max_samples is not None and len(samples) >= max_samples:
@@ -136,7 +141,7 @@ def read_data_from_jsonl(
 def read_data_from_pickle(
     data_path: str, max_samples: int | None = None
 ) -> list[tuple[object, object]]:
-    """Read problem-solution pairs from a pickle file.
+    """Read problem-answer pairs from a pickle file.
 
     Pickle preserves original Python/SageMath objects, so mathematical
     preprocessing can be applied in a DatasetLoadPreprocessor.
@@ -146,7 +151,7 @@ def read_data_from_pickle(
         max_samples: Maximum number of samples to read. Use -1 or None for all.
 
     Returns:
-        List of (problem, solution) pairs as loaded from pickle.
+        List of (problem, answer) pairs as loaded from pickle.
     """
     if max_samples == -1:
         max_samples = None
@@ -162,7 +167,7 @@ def read_data_from_pickle(
 
     if not isinstance(samples, list):
         raise ValueError(
-            f"Pickle file must contain a list of (problem, solution), got {type(samples)}"
+            f"Pickle file must contain a list of (problem, answer), got {type(samples)}"
         )
     if max_samples is not None:
         samples = samples[:max_samples]
@@ -214,9 +219,9 @@ def load_dataset_texts(
         raw_samples = read_data_from_pickle(data_path, max_samples)
         input_texts = []
         target_texts = []
-        for problem, solution in raw_samples:
+        for problem, answer in raw_samples:
             inp, tgt = dataset_load_preprocessor.process_sample(
-                {"problem": problem, "solution": solution}
+                {"problem": problem, "answer": answer}
             )
             input_texts.append(inp)
             target_texts.append(tgt)
@@ -226,9 +231,9 @@ def load_dataset_texts(
         raw_samples = read_data_from_jsonl(data_path, max_samples)
         input_texts = []
         target_texts = []
-        for problem, solution in raw_samples:
+        for problem, answer in raw_samples:
             inp, tgt = dataset_load_preprocessor.process_sample(
-                {"problem": problem, "solution": solution}
+                {"problem": problem, "answer": answer}
             )
             input_texts.append(inp)
             target_texts.append(tgt)

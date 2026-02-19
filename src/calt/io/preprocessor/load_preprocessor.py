@@ -21,7 +21,7 @@ class DatasetLoadPreprocessor(Protocol):
 
         Args:
             source: For text files, a single line (str). For JSONL,
-                a dict with "problem" and "solution" keys.
+                a dict with "problem" and "answer" keys (or "solution" for backward compatibility).
 
         Returns:
             (input_text, target_text) pair to feed into StandardDataset.
@@ -45,7 +45,7 @@ class TextDefaultLoadPreprocessor:
 
 
 def _to_str(x: Any) -> str:
-    """Convert problem/solution to string; handle nested lists via join.
+    """Convert problem/answer to string; handle nested lists via join.
     Exported for use by load_preprocessors (e.g. last_element)."""
     if isinstance(x, str):
         return x
@@ -56,8 +56,13 @@ def _to_str(x: Any) -> str:
     return str(x)
 
 
+def _get_answer_from_source(source: dict[str, Any]) -> Any:
+    """Get answer from dict; accept 'answer' or 'solution' key for backward compatibility."""
+    return source.get("answer") or source.get("solution")
+
+
 class JsonlDefaultLoadPreprocessor:
-    """Default preprocessor for JSONL: stringify problem and solution."""
+    """Default preprocessor for JSONL: stringify problem and answer."""
 
     def process_sample(self, source: str | dict[str, Any]) -> tuple[str, str]:
         if not isinstance(source, dict):
@@ -65,17 +70,19 @@ class JsonlDefaultLoadPreprocessor:
                 f"JsonlDefaultLoadPreprocessor expects dict, got {type(source).__name__}"
             )
         problem = source.get("problem")
-        solution = source.get("solution")
-        if problem is None or solution is None:
-            raise ValueError("JSONL object must have 'problem' and 'solution' keys")
-        return _to_str(problem), _to_str(solution)
+        answer = _get_answer_from_source(source)
+        if problem is None or answer is None:
+            raise ValueError(
+                "JSONL object must have 'problem' and 'answer' (or 'solution') keys"
+            )
+        return _to_str(problem), _to_str(answer)
 
 
 class UserCallableLoadPreprocessor:
-    """Wraps a user callable (problem, solution) -> (input_text, target_text).
+    """Wraps a user callable (problem, answer) -> (input_text, target_text).
 
     For text sources, the line is split by '#' and the two parts are passed
-    as (input_part, target_part). For JSONL sources, (problem, solution)
+    as (input_part, target_part). For JSONL sources, (problem, answer)
     from the parsed object are passed. The user can use SageMath etc.
     inside their callable.
     """
@@ -88,8 +95,8 @@ class UserCallableLoadPreprocessor:
         """Initialize with user callable.
 
         Args:
-            callable_: (problem, solution) -> (input_text, target_text).
-                problem/solution are str for text, or JSON types for JSONL.
+            callable_: (problem, answer) -> (input_text, target_text).
+                problem/answer are str for text, or JSON types for JSONL.
             source_type: "text", "jsonl", or "auto". If "auto", infers from
                 type of source in process_sample (str -> text, dict -> jsonl).
         """
@@ -115,26 +122,30 @@ class UserCallableLoadPreprocessor:
                     "UserCallableLoadPreprocessor configured for text but got dict"
                 )
             problem = source.get("problem")
-            solution = source.get("solution")
-            if problem is None or solution is None:
-                raise ValueError("JSONL object must have 'problem' and 'solution' keys")
-            return self.callable_(problem, solution)
+            answer = _get_answer_from_source(source)
+            if problem is None or answer is None:
+                raise ValueError(
+                    "JSONL object must have 'problem' and 'answer' (or 'solution') keys"
+                )
+            return self.callable_(problem, answer)
 
         raise TypeError(f"source must be str or dict, got {type(source).__name__}")
 
 
 class PickleDefaultLoadPreprocessor:
-    """Default preprocessor for pickle: problem/solution are Python objects (e.g. SageMath).
+    """Default preprocessor for pickle: problem/answer are Python objects (e.g. SageMath).
     Stringify them for training; user preprocessors can do math before stringifying.
     """
 
     def process_sample(self, source: str | dict[str, Any]) -> tuple[str, str]:
         if not isinstance(source, dict):
             raise TypeError(
-                "PickleDefaultLoadPreprocessor expects dict source (problem, solution)"
+                "PickleDefaultLoadPreprocessor expects dict source (problem, answer)"
             )
         problem = source.get("problem")
-        solution = source.get("solution")
-        if problem is None or solution is None:
-            raise ValueError("Source must have 'problem' and 'solution' keys")
-        return _to_str(problem), _to_str(solution)
+        answer = _get_answer_from_source(source)
+        if problem is None or answer is None:
+            raise ValueError(
+                "Source must have 'problem' and 'answer' (or 'solution') keys"
+            )
+        return _to_str(problem), _to_str(answer)

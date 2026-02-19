@@ -12,7 +12,32 @@ from .single_polynomial_sampler import SinglePolynomialSampler
 
 
 class PolynomialSampler:
-    """Generator for random polynomials with specific constraints"""
+    """Generator for random polynomials with specific constraints (SymPy).
+
+    The sampler builds polynomials by choosing a target degree and number
+    of terms (within min/max bounds), then uses :class:`SinglePolynomialSampler`
+    to select that many distinct monomials and assign random coefficients
+    from the base ring. Ring is specified by symbols, field_str, and order.
+
+    Behavior summary
+    -----------------
+
+    **degree_sampling** controls how monomial degrees are chosen (passed
+    as ``choose_degree`` to the internal sampler):
+
+    - ``'uniform'``: For each term, a degree in [min_degree, max_degree]
+      is chosen uniformly at random, then a monomial of that degree is
+      chosen. The resulting polynomial's degree distribution is more
+      uniform over the range.
+    - ``'fixed'``: Monomials are chosen uniformly from all monomials of
+      degree at most max_degree. The polynomial tends to have total degree
+      equal to max_degree.
+
+    **Degree and number of terms**: Every returned polynomial has total
+    degree >= min_degree. The guarantees on total degree and number of
+    terms depend on ``strictly_conditioned`` and ``nonzero_instance``;
+    see the constructor parameters for details.
+    """
 
     def __init__(
         self,
@@ -31,22 +56,50 @@ class PolynomialSampler:
         max_attempts: int = 1000,
     ) -> None:
         """
-        Initialize polynomial sampler
+        Initialize polynomial sampler.
 
         Args:
-            symbols: Symbols of polynomial ring
-            field_str: Field of polynomial ring
-            order: Order of polynomial ring (default: "grevlex")
-            max_num_terms: Maximum number of terms in polynomial. If None, all possible terms are allowed.
-            max_degree: Maximum degree of polynomial
-            min_degree: Minimum degree of polynomial
-            max_coeff: Maximum coefficient value
-            num_bound: Maximum absolute value of coefficients
-            degree_sampling: How to sample degree ('uniform' or 'fixed')
-            term_sampling: How to sample number of terms ('uniform' or 'fixed')
-            strictly_conditioned: Whether to strictly enforce conditions
-            nonzero_instance: Whether to enforce non-zero instance
-            max_attempts: Maximum number of attempts to generate a polynomial satisfying conditions
+            symbols: Variable names for the polynomial ring.
+            field_str: Base ring specifier: "QQ", "RR", "ZZ", or "GF(p)"
+                for a prime finite field.
+            order: Term order of the ring, e.g. "grevlex".
+            max_num_terms: Upper bound on number of terms. If None, all
+                monomials of the chosen degree are allowed.
+            max_degree: Maximum total degree of the polynomial.
+            min_degree: Minimum total degree; every returned polynomial
+                has total degree >= min_degree.
+            max_coeff: Bound on coefficient absolute value for RR and ZZ.
+            num_bound: Bound on numerator/denominator absolute value
+                for QQ.
+            degree_sampling: ``'uniform'`` or ``'fixed'``; see class
+                docstring (Behavior summary).
+            term_sampling: ``'uniform'``: number of terms chosen uniformly
+                in [1, max_terms] (max_terms bounded by max_num_terms);
+                ``'fixed'``: use max_terms.
+            strictly_conditioned: Controls when a generated polynomial
+                is accepted.
+
+                - If True:
+                    - Return only when total degree equals the degree
+                      selected for this sample and number of terms
+                      equals the number of terms selected for this
+                      sample. (Those values are chosen by
+                      degree_sampling and term_sampling; degree is in
+                      [min_degree, max_degree], and number of terms is
+                      at most max_num_terms.)
+                    - RuntimeError is raised if no success within
+                      max_attempts.
+                - If False:
+                    - Return the first polynomial with total degree >=
+                      min_degree and (if nonzero_instance) non-zero.
+                    - Number of terms may be less than the chosen value
+                      when nonzero_instance is False.
+            nonzero_instance: If True, the zero polynomial is never
+                returned and all coefficients are non-zero (predictable
+                number of terms). If False, coefficients may be zero.
+            max_attempts: Maximum trials per polynomial when
+                strictly_conditioned is True; RuntimeError is raised if
+                no success.
         """
 
         self.symbols = symbols
@@ -65,7 +118,7 @@ class PolynomialSampler:
         self.single_poly_sampler = SinglePolynomialSampler()
 
     def get_field(self) -> Domain:
-        """Convert field_str to actual sympy domain object"""
+        """Return the SymPy domain for field_str (QQ, RR, ZZ, or GF(p))."""
         # Standard field mapping
         standard_fields = {"QQ": QQ, "RR": RR, "ZZ": ZZ}
         if self.field_str in standard_fields:
@@ -90,12 +143,7 @@ class PolynomialSampler:
             raise ValueError(f"Unsupported field: {self.field_str}") from e
 
     def get_ring(self) -> PolyRing:
-        """
-        Generate polynomial ring
-
-        Returns:
-            PolyRing: Generated polynomial ring
-        """
+        """Return the polynomial ring (PolyRing) for the configured symbols, field, and order."""
 
         R, *gens = ring(self.symbols, self.get_field(), self.order)
         return R
@@ -117,7 +165,8 @@ class PolynomialSampler:
             matrix_type: Special matrix type (e.g., 'unimodular_upper_triangular')
 
         Returns:
-            List of polynomials or polynomial matrices
+            List of polynomials, or list of polynomial matrices when
+            size is provided.
         """
         if size is not None:
             return [
@@ -174,7 +223,7 @@ class PolynomialSampler:
         return p
 
     def _generate_random_polynomial(self, degree: int, num_terms: int) -> PolyElement:
-        """Generate a random polynomial with given degree and number of terms"""
+        """Generate a random polynomial with the given degree and number of terms via SinglePolynomialSampler.random_element."""
         choose_degree = self.degree_sampling == "uniform"
         non_zero_coeff = self.nonzero_instance
 
@@ -216,16 +265,28 @@ class PolynomialSampler:
         size: tuple[int, int],
         density: float = 1.0,
         matrix_type: str | None = None,
-        max_attempts: int = 100,
     ) -> np.ndarray:
-        """Generate a matrix of random polynomials"""
+        """
+        Generate a matrix of random polynomials.
+
+        Args:
+            size: (rows, cols) shape of the matrix.
+            density: Probability that each entry is non-zero (entries
+                may be zeroed at random).
+            matrix_type: If "unimodular_upper_triangular", set diagonal
+                to 1 and strict lower part to 0.
+
+        Returns:
+            An array of shape size with polynomial entries from this
+            sampler.
+        """
         rows, cols = size
         num_entries = prod(size)
 
         # Generate polynomial entries
         entries = []
         for _ in range(num_entries):
-            p = self._sample_polynomial(max_attempts)
+            p = self._sample_polynomial()
             # Apply density
             if random.random() >= density:
                 p = p * 0  # Use multiplication by 0 instead of R.zero
@@ -246,7 +307,7 @@ class PolynomialSampler:
         return M
 
     def total_degree(self, poly: PolyElement) -> int:
-        """Compute total degree of a polynomial"""
+        """Return the total degree of the polynomial."""
         if poly.is_zero:
             return 0
         else:
