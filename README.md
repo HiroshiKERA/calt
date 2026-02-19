@@ -63,7 +63,7 @@ conda env create -f environment.yml
 
 - **📚 [Full Documentation](https://hiroshikera.github.io/calt/)** - Complete guide with quickstart and project organization tips
 - **⚡ [Quickstart Guide](https://hiroshikera.github.io/calt/quickstart/)** - Get up and running quickly
-- **📓 [Demo Notebook](https://colab.research.google.com/github/HiroshiKERA/calt/blob/dev/notebooks/demo.ipynb)** - Interactive examples
+- **📓 [Demo Notebook](https://colab.research.google.com/github/HiroshiKERA/calt/blob/dev/examples/demos/minimal_demo.ipynb)** - Interactive examples
 
 ## 🔗 Links
 
