@@ -1,6 +1,6 @@
 """Load preprocessor for polynomial reduction: grevlex/lex, pattern 1 (remainder only) or 2 (quotients + remainder).
 
-データは (f, G), (r,) で保存。pattern 2 のときはロード時に (f - r).lift(I) で商を計算。
+Data is stored as (f, G), (r,). For pattern 2, quotients are computed at load time via (f - r).lift(I).
 """
 
 from typing import Any
@@ -12,7 +12,7 @@ class PolynomialReductionLoadPreprocessor:
     """Convert (f, G), (r,) to (input_text, target_text).
 
     - order: "grevlex" (use as-is) or "lex" (convert f to lex ring, G via FGLM to lex GB).
-    - pattern: 1 = target is remainder only; 2 = target is quotients | remainder (商は lift で算出).
+    - pattern: 1 = target is remainder only; 2 = target is quotients | remainder (quotients computed via lift).
     """
 
     INNER_SEP = " | "
@@ -52,7 +52,7 @@ class PolynomialReductionLoadPreprocessor:
 
 
 def _get_quotients(f, r, G):
-    """(f - r).lift(I) で商のリストを返す。I = R.ideal(G)。"""
+    """Return the list of quotients via (f - r).lift(I), where I = R.ideal(G)."""
     R = f.parent()
     ideal = R.ideal(list(G))
     try:

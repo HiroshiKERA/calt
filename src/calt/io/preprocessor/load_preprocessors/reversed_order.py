@@ -8,8 +8,8 @@ from ..load_preprocessor import _get_answer_from_source, _to_str
 class ReversedOrderLoadPreprocessor:
     """Reverse the order of answer elements (split by delimiter, reverse, rejoin).
 
-    - テキスト行: ``"11,4,11,4 # 11,15,9,13"`` → 入力: ``"11,4,11,4"``, ターゲット: ``"13,9,15,11"``
-    - JSONL: ``{"problem": ..., "answer": ...}`` (or "solution") でも同様。answer を delimiter で分割して反転し再結合。
+    - Text line: ``"11,4,11,4 # 11,15,9,13"`` → input: ``"11,4,11,4"``, target: ``"13,9,15,11"``
+    - JSONL: same for ``{"problem": ..., "answer": ...}`` (or "solution"); split answer by delimiter, reverse, rejoin.
     """
 
     def __init__(self, problem_to_str: Any = None, delimiter: str = ","):
@@ -17,7 +17,7 @@ class ReversedOrderLoadPreprocessor:
         self.delimiter = delimiter
 
     def process_sample(self, source: str | dict[str, Any]) -> tuple[str, str]:
-        # テキスト行 ("11,4,11,4 # 11,15,9,13") の場合 (format: problem # answer)
+        # Text line ("11,4,11,4 # 11,15,9,13") case (format: problem # answer)
         if isinstance(source, str):
             line = source.strip()
             if "#" not in line:
@@ -30,7 +30,7 @@ class ReversedOrderLoadPreprocessor:
             target_text = self._reverse_sequence(s)
             return input_text, target_text
 
-        # JSONL / pickle の dict 形式 {"problem": ..., "answer": ...} (or "solution") の場合
+        # JSONL / pickle dict form {"problem": ..., "answer": ...} (or "solution") case
         if not isinstance(source, dict):
             raise TypeError("ReversedOrderLoadPreprocessor expects str or dict source")
 
@@ -46,7 +46,7 @@ class ReversedOrderLoadPreprocessor:
         return input_text, target_text
 
     def _reverse_sequence(self, s: str) -> str:
-        """区切り文字で分割して反転し、再結合する。"""
+        """Split by delimiter, reverse, and rejoin."""
         if not s.strip():
             return s
         if self.delimiter not in s:
@@ -55,7 +55,7 @@ class ReversedOrderLoadPreprocessor:
         return self.delimiter.join(reversed(tokens))
 
     def _answer_to_reversed_str(self, answer: Any) -> str:
-        """answer (list or str) を反転した文字列で返す。"""
+        """Return answer (list or str) as a reversed string."""
         if isinstance(answer, list) and answer:
             parts = [
                 _to_str(x) if not isinstance(x, str) else x for x in reversed(answer)
