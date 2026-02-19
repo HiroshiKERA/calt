@@ -158,11 +158,6 @@ class MemoryEfficientStatisticsCalculator:
                   "answer": {"total_degree": 8, "num_polynomials": 4}},
                  ...]
         """
-        if len(runtimes) != len(batch_sample_stats):
-            raise ValueError(
-                "runtimes and batch_sample_stats must have the same length, "
-                f"got {len(runtimes)} and {len(batch_sample_stats)}"
-            )
         # Update runtime statistics
         for runtime in runtimes:
             self.runtime_stats.update(runtime)
