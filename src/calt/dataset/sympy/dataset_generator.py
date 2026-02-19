@@ -418,7 +418,7 @@ class DatasetGenerator:
             ... )
             >>>
             >>> # Method 2: Manual DatasetWriter creation (for advanced use cases)
-            >>> from calt.dataset_generator.sympy import DatasetWriter
+            >>> from calt.dataset.sympy import DatasetWriter
             >>> writer = DatasetWriter(save_dir="./datasets", save_text=True, save_json=True)
             >>> generator.run(
             ...     dataset_sizes={"train": 10000, "test": 1000},

@@ -3,6 +3,7 @@ import logging
 import pickle
 from datetime import timedelta
 from pathlib import Path
+from typing import Any
 
 import yaml
 
@@ -45,7 +46,15 @@ class TimedeltaDumper(yaml.SafeDumper):
 
 
 def timedelta_representer(dumper: TimedeltaDumper, data: timedelta) -> yaml.ScalarNode:
-    """Convert timedelta to float seconds."""
+    """Convert timedelta to float seconds for YAML serialization.
+
+    Args:
+        dumper: YAML SafeDumper instance.
+        data: timedelta to serialize.
+
+    Returns:
+        YAML ScalarNode representing total seconds as float.
+    """
     return dumper.represent_float(data.total_seconds())
 
 
@@ -116,7 +125,7 @@ class DatasetWriter:
         self.save_json = save_json
         self.logger = logging.getLogger(__name__)
         self._file_handles: dict[
-            str, dict[str, any]
+            str, dict[str, Any]
         ] = {}  # {tag: {file_type: file_handle}}
         TimedeltaDumper.add_representer(timedelta, timedelta_representer)
 
@@ -206,6 +215,12 @@ class DatasetWriter:
         - Single-level list -> join with INNER_SEP (" | ")
         - List containing nested lists -> join each nested list with INNER_SEP (" | "),
           then join all parts with OUTER_SEP (" || ")
+
+        Args:
+            obj: Problem or answer in string format (str or list with at most 2 levels).
+
+        Returns:
+            String with elements joined by INNER_SEP and/or OUTER_SEP.
 
         Raises:
             ValueError: If obj contains lists deeper than 2 levels
@@ -366,7 +381,8 @@ class DatasetWriter:
         """
         Close all open file handles.
 
-        This method should be called when the writer is no longer needed.
+        Closes every tag that was opened with open(tag). Should be called when
+        the writer is no longer needed (e.g., before exiting or when using as context manager).
         """
         for tag in list(self._file_handles.keys()):
             self.close(tag)
@@ -375,8 +391,12 @@ class DatasetWriter:
         """
         Combine individual batch files into a single pickle file.
 
+        Called from close(tag) when batch pickle files exist for the tag.
+        Merges all batch_*.pkl in order, writes the final {tag}_data.pkl, then
+        removes batch files and the batch directory.
+
         Args:
-            tag: Dataset tag
+            tag: Dataset tag (e.g., "train", "test").
         """
         batch_dir = self._file_handles[tag]["batch_dir"]
         final_pickle_path = self.save_dir / f"{tag}_data.pkl"
@@ -524,8 +544,13 @@ class DatasetWriter:
         """
         Legacy save_batch method for backward compatibility.
 
-        This method is used when file handles are not open, maintaining the original
-        behavior of opening/closing files for each batch.
+        Used when file handles are not open (open(tag) was not called), maintaining
+        the original behavior of opening/closing files for each batch.
+
+        Args:
+            samples: List of (problem, answer) pairs in string format.
+            tag: Dataset tag (e.g., "train", "test", "validation").
+            batch_idx: Batch index; 0 overwrites/writes new files, >0 appends.
         """
         dataset_dir = self._create_dataset_dir()
 

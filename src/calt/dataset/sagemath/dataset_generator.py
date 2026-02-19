@@ -128,7 +128,7 @@ class DatasetGenerator:
 
         Args:
             sample_index: Sample identifier (global sample index, independent of batch size)
-            tag: Dataset tag (e.g.,"train", "test", "eval")
+            tag: Dataset tag (e.g., "train", "test", "eval")
 
         Returns:
             Integer seed value (128 bits)
@@ -394,7 +394,7 @@ class DatasetGenerator:
             ... )
             >>>
             >>> # Method 2: Manual DatasetWriter creation (for advanced use cases)
-            >>> from calt.dataset_generator.sagemath import DatasetWriter
+            >>> from calt.dataset.sagemath import DatasetWriter
             >>> writer = DatasetWriter(save_dir="./datasets", save_text=True, save_json=True)
             >>> generator.run(
             ...     dataset_sizes={"train": 10000, "test": 1000},

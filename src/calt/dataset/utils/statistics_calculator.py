@@ -36,10 +36,10 @@ class BaseStatisticsCalculator(ABC):
 
 class IncrementalStatistics:
     """
-    Calculate statistics incrementally without storing all data in memory.
+    Calculates statistics incrementally without storing all data in memory.
 
-    This class implements Welford's online algorithm for calculating mean and variance
-    without storing all data points. The standard deviation is calculated as the
+    This class implements Welford's online algorithm for mean and variance
+    without storing all data points. The standard deviation is the
     population standard deviation (sqrt(variance)).
 
     Reference: Welford, B. P. (1962). "Note on a method for calculating corrected sums
@@ -60,9 +60,9 @@ class IncrementalStatistics:
 
         This method implements the core of Welford's algorithm:
         1. Update count
-        2. Calculate delta from old mean
+        2. Compute delta from current mean
         3. Update mean incrementally
-        4. Update M2 (sum of squared differences) for variance calculation
+        4. Update M2 using delta and delta2 (for variance calculation)
 
         Args:
             value: New value to include in statistics
@@ -99,8 +99,8 @@ class IncrementalStatistics:
             Dictionary containing:
             - mean: Arithmetic mean of all values
             - std: Population standard deviation (sqrt(variance))
-            - min: Minimum value observed
-            - max: Maximum value observed
+            - min: Minimum value observed (0.0 if no values have been added)
+            - max: Maximum value observed (0.0 if no values have been added)
         """
         if self.count == 0:
             return {"mean": 0.0, "std": 0.0, "min": 0.0, "max": 0.0}
@@ -128,14 +128,14 @@ class MemoryEfficientStatisticsCalculator:
     """
 
     def __init__(self):
-        """Initialize incremental sample statistics calculator."""
+        """Initialize the memory-efficient statistics calculator."""
         self.runtime_stats = IncrementalStatistics()
         self.sample_stats = {}  # Store aggregated sample statistics by category
 
     def update_batch(
         self,
         runtimes: list[float],
-        batch_sample_stats: list[dict[str, dict[str, int | float]]],
+        batch_sample_stats: list[dict[str, dict[str, int | float] | int | float]],
     ) -> None:
         """
         Update statistics with a batch of results using Welford's online algorithm.
@@ -145,18 +145,26 @@ class MemoryEfficientStatisticsCalculator:
         control and efficiency.
 
         Args:
-            runtimes: List of runtime values for each sample in the batch
-            batch_sample_stats: List of sample statistics dictionaries for the current batch.
-                               Each dictionary has the structure:
-                               {"category1": {"metric1": value1, ...},
-                                "category2": {"metric1": value1, ...}}
-                               Example:
-                               [{"problem": {"total_degree": 2, "num_polynomials": 3},
-                                 "answer": {"total_degree": 3, "num_polynomials": 3}},
-                                {"problem": {"total_degree": 5, "num_polynomials": 4},
-                                 "answer": {"total_degree": 8, "num_polynomials": 4}},
-                                ...]
+            runtimes: List of runtime values for each sample in the batch.
+                Must have the same length as batch_sample_stats.
+            batch_sample_stats: List of sample statistics for the current batch
+                (one dict per sample). Each dictionary has the structure:
+                {"category1": {"metric1": value1, ...},
+                 "category2": {"metric1": value1, ...}}
+                Alternatively, flat form {"category": value} is supported.
+                Every value must be int or float; other types raise TypeError.
+                Example:
+                [{"problem": {"total_degree": 2, "num_polynomials": 3},
+                  "answer": {"total_degree": 3, "num_polynomials": 3}},
+                 {"problem": {"total_degree": 5, "num_polynomials": 4},
+                  "answer": {"total_degree": 8, "num_polynomials": 4}},
+                 ...]
         """
+        if len(runtimes) != len(batch_sample_stats):
+            raise ValueError(
+                "runtimes and batch_sample_stats must have the same length, "
+                f"got {len(runtimes)} and {len(batch_sample_stats)}"
+            )
         # Update runtime statistics
         for runtime in runtimes:
             self.runtime_stats.update(runtime)
@@ -171,18 +179,27 @@ class MemoryEfficientStatisticsCalculator:
                         self.sample_stats[category] = {}
 
                     for stat_name, value in category_stats.items():
-                        if isinstance(value, (int, float)):
-                            if stat_name not in self.sample_stats[category]:
-                                self.sample_stats[category][stat_name] = (
-                                    IncrementalStatistics()
-                                )
-                            self.sample_stats[category][stat_name].update(float(value))
+                        if not isinstance(value, (int, float)):
+                            raise TypeError(
+                                f"Expected int or float for statistic '{category}.{stat_name}', "
+                                f"got {type(value).__name__}: {value!r}"
+                            )
+                        if stat_name not in self.sample_stats[category]:
+                            self.sample_stats[category][stat_name] = (
+                                IncrementalStatistics()
+                            )
+                        self.sample_stats[category][stat_name].update(float(value))
 
                 elif isinstance(category_stats, (int, float)):
                     # Handle flat structure
                     if category not in self.sample_stats:
                         self.sample_stats[category] = IncrementalStatistics()
                     self.sample_stats[category].update(float(category_stats))
+                else:
+                    raise TypeError(
+                        f"Expected dict or int/float for category '{category}', "
+                        f"got {type(category_stats).__name__}: {category_stats!r}"
+                    )
 
     def get_overall_statistics(
         self, total_time: float, num_samples: int
@@ -191,8 +208,8 @@ class MemoryEfficientStatisticsCalculator:
         Get overall statistics.
 
         Args:
-            total_time: Total processing time
-            num_samples: Total number of samples
+            total_time: Total processing time in seconds.
+            num_samples: Total number of samples processed.
 
         Returns:
             Dictionary containing overall statistics with the structure:
@@ -204,6 +221,8 @@ class MemoryEfficientStatisticsCalculator:
                 "problem_stats": {"metric1": {"mean": float, "std": float, "min": float, "max": float}, ...},
                 "answer_stats": {"metric1": {"mean": float, "std": float, "min": float, "max": float}, ...}
             }
+            The keys "{category}_stats" (e.g. problem_stats, answer_stats) correspond
+            to the categories passed to update_batch.
         """
         runtime_stats = self.runtime_stats.get_statistics()
 
