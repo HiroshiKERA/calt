@@ -337,7 +337,7 @@ class DatasetGenerator:
         - Incremental statistics calculation to avoid memory issues
         - Reproducible generation with unique seeds for each sample
         - Support for nested data structures (up to 2 levels)
-        - Multiple output formats (pickle, text, JSON) via DatasetWriter
+        - Multiple output formats (text, JSON Lines) via DatasetWriter
 
         Args:
             dataset_sizes: Dictionary mapping dataset names to number of samples.
