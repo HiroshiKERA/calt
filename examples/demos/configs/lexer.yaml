@@ -7,7 +7,7 @@ vocab:
     coefficients: ["", 0, 6]  # (prefix, min, max_inclusive)
     exponents: ["E", 0, 20]
     variables: ["x", 0, 2]
-  misc: ["+", "*", "^", "(", ")","|"]
+  misc: ["+", "*", "^", "(", ")","|", "-"]
   special_tokens: {}
   flags:
     include_base_vocab: true
