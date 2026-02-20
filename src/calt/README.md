@@ -18,7 +18,7 @@ uv pip install --upgrade build
 python -m build
 
 # Install the library itself (adjust version as needed)
-uv pip install dist/calt_x-0.1.0-py3-none-any.whl  
+uv pip install dist/calt_x-1.0.0-py3-none-any.whl  
 
 # Install development dependencies
 uv pip install -e ".[dev]"
