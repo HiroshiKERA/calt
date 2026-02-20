@@ -1,0 +1,1529 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    
+      <meta name="description" content="Documentation for CALT library, a library for computational algebra using Transformers">
+    
+    
+    
+      <link rel="canonical" href="https://hiroshikera.github.io/calt/configuration/">
+    
+    
+      <link rel="prev" href="../model_pipeline/">
+    
+    
+    
+    <link rel="icon" href="../assets/logo-light.png" sizes="any">
+    <link rel="icon" href="../assets/logo-auto.svg" type="image/svg+xml">
+    <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.14">
+
+    
+      
+        <title>Configuration - CALT library</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.84d31ad4.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        
+        <link rel="stylesheet" href="../assets/external/fonts.googleapis.com/css.49ea35f2.css">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#configuration" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      <div data-md-color-scheme="default" data-md-component="outdated" hidden>
+        
+      </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="CALT library" class="md-header__button md-logo" aria-label="CALT library" data-md-component="logo">
+      <!-- Logo -->
+<img src="../assets/logo-light.svg" alt="logo" class="logo-light" />
+<img src="../assets/logo-dark.svg" alt="logo" class="logo-dark" />
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            CALT library
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Configuration
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: light)" data-md-color-scheme="default" data-md-color-primary="custom" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="(prefers-color-scheme: dark)" data-md-color-scheme="slate" data-md-color-primary="custom" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/HiroshiKERA/calt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+    
+      
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href=".." class="md-tabs__link">
+          
+  
+  
+  User Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+    
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="CALT library" class="md-nav__button md-logo" aria-label="CALT library" data-md-component="logo">
+      <!-- Logo -->
+<img src="../assets/logo-light.svg" alt="logo" class="logo-light" />
+<img src="../assets/logo-dark.svg" alt="logo" class="logo-dark" />
+    </a>
+    CALT library
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/HiroshiKERA/calt" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    GitHub
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    User Guide
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_1">
+            <span class="md-nav__icon md-icon"></span>
+            User Guide
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Welcome
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_1_2" id="__nav_1_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    CALT Components
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_1_2">
+            <span class="md-nav__icon md-icon"></span>
+            CALT Components
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_2_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_2_1" id="__nav_1_2_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Dataset pipeline
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_1_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            Dataset pipeline
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dataset_generator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dataset_sagemath/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    SageMath backend
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dataset_sympy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    SymPy backend
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_2_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_2_2" id="__nav_1_2_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    IO pipeline
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_1_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            IO pipeline
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../io_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../io_lexer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Lexer and vocabulary
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../io_load_preprocessors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Load preprocessors
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../io_visualization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Visualization
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_2_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_2_3" id="__nav_1_2_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Trainer pipeline
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_1_2_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            Trainer pipeline
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../trainer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../model_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Model pipeline
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Configuration
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    Configuration
+    
+  </span>
+  
+
+      </a>
+      
+        
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#datayaml-dataset-generation-datasetpipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      data.yaml – dataset generation (DatasetPipeline)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#trainyaml-model-and-training-modelpipeline-trainerpipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      train.yaml – model and training (ModelPipeline, TrainerPipeline)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lexeryaml-io-and-vocabulary-iopipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      lexer.yaml – IO and vocabulary (IOPipeline)
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#datayaml-dataset-generation-datasetpipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      data.yaml – dataset generation (DatasetPipeline)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#trainyaml-model-and-training-modelpipeline-trainerpipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      train.yaml – model and training (ModelPipeline, TrainerPipeline)
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#lexeryaml-io-and-vocabulary-iopipeline" class="md-nav__link">
+    <span class="md-ellipsis">
+      lexer.yaml – IO and vocabulary (IOPipeline)
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="configuration">Configuration<a class="headerlink" href="#configuration" title="Permanent link">&para;</a></h1>
+<p>Example tasks in <code>calt/examples/*</code> share a common configuration pattern based on
+three YAML files:</p>
+<ul>
+<li><a href="#datayaml-dataset-generation-datasetpipeline">configs/data.yaml</a> – controls dataset generation via <code>DatasetPipeline</code>.</li>
+<li><a href="#trainyaml-model-and-training-modelpipeline-trainerpipeline">configs/train.yaml</a> – main control file for the model, training loop, and WandB logging via
+  <code>ModelPipeline</code> and <code>TrainerPipeline</code> (references <code>lexer.yaml</code> in its <code>data</code> block).</li>
+<li><a href="#lexeryaml-io-and-vocabulary-iopipeline">configs/lexer.yaml</a> – controls tokenisation and vocabulary via <code>IOPipeline</code>; path set in <code>train.yaml</code>’s <code>data.lexer_config</code>.</li>
+</ul>
+<p>All three are loaded with <code>OmegaConf.load</code> and passed around as <code>omegaconf.DictConfig</code>
+objects, so they support dot-style access (e.g. <code>cfg.data</code>, <code>cfg.model</code>, <code>cfg.train</code>).
+WandB configuration can be included in <code>cfg.train.wandb</code> or passed separately as <code>cfg.wandb</code>.</p>
+<h2 id="datayaml-dataset-generation-datasetpipeline"><code>data.yaml</code> – dataset generation (<code>DatasetPipeline</code>)<a class="headerlink" href="#datayaml-dataset-generation-datasetpipeline" title="Permanent link">&para;</a></h2>
+<p>Example tasks under <code>calt/examples/*</code> use <code>configs/data.yaml</code> to drive dataset generation
+through <a href="../dataset_generator/#calt.dataset.pipeline.DatasetPipeline">DatasetPipeline</a>. Typical usage:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">omegaconf</span><span class="w"> </span><span class="kn">import</span> <span class="n">OmegaConf</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">calt.dataset</span><span class="w"> </span><span class="kn">import</span> <span class="n">DatasetPipeline</span>
+
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">OmegaConf</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;configs/data.yaml&quot;</span><span class="p">)</span>
+<span class="n">pipeline</span> <span class="o">=</span> <span class="n">DatasetPipeline</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span>
+    <span class="n">cfg</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span>
+    <span class="n">instance_generator</span><span class="o">=</span><span class="n">my_instance_generator</span><span class="p">,</span>
+    <span class="n">statistics_calculator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">pipeline</span><span class="o">.</span><span class="n">run</span><span class="p">()</span>
+</code></pre></div>
+<p>The <code>dataset</code> block in <code>data.yaml</code> controls all dataset-generation behaviour. Example:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">dataset</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">save_dir</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;./data&quot;</span>
+<span class="w">  </span><span class="nt">num_train_samples</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100000</span>
+<span class="w">  </span><span class="nt">num_test_samples</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">1000</span>
+<span class="w">  </span><span class="nt">batch_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">10000</span>
+<span class="w">  </span><span class="nt">n_jobs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">4</span>
+<span class="w">  </span><span class="nt">root_seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
+<span class="w">  </span><span class="nt">verbose</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">backend</span><span class="p">:</span><span class="w"> </span><span class="s">&quot;sagemath&quot;</span>
+<span class="w">  </span><span class="nt">save_text</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">save_json</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+</code></pre></div>
+<details>
+<summary><code>dataset</code> — Passed to DatasetPipeline.from_config</summary>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>save_dir</code></td>
+<td>Base directory where all splits (train/test/…) are written.</td>
+</tr>
+<tr>
+<td><code>num_train_samples</code></td>
+<td>Number of training samples to generate (size of the <code>"train"</code> split).</td>
+</tr>
+<tr>
+<td><code>num_test_samples</code></td>
+<td>Number of test samples to generate (size of the <code>"test"</code> split).</td>
+</tr>
+<tr>
+<td><code>batch_size</code></td>
+<td>Batch size passed to <code>DatasetGenerator.run</code> for efficient multiprocessing.</td>
+</tr>
+<tr>
+<td><code>n_jobs</code></td>
+<td>Number of worker processes used by the generator (<code>backend="multiprocessing"</code>).</td>
+</tr>
+<tr>
+<td><code>root_seed</code></td>
+<td>Global seed used to derive per-sample seeds in the backend.</td>
+</tr>
+<tr>
+<td><code>verbose</code></td>
+<td>Whether the generator prints progress information.</td>
+</tr>
+<tr>
+<td><code>backend</code></td>
+<td>Which implementation to use: <code>"sagemath"</code> → <a href="../dataset_sagemath/">SageMath backend</a>, <code>"sympy"</code> → <a href="../dataset_sympy/">SymPy backend</a>.</td>
+</tr>
+<tr>
+<td><code>save_text</code></td>
+<td>Whether to write human-readable <code>.txt</code> files (<code>text_raw.txt</code>, etc.).</td>
+</tr>
+<tr>
+<td><code>save_json</code></td>
+<td>Whether to write <code>.jsonl</code> files preserving the nested Python structure.</td>
+</tr>
+</tbody>
+</table>
+</details>
+<p>Under the hood, <a href="../dataset_generator/#calt.dataset.pipeline.DatasetPipeline">DatasetPipeline</a> resolves the appropriate <code>DatasetGenerator</code> for the chosen <code>backend</code> and uses the common <a href="../dataset_generator/#datasetwriter">DatasetWriter</a>; both are configured from the same options.</p>
+<h2 id="trainyaml-model-and-training-modelpipeline-trainerpipeline"><code>train.yaml</code> – model and training (<code>ModelPipeline</code>, <code>TrainerPipeline</code>)<a class="headerlink" href="#trainyaml-model-and-training-modelpipeline-trainerpipeline" title="Permanent link">&para;</a></h2>
+<p>Example tasks under <code>calt/examples/*</code> use <code>configs/train.yaml</code> as the main control file for experiments. It is loaded with <code>OmegaConf.load</code> and passed to <a href="../io_pipeline/">IOPipeline</a>, <a href="../model_pipeline/">ModelPipeline</a>, and <a href="../trainer/">TrainerPipeline</a>. Typical usage:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">omegaconf</span><span class="w"> </span><span class="kn">import</span> <span class="n">OmegaConf</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">calt.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">IOPipeline</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">calt.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelPipeline</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">calt.trainer</span><span class="w"> </span><span class="kn">import</span> <span class="n">TrainerPipeline</span>
+
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">OmegaConf</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;configs/train.yaml&quot;</span><span class="p">)</span>
+
+<span class="n">io_dict</span> <span class="o">=</span> <span class="n">IOPipeline</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">ModelPipeline</span><span class="o">.</span><span class="n">from_io_dict</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">io_dict</span><span class="p">)</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="n">trainer_pipeline</span> <span class="o">=</span> <span class="n">TrainerPipeline</span><span class="o">.</span><span class="n">from_io_dict</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">train</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">io_dict</span><span class="p">)</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+<span class="n">trainer_pipeline</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+<span class="n">success_rate</span> <span class="o">=</span> <span class="n">trainer_pipeline</span><span class="o">.</span><span class="n">evaluate_and_save_generation</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Success rate: </span><span class="si">{</span><span class="mi">100</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">success_rate</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
+</code></pre></div>
+<p>The top-level blocks in <code>train.yaml</code> are <code>data</code>, <code>model</code>, <code>train</code>, and optionally <code>wandb</code> (under <code>train</code> or separate). Example:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">data</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">train_dataset_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./data/train_raw.txt</span>
+<span class="w">  </span><span class="nt">test_dataset_path</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./data/test_raw.txt</span>
+<span class="w">  </span><span class="nt">lexer_config</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./configs/lexer.yaml</span>
+<span class="w">  </span><span class="nt">num_train_samples</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-1</span>
+<span class="w">  </span><span class="nt">num_test_samples</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">-1</span>
+<span class="w">  </span><span class="nt">validate_train_tokens</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">validate_test_tokens</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">display_samples</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">5</span>
+
+<span class="nt">model</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">model_type</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">generic</span>
+<span class="w">  </span><span class="nt">num_encoder_layers</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">6</span>
+<span class="w">  </span><span class="nt">num_encoder_heads</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+<span class="w">  </span><span class="nt">num_decoder_layers</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">6</span>
+<span class="w">  </span><span class="nt">num_decoder_heads</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">8</span>
+<span class="w">  </span><span class="nt">d_model</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">512</span>
+<span class="w">  </span><span class="nt">encoder_ffn_dim</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2048</span>
+<span class="w">  </span><span class="nt">decoder_ffn_dim</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">2048</span>
+<span class="w">  </span><span class="nt">max_sequence_length</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">512</span>
+
+<span class="nt">train</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">save_dir</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">./results</span>
+<span class="w">  </span><span class="nt">num_train_epochs</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">100</span>
+<span class="w">  </span><span class="nt">learning_rate</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.0001</span>
+<span class="w">  </span><span class="nt">weight_decay</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.01</span>
+<span class="w">  </span><span class="nt">warmup_ratio</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0.1</span>
+<span class="w">  </span><span class="nt">batch_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">16</span>
+<span class="w">  </span><span class="nt">test_batch_size</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">16</span>
+<span class="w">  </span><span class="nt">seed</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">42</span>
+<span class="w">  </span><span class="nt">wandb</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">project</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">calt</span>
+<span class="w">    </span><span class="nt">group</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gf17_addition</span>
+<span class="w">    </span><span class="nt">name</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">gf17_addition</span>
+</code></pre></div>
+<details>
+<summary><code>data</code> — Passed to IOPipeline.from_config</summary>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>lexer_config</code></td>
+<td>Path to <code>lexer.yaml</code> (required).</td>
+</tr>
+<tr>
+<td><code>train_dataset_path</code></td>
+<td>Path to training raw text file.</td>
+</tr>
+<tr>
+<td><code>test_dataset_path</code></td>
+<td>Path to test raw text file.</td>
+</tr>
+<tr>
+<td><code>num_train_samples</code></td>
+<td>Number of samples to load for training (-1 = all).</td>
+</tr>
+<tr>
+<td><code>num_test_samples</code></td>
+<td>Number of samples to load for evaluation (-1 = all).</td>
+</tr>
+<tr>
+<td><code>validate_train_tokens</code></td>
+<td>Whether to validate that all training tokens are in vocab (default false).</td>
+</tr>
+<tr>
+<td><code>validate_test_tokens</code></td>
+<td>Whether to validate test tokens (default true).</td>
+</tr>
+<tr>
+<td><code>display_samples</code></td>
+<td>Number of sample lines to print when loading (0 to disable).</td>
+</tr>
+<tr>
+<td><code>use_jsonl</code></td>
+<td>If true, load from JSONL instead of raw text.</td>
+</tr>
+<tr>
+<td><code>use_pickle</code></td>
+<td>If true, load from pickle.</td>
+</tr>
+<tr>
+<td><code>train_dataset_jsonl</code>, <code>test_dataset_jsonl</code></td>
+<td>Paths when using JSONL.</td>
+</tr>
+<tr>
+<td><code>train_dataset_pickle</code>, <code>test_dataset_pickle</code></td>
+<td>Paths when using pickle.</td>
+</tr>
+<tr>
+<td><code>dataset_load_preprocessor</code></td>
+<td>Optional preprocessor for custom loading.</td>
+</tr>
+</tbody>
+</table>
+</details>
+<details>
+<summary><code>model</code> — Passed to ModelPipeline.from_io_dict</summary>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>model_type</code></td>
+<td>Model architecture (e.g. <code>generic</code>, <code>bart</code>).</td>
+</tr>
+<tr>
+<td><code>num_encoder_layers</code>, <code>num_encoder_heads</code></td>
+<td>Encoder depth and attention heads.</td>
+</tr>
+<tr>
+<td><code>num_decoder_layers</code>, <code>num_decoder_heads</code></td>
+<td>Decoder depth and attention heads.</td>
+</tr>
+<tr>
+<td><code>d_model</code></td>
+<td>Hidden size (embedding dimension).</td>
+</tr>
+<tr>
+<td><code>encoder_ffn_dim</code>, <code>decoder_ffn_dim</code></td>
+<td>Feed-forward dimension in encoder/decoder.</td>
+</tr>
+<tr>
+<td><code>max_sequence_length</code></td>
+<td>Maximum sequence length.</td>
+</tr>
+</tbody>
+</table>
+</details>
+<details>
+<summary><code>train</code> — Converted to TrainingArguments by TrainerPipeline</summary>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>save_dir</code></td>
+<td>Output directory for checkpoints and logs. Passed to HuggingFace <code>TrainingArguments.output_dir</code>. If omitted, <code>output_dir</code> is used; if both are missing, defaults to <code>"./tmp"</code>.</td>
+</tr>
+<tr>
+<td><code>output_dir</code></td>
+<td>Alias for <code>save_dir</code>. Used when <code>save_dir</code> is not set.</td>
+</tr>
+<tr>
+<td><code>num_train_epochs</code></td>
+<td>Number of training epochs.</td>
+</tr>
+<tr>
+<td><code>learning_rate</code></td>
+<td>Learning rate for the optimizer.</td>
+</tr>
+<tr>
+<td><code>weight_decay</code></td>
+<td>Weight decay (L2 penalty) coefficient.</td>
+</tr>
+<tr>
+<td><code>warmup_ratio</code></td>
+<td>Fraction of training steps used for a linear warmup from 0 to <code>learning_rate</code> (0 to 1).</td>
+</tr>
+<tr>
+<td><code>batch_size</code></td>
+<td>Per-device training batch size. With multiple GPUs, this is divided by the number of devices and passed as <code>per_device_train_batch_size</code>.</td>
+</tr>
+<tr>
+<td><code>test_batch_size</code></td>
+<td>Per-device evaluation batch size. Similarly passed as <code>per_device_eval_batch_size</code>.</td>
+</tr>
+<tr>
+<td><code>lr_scheduler_type</code></td>
+<td>Learning rate schedule. Use <code>"linear"</code> or <code>"constant"</code>. Defaults to <code>"linear"</code> if not set.</td>
+</tr>
+<tr>
+<td><code>max_grad_norm</code></td>
+<td>Maximum gradient norm for clipping.</td>
+</tr>
+<tr>
+<td><code>optimizer</code></td>
+<td>Optimizer name (passed to HuggingFace <code>optim</code>).</td>
+</tr>
+<tr>
+<td><code>num_workers</code></td>
+<td>Number of DataLoader worker processes (<code>dataloader_num_workers</code>).</td>
+</tr>
+<tr>
+<td><code>dataloader_pin_memory</code></td>
+<td>DataLoader <code>pin_memory</code> option. Defaults to <code>true</code>.</td>
+</tr>
+<tr>
+<td><code>eval_strategy</code></td>
+<td>When to run evaluation (e.g. <code>"steps"</code>, <code>"epoch"</code>). Defaults to <code>"steps"</code>.</td>
+</tr>
+<tr>
+<td><code>eval_steps</code></td>
+<td>Run evaluation every this many steps when <code>eval_strategy</code> is <code>"steps"</code>. Defaults to <code>1000</code>.</td>
+</tr>
+<tr>
+<td><code>save_strategy</code></td>
+<td>When to save checkpoints (e.g. <code>"steps"</code>, <code>"epoch"</code>). Defaults to <code>"steps"</code>.</td>
+</tr>
+<tr>
+<td><code>save_steps</code></td>
+<td>Save a checkpoint every this many steps when <code>save_strategy</code> is <code>"steps"</code>. Defaults to <code>1000</code>.</td>
+</tr>
+<tr>
+<td><code>save_total_limit</code></td>
+<td>Maximum number of checkpoints to keep; older ones are removed. Defaults to <code>1</code>.</td>
+</tr>
+<tr>
+<td><code>save_safetensors</code></td>
+<td>If <code>true</code>, save model weights in safetensors format. Defaults to <code>false</code>.</td>
+</tr>
+<tr>
+<td><code>label_names</code></td>
+<td>List of label keys used by the Trainer. Defaults to <code>["labels"]</code>.</td>
+</tr>
+<tr>
+<td><code>logging_strategy</code></td>
+<td>When to log (e.g. <code>"steps"</code>, <code>"epoch"</code>). Defaults to <code>"steps"</code>.</td>
+</tr>
+<tr>
+<td><code>logging_steps</code></td>
+<td>Log every this many steps when <code>logging_strategy</code> is <code>"steps"</code>. Defaults to <code>50</code>.</td>
+</tr>
+<tr>
+<td><code>seed</code></td>
+<td>Random seed for reproducibility.</td>
+</tr>
+<tr>
+<td><code>remove_unused_columns</code></td>
+<td>Whether to drop dataset columns not used by the model. Defaults to <code>false</code>.</td>
+</tr>
+<tr>
+<td><code>disable_tqdm</code></td>
+<td>Whether to disable the progress bar. Defaults to <code>true</code>.</td>
+</tr>
+</tbody>
+</table>
+</details>
+<details>
+<summary><code>train.wandb</code> (or top-level <code>wandb</code>) — Used by TrainerPipeline for Weights &amp; Biases</summary>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>project</code></td>
+<td>Project name on WandB.</td>
+</tr>
+<tr>
+<td><code>group</code></td>
+<td>Logical experiment group (e.g. task name).</td>
+</tr>
+<tr>
+<td><code>name</code></td>
+<td>Run identifier shown in the UI.</td>
+</tr>
+<tr>
+<td><code>tags</code></td>
+<td>Optional list of tags.</td>
+</tr>
+<tr>
+<td><code>no_wandb</code></td>
+<td>If true, disable WandB logging.</td>
+</tr>
+</tbody>
+</table>
+</details>
+<p>The trainer pipeline sets the corresponding environment variables and ensures <code>TrainingArguments.report_to</code> includes <code>"wandb"</code> when WandB is configured.</p>
+<h2 id="lexeryaml-io-and-vocabulary-iopipeline"><code>lexer.yaml</code> – IO and vocabulary (<code>IOPipeline</code>)<a class="headerlink" href="#lexeryaml-io-and-vocabulary-iopipeline" title="Permanent link">&para;</a></h2>
+<p>The <code>data</code> block in <code>train.yaml</code> points to <code>lexer.yaml</code> via <code>data.lexer_config</code>. That file controls tokenisation and vocabulary and is loaded by <a href="../io_pipeline/">IOPipeline.from_config</a>. Typical usage:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">omegaconf</span><span class="w"> </span><span class="kn">import</span> <span class="n">OmegaConf</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">calt.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">IOPipeline</span>
+
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">OmegaConf</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;configs/train.yaml&quot;</span><span class="p">)</span>
+<span class="n">io_pipeline</span> <span class="o">=</span> <span class="n">IOPipeline</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>  <span class="c1"># loads lexer_config from cfg.data.lexer_config</span>
+</code></pre></div>
+<p>The top-level keys in <code>lexer.yaml</code> control vocabulary and number tokenisation. Example:</p>
+<div class="highlight"><pre><span></span><code><span class="nt">vocab</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">range</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">numbers</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">0</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="nv">16</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">misc</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">[</span><span class="s">&quot;+&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;*&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;^&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;(&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;)&quot;</span><span class="p p-Indicator">,</span><span class="s">&quot;|&quot;</span><span class="p p-Indicator">,</span><span class="w"> </span><span class="s">&quot;-&quot;</span><span class="p p-Indicator">]</span>
+<span class="w">  </span><span class="nt">special_tokens</span><span class="p">:</span><span class="w"> </span><span class="p p-Indicator">{}</span>
+<span class="w">  </span><span class="nt">flags</span><span class="p">:</span>
+<span class="w">    </span><span class="nt">include_base_vocab</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">    </span><span class="nt">include_base_special_tokens</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+
+<span class="nt">number_policy</span><span class="p">:</span>
+<span class="w">  </span><span class="nt">attach_sign</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="w">  </span><span class="nt">digit_group</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">0</span>
+<span class="w">  </span><span class="nt">allow_float</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">false</span>
+
+<span class="nt">strict</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+<span class="nt">include_base_vocab</span><span class="p">:</span><span class="w"> </span><span class="l l-Scalar l-Scalar-Plain">true</span>
+</code></pre></div>
+<details>
+<summary><code>vocab</code> — Passed to VocabConfig.from_config</summary>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>range</code></td>
+<td>Dict of arbitrary key → <code>[prefix, min, max]</code> (inclusive). Each entry expands to tokens <code>prefix+str(i)</code> for <code>i</code> in <code>min..max</code>. For example, <code>numbers: ["", 0, 16]</code>, <code>coefficients: ["C", -50, 50]</code>, <code>exponents: ["E", 0, 20]</code>, <code>variables: ["x", 0, 2]</code>.</td>
+</tr>
+<tr>
+<td><code>misc</code></td>
+<td>List of extra tokens (e.g. <code>["+", "=", ","]</code>).</td>
+</tr>
+<tr>
+<td><code>special_tokens</code></td>
+<td>Dict of special token names. Base special tokens are defined in code.</td>
+</tr>
+<tr>
+<td><code>flags</code></td>
+<td>Optional. <code>include_base_vocab</code>, <code>include_base_special_tokens</code> (both default true).</td>
+</tr>
+</tbody>
+</table>
+</details>
+<details>
+<summary><code>number_policy</code> — Builds NumberPolicy for UnifiedLexer</summary>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>attach_sign</code></td>
+<td>bool (default true). true = sign is part of the number token; false = sign is a separate token.</td>
+</tr>
+<tr>
+<td><code>digit_group</code></td>
+<td>int (default 0). 0 = no digit grouping; d ≥ 1 = split number into tokens of d digits.</td>
+</tr>
+<tr>
+<td><code>allow_float</code></td>
+<td>bool (default true). Whether to allow decimal numbers (adds <code>"."</code> to vocab if needed).</td>
+</tr>
+</tbody>
+</table>
+</details>
+<details>
+<summary><code>strict</code>, <code>include_base_vocab</code> — Passed to UnifiedLexer</summary>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>strict</code></td>
+<td>bool (default true). If true, raise an error on unknown characters; if false, emit the unknown token (e.g. <code>&lt;unk&gt;</code>) and continue.</td>
+</tr>
+<tr>
+<td><code>include_base_vocab</code></td>
+<td>bool (default true). If true, add built-in tokens (separators, operators <code>+</code>, <code>-</code>, <code>*</code>, brackets, etc.) to the lexer’s reserved set; if false, only tokens from <code>vocab</code> are used.</td>
+</tr>
+</tbody>
+</table>
+</details>
+<p>Under the hood, <a href="../io_pipeline/">IOPipeline</a> instantiates <code>UnifiedLexer</code> and <code>VocabConfig</code> from this configuration, then builds a HuggingFace-compatible tokenizer, tokenised datasets, and a <code>StandardDataCollator</code>. See <a href="../io_lexer/">Lexer and vocabulary</a> for the API of <code>UnifiedLexer</code>, <code>NumberPolicy</code>, and <code>VocabConfig</code>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+    <a href="" target="_blank" rel="noopener" title="" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+      <div class="md-progress" data-md-component="progress" role="progressbar"></div>
+    
+    
+    
+      
+      <script id="__config" type="application/json">{"base": "..", "features": ["content.code.copy", "content.code.select", "navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.f55a23d4.min.js"></script>
+      
+        <script src="../assets/external/unpkg.com/mermaid@11/dist/mermaid.min.js"></script>
+      
+    
+  </body>
+</html>

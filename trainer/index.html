@@ -13,8 +13,10 @@
       <link rel="canonical" href="https://hiroshikera.github.io/calt/trainer/">
     
     
-      <link rel="prev" href="../data_loader/">
+      <link rel="prev" href="../io_visualization/">
     
+    
+      <link rel="next" href="../model_pipeline/">
     
     
     <link rel="icon" href="../assets/logo-light.png" sizes="any">
@@ -23,11 +25,11 @@
 
     
       
-        <title>Trainer - CALT library</title>
+        <title>Overview - CALT library</title>
       
     
     
-      <link rel="stylesheet" href="../assets/stylesheets/main.342714a4.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.84d31ad4.min.css">
       
         
         <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
@@ -79,7 +81,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#trainer" class="md-skip">
+        <a href="#overview" class="md-skip">
           Skip to content
         </a>
       
@@ -118,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Trainer
+              Overview
             
           </span>
         </div>
@@ -201,7 +203,7 @@
         <a href="https://github.com/HiroshiKERA/calt" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
   </div>
   <div class="md-source__repository">
     GitHub
@@ -279,7 +281,7 @@
       <a href="https://github.com/HiroshiKERA/calt" title="Go to repository" class="md-source" data-md-component="source">
   <div class="md-source__icon md-icon">
     
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81"/></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
   </div>
   <div class="md-source__repository">
     GitHub
@@ -414,13 +416,56 @@
   
   
   
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_2_1" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_2_1" id="__nav_1_2_1_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Dataset pipeline
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_1_2_1_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_2_1">
+            <span class="md-nav__icon md-icon"></span>
+            Dataset pipeline
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
     <li class="md-nav__item">
       <a href="../dataset_generator/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Dataset Generator
+    Overview
     
   </span>
   
@@ -438,12 +483,12 @@
   
   
     <li class="md-nav__item">
-      <a href="../data_loader/" class="md-nav__link">
+      <a href="../dataset_sagemath/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
-    Data Loader
+    SageMath backend
     
   </span>
   
@@ -453,6 +498,225 @@
   
 
               
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../dataset_sympy/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    SymPy backend
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_2_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_1_2_2" id="__nav_1_2_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    IO pipeline
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_1_2_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_1_2_2">
+            <span class="md-nav__icon md-icon"></span>
+            IO pipeline
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../io_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Overview
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../io_lexer/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Lexer and vocabulary
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../io_load_preprocessors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Load preprocessors
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../io_visualization/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Visualization
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_2_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_1_2_3" id="__nav_1_2_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    Trainer pipeline
+    
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_1_2_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_1_2_3">
+            <span class="md-nav__icon md-icon"></span>
+            Trainer pipeline
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
             
               
                 
@@ -475,7 +739,7 @@
   
   
   <span class="md-ellipsis">
-    Trainer
+    Overview
     
   </span>
   
@@ -488,7 +752,7 @@
   
   
   <span class="md-ellipsis">
-    Trainer
+    Overview
     
   </span>
   
@@ -513,37 +777,28 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#class" class="md-nav__link">
-    <span class="md-ellipsis">
-      Class
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#calt.trainer.trainer.Trainer" class="md-nav__link">
     <span class="md-ellipsis">
       Trainer
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#calt.trainer.trainer.Trainer.evaluate_and_save_generation" class="md-nav__link">
-    <span class="md-ellipsis">
-      evaluate_and_save_generation
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="evaluate_and_save_generation">
+    <nav class="md-nav" aria-label="Trainer">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#utilities" class="md-nav__link">
+  <a href="#calt.trainer.trainer.Trainer.evaluate" class="md-nav__link">
     <span class="md-ellipsis">
-      Utilities
+      evaluate
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calt.trainer.trainer.Trainer.evaluate_and_save_generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      evaluate_and_save_generation
     </span>
   </a>
   
@@ -555,18 +810,87 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#calt.trainer.utils.count_cuda_devices" class="md-nav__link">
+  <a href="#trainerpipeline" class="md-nav__link">
     <span class="md-ellipsis">
-      count_cuda_devices
+      TrainerPipeline
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TrainerPipeline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#calt.trainer.pipeline.TrainerPipeline.build" class="md-nav__link">
+    <span class="md-ellipsis">
+      build
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calt.trainer.pipeline.TrainerPipeline.train" class="md-nav__link">
+    <span class="md-ellipsis">
+      train
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calt.trainer.pipeline.TrainerPipeline.save_model" class="md-nav__link">
+    <span class="md-ellipsis">
+      save_model
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calt.trainer.pipeline.TrainerPipeline.evaluate_and_save_generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      evaluate_and_save_generation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calt.trainer.pipeline.TrainerPipeline.from_io_dict" class="md-nav__link">
+    <span class="md-ellipsis">
+      from_io_dict
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calt.trainer.pipeline.TrainerPipeline.resume_from_checkpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      resume_from_checkpoint
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pipelines-and-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pipelines and configuration
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#calt.trainer.utils.setup_wandb" class="md-nav__link">
+  <a href="#resuming-training-from-checkpoint" class="md-nav__link">
     <span class="md-ellipsis">
-      setup_wandb
+      Resuming training from checkpoint
     </span>
   </a>
   
@@ -576,6 +900,60 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../model_pipeline/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Model pipeline
+    
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../configuration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    Configuration
+    
+  </span>
+  
+
+      </a>
     </li>
   
 
@@ -625,37 +1003,28 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#class" class="md-nav__link">
-    <span class="md-ellipsis">
-      Class
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#calt.trainer.trainer.Trainer" class="md-nav__link">
     <span class="md-ellipsis">
       Trainer
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#calt.trainer.trainer.Trainer.evaluate_and_save_generation" class="md-nav__link">
-    <span class="md-ellipsis">
-      evaluate_and_save_generation
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="evaluate_and_save_generation">
+    <nav class="md-nav" aria-label="Trainer">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#utilities" class="md-nav__link">
+  <a href="#calt.trainer.trainer.Trainer.evaluate" class="md-nav__link">
     <span class="md-ellipsis">
-      Utilities
+      evaluate
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calt.trainer.trainer.Trainer.evaluate_and_save_generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      evaluate_and_save_generation
     </span>
   </a>
   
@@ -667,18 +1036,87 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#calt.trainer.utils.count_cuda_devices" class="md-nav__link">
+  <a href="#trainerpipeline" class="md-nav__link">
     <span class="md-ellipsis">
-      count_cuda_devices
+      TrainerPipeline
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TrainerPipeline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#calt.trainer.pipeline.TrainerPipeline.build" class="md-nav__link">
+    <span class="md-ellipsis">
+      build
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calt.trainer.pipeline.TrainerPipeline.train" class="md-nav__link">
+    <span class="md-ellipsis">
+      train
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calt.trainer.pipeline.TrainerPipeline.save_model" class="md-nav__link">
+    <span class="md-ellipsis">
+      save_model
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calt.trainer.pipeline.TrainerPipeline.evaluate_and_save_generation" class="md-nav__link">
+    <span class="md-ellipsis">
+      evaluate_and_save_generation
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calt.trainer.pipeline.TrainerPipeline.from_io_dict" class="md-nav__link">
+    <span class="md-ellipsis">
+      from_io_dict
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#calt.trainer.pipeline.TrainerPipeline.resume_from_checkpoint" class="md-nav__link">
+    <span class="md-ellipsis">
+      resume_from_checkpoint
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pipelines-and-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      Pipelines and configuration
     </span>
   </a>
   
 </li>
       
         <li class="md-nav__item">
-  <a href="#calt.trainer.utils.setup_wandb" class="md-nav__link">
+  <a href="#resuming-training-from-checkpoint" class="md-nav__link">
     <span class="md-ellipsis">
-      setup_wandb
+      Resuming training from checkpoint
     </span>
   </a>
   
@@ -703,16 +1141,30 @@
   
 
 
-<h1 id="trainer">Trainer<a class="headerlink" href="#trainer" title="Permanent link">&para;</a></h1>
-<p>A convenient extension of the HuggingFace <code>Trainer</code> and utility helpers for training and evaluation. It streamlines device placement, metrics computation, and generation result saving.</p>
-<h3 id="class">Class<a class="headerlink" href="#class" title="Permanent link">&para;</a></h3>
+<h1 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h1>
+<p>A convenient extension of the HuggingFace <code>Trainer</code> and utility helpers for training and
+evaluation. It streamlines device placement, metrics computation, and generation result
+saving.</p>
+<ul>
+<li><a href="../model_pipeline/">Model pipeline</a> — builds the model from configuration; <code>cfg.model</code> and supported model types.</li>
+<li><a href="../configuration/">Configuration</a> — <code>data.yaml</code>, <code>lexer.yaml</code>, and <code>train.yaml</code>.</li>
+</ul>
+<!-- ## Core class -->
+
 
 
 <div class="doc doc-object doc-class">
 
 
 
-<a id="calt.trainer.trainer.Trainer"></a>
+<h2 id="calt.trainer.trainer.Trainer" class="doc doc-heading">
+            Trainer
+
+
+<a href="#calt.trainer.trainer.Trainer" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">Trainer</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</code></pre></div>
+
     <div class="doc doc-contents first">
             <p class="doc doc-class-bases">
               Bases: <code><span title="transformers.Trainer">Trainer</span></code></p>
@@ -731,15 +1183,15 @@ and does not introduce new parameters - the default constructor is therefore for
 
                   <details class="quote">
                     <summary>Source code in <code>src/calt/trainer/trainer.py</code></summary>
-                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">31</span>
 <span class="normal">32</span>
 <span class="normal">33</span>
 <span class="normal">34</span>
-<span class="normal">35</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<span class="normal">35</span>
+<span class="normal">36</span>
+<span class="normal">37</span>
+<span class="normal">38</span>
+<span class="normal">39</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="c1"># Keeps a chronological list of metric dictionaries that WandB has</span>
     <span class="c1"># seen.  This enables the caller to inspect the *complete* training</span>
@@ -766,124 +1218,24 @@ and does not introduce new parameters - the default constructor is therefore for
 <div class="doc doc-object doc-function">
 
 
-<h2 id="calt.trainer.trainer.Trainer.evaluate_and_save_generation" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">evaluate_and_save_generation</span>
+<h3 id="calt.trainer.trainer.Trainer.evaluate" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">evaluate</span>
 
 
-<a href="#calt.trainer.trainer.Trainer.evaluate_and_save_generation" class="headerlink" title="Permanent link">&para;</a></h2>
-<div class="doc-signature highlight"><pre><span></span><code><span class="nf">evaluate_and_save_generation</span><span class="p">(</span><span class="n">max_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">512</span><span class="p">)</span>
+<a href="#calt.trainer.trainer.Trainer.evaluate" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">evaluate</span><span class="p">(</span><span class="n">eval_dataset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ignore_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">metric_key_prefix</span><span class="o">=</span><span class="s1">&#39;eval&#39;</span><span class="p">)</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
 
-        <p>Run greedy/beam-search generation on the evaluation set.</p>
-<p>The helper decodes the model outputs into strings, stores the results in
-<code>eval_results.json</code> inside the trainer's output directory and finally computes
-exact-match accuracy between the generated and reference sequences.</p>
-
-
-<p><span class="doc-section-title">Parameters:</span></p>
-    <table>
-      <thead>
-        <tr>
-          <th>Name</th>
-          <th>Type</th>
-          <th>Description</th>
-          <th>Default</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-            <td>
-                <code>max_length</code>
-            </td>
-            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Maximum generation length. Defaults to 512.</p>
-              </div>
-            </td>
-            <td>
-                  <code>512</code>
-            </td>
-          </tr>
-      </tbody>
-    </table>
-
-
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-<th>Name</th>          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-<td><code>float</code></td>            <td>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Exact-match accuracy in the [0, 1] interval.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
+        <p>Override evaluate to also save generation results during training.</p>
+<p>This method is called during training evaluation steps and after training.
+It runs the standard evaluation and then saves generation results.</p>
 
 
             <details class="quote">
               <summary>Source code in <code>src/calt/trainer/trainer.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 79</span>
-<span class="normal"> 80</span>
-<span class="normal"> 81</span>
-<span class="normal"> 82</span>
-<span class="normal"> 83</span>
-<span class="normal"> 84</span>
-<span class="normal"> 85</span>
-<span class="normal"> 86</span>
-<span class="normal"> 87</span>
-<span class="normal"> 88</span>
-<span class="normal"> 89</span>
-<span class="normal"> 90</span>
-<span class="normal"> 91</span>
-<span class="normal"> 92</span>
-<span class="normal"> 93</span>
-<span class="normal"> 94</span>
-<span class="normal"> 95</span>
-<span class="normal"> 96</span>
-<span class="normal"> 97</span>
-<span class="normal"> 98</span>
-<span class="normal"> 99</span>
-<span class="normal">100</span>
-<span class="normal">101</span>
-<span class="normal">102</span>
-<span class="normal">103</span>
-<span class="normal">104</span>
-<span class="normal">105</span>
-<span class="normal">106</span>
-<span class="normal">107</span>
-<span class="normal">108</span>
-<span class="normal">109</span>
-<span class="normal">110</span>
-<span class="normal">111</span>
-<span class="normal">112</span>
-<span class="normal">113</span>
-<span class="normal">114</span>
-<span class="normal">115</span>
-<span class="normal">116</span>
-<span class="normal">117</span>
-<span class="normal">118</span>
-<span class="normal">119</span>
-<span class="normal">120</span>
-<span class="normal">121</span>
-<span class="normal">122</span>
-<span class="normal">123</span>
-<span class="normal">124</span>
-<span class="normal">125</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">125</span>
 <span class="normal">126</span>
 <span class="normal">127</span>
 <span class="normal">128</span>
@@ -926,13 +1278,270 @@ exact-match accuracy between the generated and reference sequences.</p>
 <span class="normal">165</span>
 <span class="normal">166</span>
 <span class="normal">167</span>
-<span class="normal">168</span>
-<span class="normal">169</span>
-<span class="normal">170</span>
+<span class="normal">168</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">evaluate</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">eval_dataset</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">ignore_keys</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">metric_key_prefix</span><span class="o">=</span><span class="s2">&quot;eval&quot;</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Override evaluate to also save generation results during training.</span>
+
+<span class="sd">    This method is called during training evaluation steps and after training.</span>
+<span class="sd">    It runs the standard evaluation and then saves generation results.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Run standard evaluation</span>
+    <span class="n">metrics</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">evaluate</span><span class="p">(</span><span class="n">eval_dataset</span><span class="p">,</span> <span class="n">ignore_keys</span><span class="p">,</span> <span class="n">metric_key_prefix</span><span class="p">)</span>
+
+    <span class="c1"># Also save generation results during evaluation</span>
+    <span class="c1"># Get current step number if available</span>
+    <span class="n">step</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="s2">&quot;global_step&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+        <span class="sa">f</span><span class="s2">&quot;Running evaluate_and_save_generation (step=</span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2">, metric_key_prefix=</span><span class="si">{</span><span class="n">metric_key_prefix</span><span class="si">}</span><span class="s2">)&quot;</span>
+    <span class="p">)</span>
+    <span class="k">try</span><span class="p">:</span>
+        <span class="c1"># Pass step number to evaluate_and_save_generation</span>
+        <span class="n">success_rate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">evaluate_and_save_generation</span><span class="p">(</span><span class="n">step</span><span class="o">=</span><span class="n">step</span><span class="p">)</span>
+        <span class="c1"># Add generation metrics to the returned metrics dict</span>
+        <span class="n">generation_metrics</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">metric_key_prefix</span><span class="si">}</span><span class="s2">_generation_success_rate&quot;</span><span class="p">:</span> <span class="n">success_rate</span><span class="p">,</span>
+        <span class="p">}</span>
+        <span class="k">if</span> <span class="n">step</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">generation_metrics</span><span class="p">[</span><span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">metric_key_prefix</span><span class="si">}</span><span class="s2">_generation_step&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">step</span>
+        <span class="c1"># Update the metrics dict</span>
+        <span class="n">metrics</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">generation_metrics</span><span class="p">)</span>
+        <span class="c1"># Explicitly log only the generation metrics to ensure they are recorded</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="n">generation_metrics</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Successfully saved generation results (step=</span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2">, success_rate=</span><span class="si">{</span><span class="n">success_rate</span><span class="si">:</span><span class="s2">.4f</span><span class="si">}</span><span class="s2">)&quot;</span>
+        <span class="p">)</span>
+    <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="c1"># Log error but don&#39;t fail the evaluation</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="sa">f</span><span class="s2">&quot;Failed to save generation results during evaluation: </span><span class="si">{</span><span class="n">e</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span>
+            <span class="n">exc_info</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">metrics</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="calt.trainer.trainer.Trainer.evaluate_and_save_generation" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">evaluate_and_save_generation</span>
+
+
+<a href="#calt.trainer.trainer.Trainer.evaluate_and_save_generation" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">evaluate_and_save_generation</span><span class="p">(</span><span class="n">max_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">512</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Run greedy/beam-search generation on the evaluation set.</p>
+<p>The helper decodes the model outputs into strings, stores the results in
+<code>eval_results.json</code> inside the trainer's output directory and finally computes
+exact-match accuracy between the generated and reference sequences.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>max_length</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Maximum generation length. Defaults to 512.</p>
+              </div>
+            </td>
+            <td>
+                  <code>512</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>step</code>
+            </td>
+            <td>
+                  <code><span title="int">int</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Current training step number. If None, tries to get from self.state.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+<th>Name</th>          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+<td><code>float</code></td>            <td>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Exact-match accuracy in the [0, 1] interval.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="quote">
+              <summary>Source code in <code>src/calt/trainer/trainer.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">170</span>
 <span class="normal">171</span>
 <span class="normal">172</span>
 <span class="normal">173</span>
-<span class="normal">174</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">evaluate_and_save_generation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">512</span><span class="p">):</span>
+<span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span>
+<span class="normal">179</span>
+<span class="normal">180</span>
+<span class="normal">181</span>
+<span class="normal">182</span>
+<span class="normal">183</span>
+<span class="normal">184</span>
+<span class="normal">185</span>
+<span class="normal">186</span>
+<span class="normal">187</span>
+<span class="normal">188</span>
+<span class="normal">189</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span>
+<span class="normal">226</span>
+<span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span>
+<span class="normal">257</span>
+<span class="normal">258</span>
+<span class="normal">259</span>
+<span class="normal">260</span>
+<span class="normal">261</span>
+<span class="normal">262</span>
+<span class="normal">263</span>
+<span class="normal">264</span>
+<span class="normal">265</span>
+<span class="normal">266</span>
+<span class="normal">267</span>
+<span class="normal">268</span>
+<span class="normal">269</span>
+<span class="normal">270</span>
+<span class="normal">271</span>
+<span class="normal">272</span>
+<span class="normal">273</span>
+<span class="normal">274</span>
+<span class="normal">275</span>
+<span class="normal">276</span>
+<span class="normal">277</span>
+<span class="normal">278</span>
+<span class="normal">279</span>
+<span class="normal">280</span>
+<span class="normal">281</span>
+<span class="normal">282</span>
+<span class="normal">283</span>
+<span class="normal">284</span>
+<span class="normal">285</span>
+<span class="normal">286</span>
+<span class="normal">287</span>
+<span class="normal">288</span>
+<span class="normal">289</span>
+<span class="normal">290</span>
+<span class="normal">291</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">evaluate_and_save_generation</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span> <span class="n">max_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">512</span><span class="p">,</span> <span class="n">step</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span>
+<span class="p">):</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Run greedy/beam-search generation on the evaluation set.</span>
 
 <span class="sd">    The helper decodes the model outputs into strings, stores the results in</span>
@@ -941,12 +1550,19 @@ exact-match accuracy between the generated and reference sequences.</p>
 
 <span class="sd">    Args:</span>
 <span class="sd">        max_length (int, optional): Maximum generation length. Defaults to 512.</span>
+<span class="sd">        step (int, optional): Current training step number. If None, tries to get from self.state.</span>
 
 <span class="sd">    Returns:</span>
 <span class="sd">        float: Exact-match accuracy in the [0, 1] interval.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">eval_dataset</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Trainer: evaluation requires an eval_dataset.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">eval_dataset</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+            <span class="s2">&quot;eval_dataset is empty; skipping evaluate_and_save_generation.&quot;</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="mf">0.0</span>
 
     <span class="n">all_generated_texts</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="n">all_reference_texts</span> <span class="o">=</span> <span class="p">[]</span>
@@ -957,7 +1573,11 @@ exact-match accuracy between the generated and reference sequences.</p>
     <span class="n">tokenizer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">processing_class</span>
 
     <span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">eval_dataloader</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">batch</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
         <span class="n">inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_prepare_inputs</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">inputs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
         <span class="n">input_ids</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;input_ids&quot;</span><span class="p">)</span>
         <span class="n">attention_mask</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;attention_mask&quot;</span><span class="p">)</span>
         <span class="n">labels</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;labels&quot;</span><span class="p">)</span>
@@ -983,9 +1603,10 @@ exact-match accuracy between the generated and reference sequences.</p>
         <span class="n">all_generated_texts</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">current_generated_texts</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">labels</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">labels</span><span class="p">[</span><span class="n">labels</span> <span class="o">==</span> <span class="o">-</span><span class="mi">100</span><span class="p">]</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">pad_token_id</span>
+            <span class="n">labels_for_decode</span> <span class="o">=</span> <span class="n">labels</span><span class="o">.</span><span class="n">clone</span><span class="p">()</span>
+            <span class="n">labels_for_decode</span><span class="p">[</span><span class="n">labels_for_decode</span> <span class="o">==</span> <span class="o">-</span><span class="mi">100</span><span class="p">]</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">pad_token_id</span>
             <span class="n">current_reference_texts</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="o">.</span><span class="n">batch_decode</span><span class="p">(</span>
-                <span class="n">labels</span><span class="p">,</span>
+                <span class="n">labels_for_decode</span><span class="p">,</span>
                 <span class="n">skip_special_tokens</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                 <span class="n">clean_up_tokenization_spaces</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
             <span class="p">)</span>
@@ -994,10 +1615,22 @@ exact-match accuracy between the generated and reference sequences.</p>
             <span class="c1"># Keep placeholder when reference labels are missing.</span>
             <span class="n">all_reference_texts</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="s2">&quot;&quot;</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">current_generated_texts</span><span class="p">])</span>
 
-    <span class="n">output_eval_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">output_dir</span><span class="p">,</span>
-        <span class="s2">&quot;eval_results.json&quot;</span><span class="p">,</span>
-    <span class="p">)</span>
+    <span class="c1"># Include step number in filename if available during training</span>
+    <span class="k">if</span> <span class="n">step</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">step</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="s2">&quot;global_step&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">step</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># Save step-wise results in a subdirectory</span>
+        <span class="n">eval_results_dir</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">output_dir</span><span class="p">,</span> <span class="s2">&quot;eval_results&quot;</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">eval_results_dir</span><span class="p">,</span> <span class="n">exist_ok</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+        <span class="n">output_eval_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="n">eval_results_dir</span><span class="p">,</span>
+            <span class="sa">f</span><span class="s2">&quot;step_</span><span class="si">{</span><span class="n">step</span><span class="si">}</span><span class="s2">.json&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">output_eval_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">output_dir</span><span class="p">,</span>
+            <span class="s2">&quot;eval_results.json&quot;</span><span class="p">,</span>
+        <span class="p">)</span>
     <span class="n">results</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="k">for</span> <span class="n">gen_text</span><span class="p">,</span> <span class="n">ref_text</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">all_generated_texts</span><span class="p">,</span> <span class="n">all_reference_texts</span><span class="p">):</span>
         <span class="n">results</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
@@ -1040,117 +1673,46 @@ exact-match accuracy between the generated and reference sequences.</p>
 
     </div>
 
-</div><h3 id="utilities">Utilities<a class="headerlink" href="#utilities" title="Permanent link">&para;</a></h3>
+</div><h2 id="trainerpipeline">TrainerPipeline<a class="headerlink" href="#trainerpipeline" title="Permanent link">&para;</a></h2>
+<p>The main entry point for building a trainer from config is <code>TrainerPipeline</code>. Use <code>TrainerPipeline.from_io_dict(cfg.train, model, io_dict)</code> then <code>.build()</code> to obtain a pipeline; call <code>.train()</code> to run training and <code>.evaluate_and_save_generation()</code> for evaluation.</p>
 
 
-<div class="doc doc-object doc-function">
+<div class="doc doc-object doc-class">
 
 
 
-<a id="calt.trainer.utils.count_cuda_devices"></a>
+
     <div class="doc doc-contents first">
 
-        <p>Count the number of CUDA devices visible to the current process.</p>
-<p>The function first inspects the environment variable <code>CUDA_VISIBLE_DEVICES</code>. When set,
-only the GPU indices listed there are considered visible and contribute to the count.
-When not set, the function falls back to <code>torch.cuda.device_count</code> and returns the
-total number of devices detected by the NVIDIA runtime.</p>
+
+        <p>Pipeline for creating trainers from configuration.</p>
+<p>Similar to IOPipeline, this class provides a simple interface for creating
+trainer instances from config files. It automatically selects the appropriate
+TrainerLoader based on the config.</p>
 
 
-    <p><span class="doc-section-title">Returns:</span></p>
-    <table>
-      <thead>
-        <tr>
-<th>Name</th>          <th>Type</th>
-          <th>Description</th>
-        </tr>
-      </thead>
-      <tbody>
-          <tr class="doc-section-item">
-<td><code>int</code></td>            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>Number of GPUs that the current process is allowed to use. <code>0</code> indicates no GPU</p>
-              </div>
-            </td>
-          </tr>
-          <tr class="doc-section-item">
-<td></td>            <td>
-                  <code><span title="int">int</span></code>
-            </td>
-            <td>
-              <div class="doc-md-description">
-                <p>is available or that PyTorch was compiled without CUDA support.</p>
-              </div>
-            </td>
-          </tr>
-      </tbody>
-    </table>
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">omegaconf</span><span class="w"> </span><span class="kn">import</span> <span class="n">OmegaConf</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">calt.trainer</span><span class="w"> </span><span class="kn">import</span> <span class="n">TrainerPipeline</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">cfg</span> <span class="o">=</span> <span class="n">OmegaConf</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;config/train.yaml&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">model</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># Get model from ModelPipeline</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">tokenizer</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># Get tokenizer from IOPipeline</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">train_dataset</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># Get from IOPipeline</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eval_dataset</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># Get from IOPipeline</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">data_collator</span> <span class="o">=</span> <span class="o">...</span>  <span class="c1"># Get from IOPipeline</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">trainer_pipeline</span> <span class="o">=</span> <span class="n">TrainerPipeline</span><span class="p">(</span>
+<span class="gp">... </span>    <span class="n">cfg</span><span class="o">.</span><span class="n">train</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">tokenizer</span><span class="o">=</span><span class="n">tokenizer</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">train_dataset</span><span class="o">=</span><span class="n">train_dataset</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">eval_dataset</span><span class="o">=</span><span class="n">eval_dataset</span><span class="p">,</span>
+<span class="gp">... </span>    <span class="n">data_collator</span><span class="o">=</span><span class="n">data_collator</span><span class="p">,</span>
+<span class="gp">... </span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">trainer</span> <span class="o">=</span> <span class="n">trainer_pipeline</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+</code></pre></div>
 
-
-            <details class="quote">
-              <summary>Source code in <code>src/calt/trainer/utils.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">14</span>
-<span class="normal">15</span>
-<span class="normal">16</span>
-<span class="normal">17</span>
-<span class="normal">18</span>
-<span class="normal">19</span>
-<span class="normal">20</span>
-<span class="normal">21</span>
-<span class="normal">22</span>
-<span class="normal">23</span>
-<span class="normal">24</span>
-<span class="normal">25</span>
-<span class="normal">26</span>
-<span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
-<span class="normal">30</span>
-<span class="normal">31</span>
-<span class="normal">32</span>
-<span class="normal">33</span>
-<span class="normal">34</span>
-<span class="normal">35</span>
-<span class="normal">36</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">count_cuda_devices</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Count the number of CUDA devices visible to the current process.</span>
-
-<span class="sd">    The function first inspects the environment variable ``CUDA_VISIBLE_DEVICES``. When set,</span>
-<span class="sd">    only the GPU indices listed there are considered visible and contribute to the count.</span>
-<span class="sd">    When not set, the function falls back to ``torch.cuda.device_count`` and returns the</span>
-<span class="sd">    total number of devices detected by the NVIDIA runtime.</span>
-
-<span class="sd">    Returns:</span>
-<span class="sd">        int: Number of GPUs that the current process is allowed to use. ``0`` indicates no GPU</span>
-<span class="sd">        is available or that PyTorch was compiled without CUDA support.</span>
-<span class="sd">    &quot;&quot;&quot;</span>
-
-    <span class="n">cuda_visible_devices</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">environ</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;CUDA_VISIBLE_DEVICES&quot;</span><span class="p">)</span>
-
-    <span class="k">if</span> <span class="n">cuda_visible_devices</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-        <span class="c1"># ``CUDA_VISIBLE_DEVICES`` is set – split on commas to extract the</span>
-        <span class="c1"># list of allowed GPU indices (empty strings are filtered out).</span>
-        <span class="n">visible_devices</span> <span class="o">=</span> <span class="p">[</span><span class="n">d</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">cuda_visible_devices</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">)</span> <span class="k">if</span> <span class="n">d</span><span class="p">]</span>
-        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">visible_devices</span><span class="p">)</span>
-
-    <span class="c1"># Variable not set – fall back to the total number detected by PyTorch.</span>
-    <span class="k">return</span> <span class="n">torch</span><span class="o">.</span><span class="n">cuda</span><span class="o">.</span><span class="n">device_count</span><span class="p">()</span>
-</code></pre></div></td></tr></table></div>
-            </details>
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-
-<a id="calt.trainer.utils.setup_wandb"></a>
-    <div class="doc doc-contents first">
-
-        <p>Initialise a Weights &amp; Biases tracking session.</p>
 
 
 <p><span class="doc-section-title">Parameters:</span></p>
@@ -1166,32 +1728,30 @@ total number of devices detected by the NVIDIA runtime.</p>
       <tbody>
           <tr class="doc-section-item">
             <td>
-                <code>project</code>
+                <code>config</code>
             </td>
             <td>
-                  <code><span title="str">str</span></code>
+                  <code><span title="omegaconf.DictConfig">DictConfig</span></code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Project name under which runs will appear in the WandB dashboard.
-Defaults to <code>"transformer-algebra"</code>.</p>
+                <p>Training configuration from cfg.train (OmegaConf).</p>
               </div>
             </td>
             <td>
-                  <code>&#39;transformer-algebra&#39;</code>
+                <em>required</em>
             </td>
           </tr>
           <tr class="doc-section-item">
             <td>
-                <code>entity</code>
+                <code>model</code>
             </td>
             <td>
-                  <code><span title="str">str</span> | None</code>
+                  <code><span title="transformers.PreTrainedModel">PreTrainedModel</span> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>WandB entity (user or team) that owns the project.
-When <code>None</code>, the default entity configured in local WandB settings is used.</p>
+                <p>Model instance.</p>
               </div>
             </td>
             <td>
@@ -1200,36 +1760,80 @@ When <code>None</code>, the default entity configured in local WandB settings is
           </tr>
           <tr class="doc-section-item">
             <td>
-                <code>**extra_config</code>
+                <code>tokenizer</code>
             </td>
             <td>
+                  <code><span title="transformers.PreTrainedTokenizerFast">PreTrainedTokenizerFast</span> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Additional key-value pairs inserted into the run configuration.
-Useful for hyper-parameter sweeps or ad-hoc experiments.</p>
+                <p>Tokenizer instance.</p>
               </div>
             </td>
             <td>
-                  <code>{}</code>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>train_dataset</code>
+            </td>
+            <td>
+                  <code><span title="torch.utils.data.Dataset">Dataset</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Training dataset.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>eval_dataset</code>
+            </td>
+            <td>
+                  <code><span title="torch.utils.data.Dataset">Dataset</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Evaluation dataset.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>data_collator</code>
+            </td>
+            <td>
+                  <code><span title="calt.io.base.StandardDataCollator">StandardDataCollator</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Data collator.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
             </td>
           </tr>
       </tbody>
     </table>
 
 
-            <details class="quote">
-              <summary>Source code in <code>src/calt/trainer/utils.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">39</span>
-<span class="normal">40</span>
-<span class="normal">41</span>
-<span class="normal">42</span>
-<span class="normal">43</span>
-<span class="normal">44</span>
-<span class="normal">45</span>
-<span class="normal">46</span>
-<span class="normal">47</span>
-<span class="normal">48</span>
+
+
+
+
+
+                  <details class="quote">
+                    <summary>Source code in <code>src/calt/trainer/pipeline.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">48</span>
 <span class="normal">49</span>
 <span class="normal">50</span>
 <span class="normal">51</span>
@@ -1246,38 +1850,767 @@ Useful for hyper-parameter sweeps or ad-hoc experiments.</p>
 <span class="normal">62</span>
 <span class="normal">63</span>
 <span class="normal">64</span>
-<span class="normal">65</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">setup_wandb</span><span class="p">(</span>
-    <span class="n">project</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;transformer-algebra&quot;</span><span class="p">,</span>
-    <span class="n">entity</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="o">**</span><span class="n">extra_config</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialise a Weights &amp; Biases tracking session.</span>
+<span class="normal">65</span>
+<span class="normal">66</span>
+<span class="normal">67</span>
+<span class="normal">68</span>
+<span class="normal">69</span>
+<span class="normal">70</span>
+<span class="normal">71</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span>
+<span class="normal">75</span>
+<span class="normal">76</span>
+<span class="normal">77</span>
+<span class="normal">78</span>
+<span class="normal">79</span>
+<span class="normal">80</span>
+<span class="normal">81</span>
+<span class="normal">82</span>
+<span class="normal">83</span>
+<span class="normal">84</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">DictConfig</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PreTrainedModel</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">tokenizer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">PreTrainedTokenizerFast</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">train_dataset</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dataset</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">eval_dataset</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Dataset</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">data_collator</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">StandardDataCollator</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">wandb_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DictConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">io_dict</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">dict</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize the trainer pipeline.</span>
 
 <span class="sd">    Args:</span>
-<span class="sd">        project (str, optional): Project name under which runs will appear in the WandB dashboard.</span>
-<span class="sd">            Defaults to ``&quot;transformer-algebra&quot;``.</span>
-<span class="sd">        entity (str | None, optional): WandB entity (user or team) that owns the project.</span>
-<span class="sd">            When ``None``, the default entity configured in local WandB settings is used.</span>
-<span class="sd">        **extra_config: Additional key-value pairs inserted into the run configuration.</span>
-<span class="sd">            Useful for hyper-parameter sweeps or ad-hoc experiments.</span>
+<span class="sd">        config (DictConfig): Training configuration from cfg.train (OmegaConf).</span>
+<span class="sd">        model (PreTrainedModel | None): Model instance.</span>
+<span class="sd">        tokenizer (PreTrainedTokenizerFast | None): Tokenizer instance.</span>
+<span class="sd">        train_dataset (Dataset | None): Training dataset.</span>
+<span class="sd">        eval_dataset (Dataset | None): Evaluation dataset.</span>
+<span class="sd">        data_collator (StandardDataCollator | None): Data collator.</span>
 <span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># Initialize wandb</span>
-    <span class="kn">import</span><span class="w"> </span><span class="nn">wandb</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="n">config</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">model</span>
+    <span class="c1"># Prefer explicit arguments, but allow filling from io_dict when provided</span>
+    <span class="k">if</span> <span class="n">io_dict</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">tokenizer</span> <span class="o">=</span> <span class="n">tokenizer</span> <span class="ow">or</span> <span class="n">io_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;tokenizer&quot;</span><span class="p">)</span>
+        <span class="n">train_dataset</span> <span class="o">=</span> <span class="n">train_dataset</span> <span class="ow">or</span> <span class="n">io_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;train_dataset&quot;</span><span class="p">)</span>
+        <span class="n">eval_dataset</span> <span class="o">=</span> <span class="n">eval_dataset</span> <span class="ow">or</span> <span class="n">io_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;test_dataset&quot;</span><span class="p">)</span>
+        <span class="n">data_collator</span> <span class="o">=</span> <span class="n">data_collator</span> <span class="ow">or</span> <span class="n">io_dict</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;data_collator&quot;</span><span class="p">)</span>
 
-    <span class="n">wandb</span><span class="o">.</span><span class="n">init</span><span class="p">(</span>
-        <span class="n">project</span><span class="o">=</span><span class="n">project</span><span class="p">,</span>
-        <span class="n">entity</span><span class="o">=</span><span class="n">entity</span><span class="p">,</span>
-        <span class="n">config</span><span class="o">=</span><span class="p">{</span>
-            <span class="s2">&quot;learning_rate&quot;</span><span class="p">:</span> <span class="mf">0.001</span><span class="p">,</span>
-            <span class="s2">&quot;batch_size&quot;</span><span class="p">:</span> <span class="mi">32</span><span class="p">,</span>
-            <span class="s2">&quot;epochs&quot;</span><span class="p">:</span> <span class="mi">10</span><span class="p">,</span>
-        <span class="p">},</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span> <span class="o">=</span> <span class="n">tokenizer</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">train_dataset</span> <span class="o">=</span> <span class="n">train_dataset</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">eval_dataset</span> <span class="o">=</span> <span class="n">eval_dataset</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">data_collator</span> <span class="o">=</span> <span class="n">data_collator</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">wandb_config</span> <span class="o">=</span> <span class="n">wandb_config</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">trainer</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">Trainer</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_loader</span> <span class="o">=</span> <span class="kc">None</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="calt.trainer.pipeline.TrainerPipeline.build" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">build</span>
+
+
+<a href="#calt.trainer.pipeline.TrainerPipeline.build" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">build</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n">TrainerPipeline</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Build the trainer from configuration.</p>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+<th>Name</th>          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+<td><code>TrainerPipeline</code></td>            <td>
+                  <code><span title="calt.trainer.pipeline.TrainerPipeline">TrainerPipeline</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Returns self for method chaining.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="quote">
+              <summary>Source code in <code>src/calt/trainer/pipeline.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">116</span>
+<span class="normal">117</span>
+<span class="normal">118</span>
+<span class="normal">119</span>
+<span class="normal">120</span>
+<span class="normal">121</span>
+<span class="normal">122</span>
+<span class="normal">123</span>
+<span class="normal">124</span>
+<span class="normal">125</span>
+<span class="normal">126</span>
+<span class="normal">127</span>
+<span class="normal">128</span>
+<span class="normal">129</span>
+<span class="normal">130</span>
+<span class="normal">131</span>
+<span class="normal">132</span>
+<span class="normal">133</span>
+<span class="normal">134</span>
+<span class="normal">135</span>
+<span class="normal">136</span>
+<span class="normal">137</span>
+<span class="normal">138</span>
+<span class="normal">139</span>
+<span class="normal">140</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TrainerPipeline&quot;</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Build the trainer from configuration.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        TrainerPipeline: Returns self for method chaining.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Configure wandb before building TrainingArguments / Trainer</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_configure_wandb</span><span class="p">()</span>
+
+    <span class="c1"># Import here to avoid circular import</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.loader</span><span class="w"> </span><span class="kn">import</span> <span class="n">StandardTrainerLoader</span>
+
+    <span class="c1"># Create trainer loader</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_loader</span> <span class="o">=</span> <span class="n">StandardTrainerLoader</span><span class="p">(</span>
+        <span class="n">calt_config</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span>
+        <span class="n">model</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+        <span class="n">tokenizer</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="p">,</span>
+        <span class="n">train_dataset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">train_dataset</span><span class="p">,</span>
+        <span class="n">eval_dataset</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">eval_dataset</span><span class="p">,</span>
+        <span class="n">data_collator</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">data_collator</span><span class="p">,</span>
     <span class="p">)</span>
+
+    <span class="c1"># Load the trainer</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">trainer</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_loader</span><span class="o">.</span><span class="n">load</span><span class="p">()</span>
+    <span class="k">return</span> <span class="bp">self</span>
 </code></pre></div></td></tr></table></div>
             </details>
     </div>
 
 </div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="calt.trainer.pipeline.TrainerPipeline.train" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">train</span>
+
+
+<a href="#calt.trainer.pipeline.TrainerPipeline.train" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">train</span><span class="p">(</span><span class="n">resume_from_checkpoint</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Train the model.</p>
+<p>This method calls trainer.train(). If resume_from_checkpoint is provided,
+training will resume from the specified checkpoint.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>resume_from_checkpoint</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span> | <span title="bool">bool</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If True, resume from the latest checkpoint in output_dir.
+                   If str, resume from the specified checkpoint path.
+                   If None, start training from scratch.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="quote">
+              <summary>Source code in <code>src/calt/trainer/pipeline.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">142</span>
+<span class="normal">143</span>
+<span class="normal">144</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span>
+<span class="normal">148</span>
+<span class="normal">149</span>
+<span class="normal">150</span>
+<span class="normal">151</span>
+<span class="normal">152</span>
+<span class="normal">153</span>
+<span class="normal">154</span>
+<span class="normal">155</span>
+<span class="normal">156</span>
+<span class="normal">157</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">train</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">resume_from_checkpoint</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="nb">bool</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Train the model.</span>
+
+<span class="sd">    This method calls trainer.train(). If resume_from_checkpoint is provided,</span>
+<span class="sd">    training will resume from the specified checkpoint.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        resume_from_checkpoint: If True, resume from the latest checkpoint in output_dir.</span>
+<span class="sd">                               If str, resume from the specified checkpoint path.</span>
+<span class="sd">                               If None, start training from scratch.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">trainer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Trainer not built. Call build() first.&quot;</span><span class="p">)</span>
+
+    <span class="c1"># Train the model</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">train</span><span class="p">(</span><span class="n">resume_from_checkpoint</span><span class="o">=</span><span class="n">resume_from_checkpoint</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="calt.trainer.pipeline.TrainerPipeline.save_model" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">save_model</span>
+
+
+<a href="#calt.trainer.pipeline.TrainerPipeline.save_model" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">save_model</span><span class="p">(</span><span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Save the model and tokenizer.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>output_dir</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span> | None</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Directory to save the model and tokenizer. If None, uses trainer's output_dir.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="quote">
+              <summary>Source code in <code>src/calt/trainer/pipeline.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">159</span>
+<span class="normal">160</span>
+<span class="normal">161</span>
+<span class="normal">162</span>
+<span class="normal">163</span>
+<span class="normal">164</span>
+<span class="normal">165</span>
+<span class="normal">166</span>
+<span class="normal">167</span>
+<span class="normal">168</span>
+<span class="normal">169</span>
+<span class="normal">170</span>
+<span class="normal">171</span>
+<span class="normal">172</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">save_model</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">output_dir</span><span class="p">:</span> <span class="nb">str</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Save the model and tokenizer.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        output_dir: Directory to save the model and tokenizer. If None, uses trainer&#39;s output_dir.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">trainer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Trainer not built. Call build() first.&quot;</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">output_dir</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">output_dir</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">output_dir</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">save_model</span><span class="p">(</span><span class="n">output_dir</span><span class="o">=</span><span class="n">output_dir</span><span class="p">)</span>
+    <span class="c1"># Also save tokenizer</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tokenizer</span><span class="o">.</span><span class="n">save_pretrained</span><span class="p">(</span><span class="n">output_dir</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="calt.trainer.pipeline.TrainerPipeline.evaluate_and_save_generation" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">evaluate_and_save_generation</span>
+
+
+<a href="#calt.trainer.pipeline.TrainerPipeline.evaluate_and_save_generation" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">evaluate_and_save_generation</span><span class="p">(</span><span class="n">max_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">512</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Evaluate and save generation results.</p>
+
+
+            <details class="quote">
+              <summary>Source code in <code>src/calt/trainer/pipeline.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">174</span>
+<span class="normal">175</span>
+<span class="normal">176</span>
+<span class="normal">177</span>
+<span class="normal">178</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">evaluate_and_save_generation</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">max_length</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="mi">512</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">float</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Evaluate and save generation results.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">trainer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Trainer not built. Call build() first.&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">trainer</span><span class="o">.</span><span class="n">evaluate_and_save_generation</span><span class="p">(</span><span class="n">max_length</span><span class="o">=</span><span class="n">max_length</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="calt.trainer.pipeline.TrainerPipeline.from_io_dict" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">from_io_dict</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#calt.trainer.pipeline.TrainerPipeline.from_io_dict" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">from_io_dict</span><span class="p">(</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">DictConfig</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">PreTrainedModel</span><span class="p">,</span>
+    <span class="n">io_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+    <span class="n">wandb_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DictConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TrainerPipeline</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Create a TrainerPipeline from a dict returned by IOPipeline.build().</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>config</code>
+            </td>
+            <td>
+                  <code><span title="omegaconf.DictConfig">DictConfig</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Training configuration (cfg.train). May contain wandb config as config.wandb.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>model</code>
+            </td>
+            <td>
+                  <code><span title="transformers.PreTrainedModel">PreTrainedModel</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Model instance from ModelPipeline.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>io_dict</code>
+            </td>
+            <td>
+                  <code><span title="dict">dict</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>IOPipeline.build() result.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>wandb_config</code>
+            </td>
+            <td>
+                  <code><span title="typing.Optional">Optional</span>[<span title="omegaconf.DictConfig">DictConfig</span>]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Optional wandb configuration block. If None, tries to get from config.wandb.</p>
+              </div>
+            </td>
+            <td>
+                  <code>None</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+            <details class="quote">
+              <summary>Source code in <code>src/calt/trainer/pipeline.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span>
+<span class="normal">199</span>
+<span class="normal">200</span>
+<span class="normal">201</span>
+<span class="normal">202</span>
+<span class="normal">203</span>
+<span class="normal">204</span>
+<span class="normal">205</span>
+<span class="normal">206</span>
+<span class="normal">207</span>
+<span class="normal">208</span>
+<span class="normal">209</span>
+<span class="normal">210</span>
+<span class="normal">211</span>
+<span class="normal">212</span>
+<span class="normal">213</span>
+<span class="normal">214</span>
+<span class="normal">215</span>
+<span class="normal">216</span>
+<span class="normal">217</span>
+<span class="normal">218</span>
+<span class="normal">219</span>
+<span class="normal">220</span>
+<span class="normal">221</span>
+<span class="normal">222</span>
+<span class="normal">223</span>
+<span class="normal">224</span>
+<span class="normal">225</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">from_io_dict</span><span class="p">(</span>
+    <span class="bp">cls</span><span class="p">,</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">DictConfig</span><span class="p">,</span>
+    <span class="n">model</span><span class="p">:</span> <span class="n">PreTrainedModel</span><span class="p">,</span>
+    <span class="n">io_dict</span><span class="p">:</span> <span class="nb">dict</span><span class="p">,</span>
+    <span class="n">wandb_config</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">DictConfig</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TrainerPipeline&quot;</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Create a TrainerPipeline from a dict returned by IOPipeline.build().</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        config: Training configuration (cfg.train). May contain wandb config as config.wandb.</span>
+<span class="sd">        model: Model instance from ModelPipeline.</span>
+<span class="sd">        io_dict: IOPipeline.build() result.</span>
+<span class="sd">        wandb_config: Optional wandb configuration block. If None, tries to get from config.wandb.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="c1"># Get wandb_config from config.wandb if not provided</span>
+    <span class="k">if</span> <span class="n">wandb_config</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">config</span><span class="p">,</span> <span class="s2">&quot;wandb&quot;</span><span class="p">):</span>
+        <span class="n">wandb_config</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">wandb</span>
+
+    <span class="n">instance</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span>
+        <span class="n">config</span><span class="o">=</span><span class="n">config</span><span class="p">,</span>
+        <span class="n">model</span><span class="o">=</span><span class="n">model</span><span class="p">,</span>
+        <span class="n">tokenizer</span><span class="o">=</span><span class="n">io_dict</span><span class="p">[</span><span class="s2">&quot;tokenizer&quot;</span><span class="p">],</span>
+        <span class="n">train_dataset</span><span class="o">=</span><span class="n">io_dict</span><span class="p">[</span><span class="s2">&quot;train_dataset&quot;</span><span class="p">],</span>
+        <span class="n">eval_dataset</span><span class="o">=</span><span class="n">io_dict</span><span class="p">[</span><span class="s2">&quot;test_dataset&quot;</span><span class="p">],</span>
+        <span class="n">data_collator</span><span class="o">=</span><span class="n">io_dict</span><span class="p">[</span><span class="s2">&quot;data_collator&quot;</span><span class="p">],</span>
+        <span class="n">wandb_config</span><span class="o">=</span><span class="n">wandb_config</span><span class="p">,</span>
+        <span class="n">io_dict</span><span class="o">=</span><span class="n">io_dict</span><span class="p">,</span>
+    <span class="p">)</span>
+    <span class="k">return</span> <span class="n">instance</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="calt.trainer.pipeline.TrainerPipeline.resume_from_checkpoint" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">resume_from_checkpoint</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-classmethod"><code>classmethod</code></small>
+  </span>
+
+<a href="#calt.trainer.pipeline.TrainerPipeline.resume_from_checkpoint" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">resume_from_checkpoint</span><span class="p">(</span>
+    <span class="n">save_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">resume_from_checkpoint</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">TrainerPipeline</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Resume training from a saved checkpoint directory.</p>
+<p>This method loads train.yaml from save_dir, reconstructs IOPipeline, ModelPipeline,
+and TrainerPipeline, and optionally loads the saved model and tokenizer.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>save_dir</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>Directory containing train.yaml, model/, and tokenizer/.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>resume_from_checkpoint</code>
+            </td>
+            <td>
+                  <code><span title="bool">bool</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>If True, load saved model and tokenizer. If False, create new model.</p>
+              </div>
+            </td>
+            <td>
+                  <code>True</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+    <p><span class="doc-section-title">Returns:</span></p>
+    <table>
+      <thead>
+        <tr>
+<th>Name</th>          <th>Type</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+<td><code>TrainerPipeline</code></td>            <td>
+                  <code><span title="calt.trainer.pipeline.TrainerPipeline">TrainerPipeline</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>TrainerPipeline instance ready for training continuation.</p>
+              </div>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="highlight"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="kn">from</span><span class="w"> </span><span class="nn">calt.trainer</span><span class="w"> </span><span class="kn">import</span> <span class="n">TrainerPipeline</span>
+<span class="gp">&gt;&gt;&gt;</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="c1"># Load from checkpoint and continue training</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">trainer_pipeline</span> <span class="o">=</span> <span class="n">TrainerPipeline</span><span class="o">.</span><span class="n">resume_from_checkpoint</span><span class="p">(</span><span class="s2">&quot;./results&quot;</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">trainer_pipeline</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">trainer_pipeline</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>  <span class="c1"># Continue training</span>
+</code></pre></div>
+
+
+            <details class="quote">
+              <summary>Source code in <code>src/calt/trainer/pipeline.py</code></summary>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">227</span>
+<span class="normal">228</span>
+<span class="normal">229</span>
+<span class="normal">230</span>
+<span class="normal">231</span>
+<span class="normal">232</span>
+<span class="normal">233</span>
+<span class="normal">234</span>
+<span class="normal">235</span>
+<span class="normal">236</span>
+<span class="normal">237</span>
+<span class="normal">238</span>
+<span class="normal">239</span>
+<span class="normal">240</span>
+<span class="normal">241</span>
+<span class="normal">242</span>
+<span class="normal">243</span>
+<span class="normal">244</span>
+<span class="normal">245</span>
+<span class="normal">246</span>
+<span class="normal">247</span>
+<span class="normal">248</span>
+<span class="normal">249</span>
+<span class="normal">250</span>
+<span class="normal">251</span>
+<span class="normal">252</span>
+<span class="normal">253</span>
+<span class="normal">254</span>
+<span class="normal">255</span>
+<span class="normal">256</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">resume_from_checkpoint</span><span class="p">(</span>
+    <span class="bp">cls</span><span class="p">,</span>
+    <span class="n">save_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+    <span class="n">resume_from_checkpoint</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+<span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TrainerPipeline&quot;</span><span class="p">:</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Resume training from a saved checkpoint directory.</span>
+
+<span class="sd">    This method loads train.yaml from save_dir, reconstructs IOPipeline, ModelPipeline,</span>
+<span class="sd">    and TrainerPipeline, and optionally loads the saved model and tokenizer.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        save_dir: Directory containing train.yaml, model/, and tokenizer/.</span>
+<span class="sd">        resume_from_checkpoint: If True, load saved model and tokenizer. If False, create new model.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        TrainerPipeline: TrainerPipeline instance ready for training continuation.</span>
+
+<span class="sd">    Examples:</span>
+<span class="sd">        &gt;&gt;&gt; from calt.trainer import TrainerPipeline</span>
+<span class="sd">        &gt;&gt;&gt;</span>
+<span class="sd">        &gt;&gt;&gt; # Load from checkpoint and continue training</span>
+<span class="sd">        &gt;&gt;&gt; trainer_pipeline = TrainerPipeline.resume_from_checkpoint(&quot;./results&quot;)</span>
+<span class="sd">        &gt;&gt;&gt; trainer_pipeline.build()</span>
+<span class="sd">        &gt;&gt;&gt; trainer_pipeline.train()  # Continue training</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">.utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">load_from_checkpoint</span>
+
+    <span class="n">_</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">trainer_pipeline</span> <span class="o">=</span> <span class="n">load_from_checkpoint</span><span class="p">(</span><span class="n">save_dir</span><span class="p">,</span> <span class="n">resume_from_checkpoint</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">trainer_pipeline</span>
+</code></pre></div></td></tr></table></div>
+            </details>
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div><h2 id="pipelines-and-configuration">Pipelines and configuration<a class="headerlink" href="#pipelines-and-configuration" title="Permanent link">&para;</a></h2>
+<p>High-level example scripts (under <code>calt/examples/*</code>) use class-based pipelines to keep
+configuration and wiring simple:</p>
+<ul>
+<li>:class:<code>calt.io.IOPipeline</code> – builds datasets, tokenizer, and collator.</li>
+<li>:class:<code>calt.models.ModelPipeline</code> – builds the model from configuration.</li>
+<li>:class:<code>calt.trainer.TrainerPipeline</code> – builds the HuggingFace <code>Trainer</code>.</li>
+</ul>
+<p>A typical training script looks like:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">omegaconf</span><span class="w"> </span><span class="kn">import</span> <span class="n">OmegaConf</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">calt.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">IOPipeline</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">calt.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ModelPipeline</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">calt.trainer</span><span class="w"> </span><span class="kn">import</span> <span class="n">TrainerPipeline</span>
+
+<span class="n">cfg</span> <span class="o">=</span> <span class="n">OmegaConf</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;configs/train.yaml&quot;</span><span class="p">)</span>
+
+<span class="n">io_dict</span> <span class="o">=</span> <span class="n">IOPipeline</span><span class="o">.</span><span class="n">from_config</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">data</span><span class="p">)</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="n">model</span> <span class="o">=</span> <span class="n">ModelPipeline</span><span class="o">.</span><span class="n">from_io_dict</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">model</span><span class="p">,</span> <span class="n">io_dict</span><span class="p">)</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="c1"># wandb_config is optional - if not provided, TrainerPipeline will try to get it from cfg.train.wandb</span>
+<span class="n">trainer_pipeline</span> <span class="o">=</span> <span class="n">TrainerPipeline</span><span class="o">.</span><span class="n">from_io_dict</span><span class="p">(</span><span class="n">cfg</span><span class="o">.</span><span class="n">train</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="n">io_dict</span><span class="p">)</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+
+<span class="n">trainer_pipeline</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+<span class="n">success_rate</span> <span class="o">=</span> <span class="n">trainer_pipeline</span><span class="o">.</span><span class="n">evaluate_and_save_generation</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;Success rate: </span><span class="si">{</span><span class="mi">100</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="n">success_rate</span><span class="si">:</span><span class="s2">.1f</span><span class="si">}</span><span class="s2">%&quot;</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="resuming-training-from-checkpoint">Resuming training from checkpoint<a class="headerlink" href="#resuming-training-from-checkpoint" title="Permanent link">&para;</a></h2>
+<p>You can resume training from a saved checkpoint using <code>TrainerPipeline.resume_from_checkpoint</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">calt.trainer</span><span class="w"> </span><span class="kn">import</span> <span class="n">TrainerPipeline</span>
+
+<span class="c1"># Resume training from a saved directory</span>
+<span class="n">trainer_pipeline</span> <span class="o">=</span> <span class="n">TrainerPipeline</span><span class="o">.</span><span class="n">resume_from_checkpoint</span><span class="p">(</span>
+    <span class="n">save_dir</span><span class="o">=</span><span class="s2">&quot;./results/my_experiment&quot;</span><span class="p">,</span>
+    <span class="n">resume_from_checkpoint</span><span class="o">=</span><span class="kc">True</span>  <span class="c1"># Load saved model weights</span>
+<span class="p">)</span>
+<span class="n">trainer_pipeline</span><span class="o">.</span><span class="n">build</span><span class="p">()</span>
+<span class="n">trainer_pipeline</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>  <span class="c1"># Continue training</span>
+</code></pre></div>
+<p>For details on the three configuration files used in these examples
+(<code>data.yaml</code>, <code>lexer.yaml</code>, <code>train.yaml</code>), see <a href="../configuration/">Configuration</a>.</p>
 
 
 
@@ -1320,14 +2653,15 @@ Useful for hyper-parameter sweeps or ad-hoc experiments.</p>
   
 </div>
       
-        <div class="md-social">
+        
+<div class="md-social">
   
     
     
     
     
     <a href="" target="_blank" rel="noopener" title="" class="md-social__link">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.7.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8M97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
     </a>
   
 </div>
@@ -1346,10 +2680,10 @@ Useful for hyper-parameter sweeps or ad-hoc experiments.</p>
     
     
       
-      <script id="__config" type="application/json">{"base": "..", "features": ["content.code.copy", "content.code.select", "navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.d50fe291.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"base": "..", "features": ["content.code.copy", "content.code.select", "navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="../assets/javascripts/bundle.56ea9cef.min.js"></script>
+      <script src="../assets/javascripts/bundle.f55a23d4.min.js"></script>
       
         <script src="../assets/external/unpkg.com/mermaid@11/dist/mermaid.min.js"></script>
       
