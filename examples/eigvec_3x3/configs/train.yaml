@@ -1,0 +1,37 @@
+model:
+  model_type: bart
+  num_encoder_layers: 6
+  num_encoder_heads: 8
+  num_decoder_layers: 6
+  num_decoder_heads: 8
+  d_model: 512
+  encoder_ffn_dim: 2048
+  decoder_ffn_dim: 2048
+  max_sequence_length: 512
+
+train:
+  save_dir: ./results
+  num_train_epochs: 100
+  learning_rate: 0.0005
+  weight_decay: 0.0
+  warmup_ratio: 0.0
+  batch_size: 16
+  test_batch_size: 16
+  lr_scheduler_type: linear
+  max_grad_norm: 1.0
+  optimizer: adamw_torch
+  num_workers: 2
+  seed: 42
+  wandb:
+    project: calt
+    group: eigvec_3x3
+    name: eigvec_3x3
+    no_wandb: False
+
+data:
+  train_dataset_path: ./data/train_raw.txt
+  test_dataset_path: ./data/test_raw.txt
+  lexer_config: ./configs/lexer.yaml
+  # Vocabulary validation options
+  validate_train_tokens: true   # Validate training dataset tokens before training
+  validate_test_tokens: true    # Validate test dataset tokens before training

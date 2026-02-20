@@ -1,18 +1,30 @@
-from .data_loader.data_loader import load_data
-from .data_loader.utils.data_collator import StandardDataCollator, StandardDataset
-from .data_loader.utils.preprocessor import (
-    AbstractPreprocessor,
-    CoefficientPostfixProcessor,
-    IntegerToInternalProcessor,
-    PolynomialToInternalProcessor,
-    ProcessorChain,
+from importlib.metadata import version as _version
+
+__version__ = _version("calt-x")
+
+from . import (
+    dataset,  # ensure calt.dataset subpackage is loadable
+    io,
+    models,
+    trainer,
 )
-from .data_loader.utils.tokenizer import set_tokenizer
-from .dataset_generator.sympy.dataset_generator import DatasetGenerator
-from .dataset_generator.sympy.utils.dataset_writer import DatasetWriter
-from .dataset_generator.sympy.utils.polynomial_sampler import PolynomialSampler
-from .dataset_generator.sympy.utils.statistics_calculator import (
+from .dataset import DatasetPipeline
+from .dataset.sympy.dataset_generator import DatasetGenerator
+from .dataset.sympy.utils.polynomial_sampler import PolynomialSampler
+from .dataset.utils.dataset_writer import DatasetWriter
+from .dataset.utils.statistics_calculator import (
     BaseStatisticsCalculator,
 )
+from .io import IOPipeline
+from .io.base import StandardDataCollator, StandardDataset
+from .io.preprocessor import (
+    AbstractPreProcessor,
+    NumberPolicy,
+    PreProcessorChain,
+    UnifiedLexer,
+)
+from .io.tokenizer import get_tokenizer
+from .models import ModelPipeline
+from .trainer import TrainerPipeline
 from .trainer.trainer import Trainer
 from .trainer.utils import count_cuda_devices

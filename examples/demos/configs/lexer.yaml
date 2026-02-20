@@ -1,0 +1,24 @@
+# Unified Lexer Configuration
+# This config defines both vocabulary and lexer tokenization settings
+
+# Vocabulary configuration
+vocab:
+  range:  
+    coefficients: ["", 0, 6]  # (prefix, min, max_inclusive)
+    exponents: ["E", 0, 20]
+    variables: ["x", 0, 2]
+  misc: ["+", "*", "^", "(", ")","|", "-"]
+  special_tokens: {}
+  flags:
+    include_base_vocab: true
+    include_base_special_tokens: true
+
+# Number tokenization policy
+number_policy:
+  attach_sign: true  # true = attach sign to number, false = separate sign as token
+  digit_group: 0    # 0 = no split, d>=1 = split every d digits
+  allow_float: false # Whether to allow floating point numbers
+
+# Lexer behavior
+strict: true              # If true, raise error on unknown characters; if false, emit <unk>
+include_base_vocab: true   # Whether to include base vocabulary tokens in lexer (separate from vocab flags)

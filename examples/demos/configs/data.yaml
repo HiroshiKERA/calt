@@ -1,0 +1,11 @@
+dataset:
+  save_dir: "./data"
+  num_train_samples: 10000
+  num_test_samples: 1000
+  batch_size: 10000
+  n_jobs: 1
+  root_seed: 42
+  verbose: true
+  backend: "sympy"
+  save_text: true
+  save_json: false

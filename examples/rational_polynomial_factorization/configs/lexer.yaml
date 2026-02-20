@@ -1,0 +1,16 @@
+vocab:
+  range:
+    numbers: ["", -999, 999]
+  misc: ["+", "-", "*", "^", "(", ")", "/", ",", "]", "x"]  # Add "x" for variable names
+  special_tokens: {}
+  flags:
+    include_base_vocab: true
+    include_base_special_tokens: true
+
+number_policy:
+  attach_sign: true  # true = attach sign to number, false = separate sign as token
+  digit_group: 3
+  allow_float: false
+
+strict: true
+include_base_vocab: true

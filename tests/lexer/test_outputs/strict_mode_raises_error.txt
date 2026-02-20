@@ -1,0 +1,20 @@
+Test: strict_mode_raises_error
+================================================================================
+
+Configuration:
+--------------------------------------------------------------------------------
+  Number Policy:
+    sign: False
+    digit_group: 0
+    allow_float: False
+  strict: True
+  include_base_vocab: True
+
+Input:
+--------------------------------------------------------------------------------
+  x0 + x1 @ invalid
+
+Result:
+--------------------------------------------------------------------------------
+  Error occurred: True
+  Error message: Unknown character '@' at position 8 in: x0 + x1 @ invalid

@@ -1,28 +1,23 @@
-# Dataset Generator
+# Overview
 
-A unified interface with SageMath and SymPy backends for large-scale dataset generation. It produces paired problems and solutions, supports batch writing, and computes incremental statistics.
+A unified interface with SageMath and SymPy backends for large-scale dataset generation. It produces paired problems and answers, supports batch writing, and computes incremental statistics.
 
-## Common (SageMath backend example)
+[DatasetPipeline](#calt.dataset.pipeline.DatasetPipeline) and [DatasetWriter](#datasetwriter) are shared regardless of backend (`sagemath` or `sympy`). For details on each component, see:
 
-### Generation flow
-::: calt.dataset_generator.sagemath.dataset_generator.DatasetGenerator
+- [DatasetWriter](#datasetwriter) — writing samples to disk
+- [SageMath backend](dataset_sagemath.md) — `DatasetGenerator` and `PolynomialSampler` for SageMath
+- [SymPy backend](dataset_sympy.md) — `DatasetGenerator` and `PolynomialSampler` for SymPy
 
-### Writing and statistics
-::: calt.dataset_generator.sagemath.utils.dataset_writer.DatasetWriter
-::: calt.dataset_generator.sagemath.utils.statistics_calculator.MemoryEfficientStatisticsCalculator
+::: calt.dataset.pipeline.DatasetPipeline
+    options:
+      heading: "DatasetPipeline"
 
-### Sampling
-::: calt.dataset_generator.sagemath.utils.polynomial_sampler.PolynomialSampler
+Configuration for the dataset pipeline is done via the `dataset` block in `data.yaml`. For the option list, usage example, and YAML sample, see [Configuration](configuration.md).
 
-## Common (SymPy backend example)
 
-### Generation flow
-::: calt.dataset_generator.sympy.dataset_generator.DatasetGenerator
+::: calt.dataset.utils.dataset_writer.DatasetWriter
+    options:
+      heading: "DatasetWriter"
+      members:
+        - __init__
 
-### Writing and statistics
-::: calt.dataset_generator.sympy.utils.dataset_writer.DatasetWriter
-::: calt.dataset_generator.sympy.utils.statistics_calculator.MemoryEfficientStatisticsCalculator
-
-### Sampling
-::: calt.dataset_generator.sympy.utils.polynomial_sampler.PolynomialSampler
-::: calt.dataset_generator.sympy.utils.single_polynomial_sampler.SinglePolynomialSampler

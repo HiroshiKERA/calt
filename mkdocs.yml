@@ -69,9 +69,19 @@ nav:
   - User Guide:
     - Welcome: README.md
     - CALT Components:
-      - Dataset Generator: dataset_generator.md
-      - Data Loader: data_loader.md
-      - Trainer: trainer.md
+      - Dataset pipeline:
+        - Overview: dataset_generator.md
+        - SageMath backend: dataset_sagemath.md
+        - SymPy backend: dataset_sympy.md
+      - IO pipeline:
+        - Overview: io_pipeline.md
+        - Lexer and vocabulary: io_lexer.md
+        - Load preprocessors: io_load_preprocessors.md
+        - Visualization: io_visualization.md
+      - Trainer pipeline:
+        - Overview: trainer.md
+        - Model pipeline: model_pipeline.md
+      - Configuration: configuration.md
 
 exclude_docs: |
   node_modules
@@ -99,7 +109,7 @@ plugins:
             show_signature_annotations: true
             line_length: 80
             heading_level: 2
-            show_root_heading: false
+            show_root_heading: true
             show_root_toc_entry: true
             # Member selection and ordering
             filters: ["!^_[^_]"]           # Exclude members starting with _, keep dunder (default)
@@ -124,7 +134,12 @@ plugins:
         API Reference:
           - api.md
           - dataset_generator.md
-          - data_loader.md
+          - dataset_sagemath.md
+          - dataset_sympy.md
+          - io_pipeline.md
+          - io_lexer.md
+          - io_load_preprocessors.md
+          - io_visualization.md
           - trainer.md
 
 extra:
