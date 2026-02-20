@@ -1,12 +1,36 @@
-# Trainer
+# Overview
 
 A convenient extension of the HuggingFace `Trainer` and utility helpers for training and
 evaluation. It streamlines device placement, metrics computation, and generation result
 saving.
 
-## Core class
+- [Model pipeline](model_pipeline.md) — builds the model from configuration; `cfg.model` and supported model types.
+- [Configuration](configuration.md) — `data.yaml`, `lexer.yaml`, and `train.yaml`.
 
-:::: calt.trainer.trainer.Trainer
+<!-- ## Core class -->
+
+::: calt.trainer.trainer.Trainer
+    options:
+      heading: "Trainer"
+
+## TrainerPipeline
+
+The main entry point for building a trainer from config is `TrainerPipeline`. Use `TrainerPipeline.from_io_dict(cfg.train, model, io_dict)` then `.build()` to obtain a pipeline; call `.train()` to run training and `.evaluate_and_save_generation()` for evaluation.
+
+::: calt.trainer.pipeline.TrainerPipeline
+    options:
+      heading: "TrainerPipeline"
+      show_root_heading: false
+      show_root_toc_entry: false
+      heading_level: 3
+      members:
+        - __init__
+        - build
+        - train
+        - save_model
+        - evaluate_and_save_generation
+        - from_io_dict
+        - resume_from_checkpoint
 
 ## Pipelines and configuration
 
@@ -54,5 +78,5 @@ trainer_pipeline.train()  # Continue training
 ```
 
 For details on the three configuration files used in these examples
-(`data.yaml`, `lexer.yaml`, `train.yaml`), see :doc:`configuration`.
+(`data.yaml`, `lexer.yaml`, `train.yaml`), see [Configuration](configuration.md).
 
