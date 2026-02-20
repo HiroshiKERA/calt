@@ -22,6 +22,9 @@ train:
   optimizer: adamw_torch
   num_workers: 2
   seed: 42
+  # Disable Weights & Biases logging (set no_wandb: false or remove to enable)
+  wandb:
+    no_wandb: true
 
 data:
   train_dataset_path: ./data/train_raw.txt
