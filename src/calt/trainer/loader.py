@@ -14,8 +14,10 @@ from torch.utils.data import Dataset
 from transformers import (
     PreTrainedModel,
     PreTrainedTokenizerFast,
-    Trainer as HfTrainer,
     TrainingArguments,
+)
+from transformers import (
+    Trainer as HfTrainer,
 )
 
 from ..io.base import StandardDataCollator

@@ -41,7 +41,9 @@ class Trainer(HTrainer):
     @property
     def _tokenizer_or_processor(self):
         """Tokenizers/processor for generation; works with both HF 4.x (tokenizer) and 5.x (processing_class)."""
-        return getattr(self, "processing_class", None) or getattr(self, "tokenizer", None)
+        return getattr(self, "processing_class", None) or getattr(
+            self, "tokenizer", None
+        )
 
     def _prepare_inputs(self, inputs):
         """Move every tensor in "inputs" onto ``self.args.device``.
