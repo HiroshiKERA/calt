@@ -94,6 +94,7 @@ class DatasetWriter:
                       nested structure format, with one sample per line.
 
         Usage:
+            ```python
             # Efficient batch processing with file handle management
             writer = DatasetWriter(save_dir="./datasets")
             writer.open("train")  # Open file handles once
@@ -114,6 +115,7 @@ class DatasetWriter:
             writer.open("validation")  # Validation set
             writer.open("dev")         # Development set
             writer.open("eval")        # Evaluation set
+            ```
         """
         self.save_dir = Path(save_dir) if save_dir else Path.cwd()
         self.save_text = save_text

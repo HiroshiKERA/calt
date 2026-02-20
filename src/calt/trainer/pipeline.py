@@ -23,7 +23,7 @@ class TrainerPipeline:
     trainer instances from config files. It automatically selects the appropriate
     TrainerLoader based on the config.
 
-    Example:
+    Examples:
         >>> from omegaconf import OmegaConf
         >>> from calt.trainer import TrainerPipeline
         >>>
@@ -242,7 +242,7 @@ class TrainerPipeline:
         Returns:
             TrainerPipeline: TrainerPipeline instance ready for training continuation.
 
-        Example:
+        Examples:
             >>> from calt.trainer import TrainerPipeline
             >>>
             >>> # Load from checkpoint and continue training

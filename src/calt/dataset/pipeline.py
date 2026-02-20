@@ -12,7 +12,7 @@ class DatasetPipeline:
     batches, then writes them to disk via the backend's DatasetWriter.
     Typically constructed via from_config() with a DictConfig (e.g. from YAML).
 
-    Example:
+    Examples:
         >>> from omegaconf import OmegaConf
         >>> from calt.dataset import DatasetPipeline
         >>> cfg = OmegaConf.load("configs/dataset.yaml")

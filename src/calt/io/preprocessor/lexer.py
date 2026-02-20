@@ -146,7 +146,7 @@ class UnifiedLexer(AbstractPreProcessor):
     vocabulary configuration. It follows longest-match principle for
     reserved tokens and supports configurable number tokenization.
 
-    Example:
+    Examples:
         >>> from calt.io.vocabulary import VocabConfig
         >>> from calt.io.preprocessor import UnifiedLexer, NumberPolicy
         >>>

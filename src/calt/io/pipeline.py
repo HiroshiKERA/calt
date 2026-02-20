@@ -100,7 +100,7 @@ class IOPipeline:
         Returns:
             IOPipeline: IOPipeline instance configured from the config.
 
-        Example:
+        Examples:
             >>> from omegaconf import OmegaConf
             >>> from calt.io import IOPipeline
             >>>

@@ -20,7 +20,7 @@ class ModelPipeline:
     model instances from config files. It uses ModelRegistry internally to handle
     model creation.
 
-    Example:
+    Examples:
         >>> from omegaconf import OmegaConf
         >>> from calt.models import ModelPipeline
         >>>
