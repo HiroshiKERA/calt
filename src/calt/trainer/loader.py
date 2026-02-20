@@ -181,9 +181,7 @@ class StandardTrainerLoader(TrainerLoader):
             "save_steps": getattr(self.calt_config, "save_steps", 1000),
             "save_total_limit": getattr(self.calt_config, "save_total_limit", 1),
             "label_names": getattr(self.calt_config, "label_names", ["labels"]),
-            "logging_strategy": getattr(
-                self.calt_config, "logging_strategy", "steps"
-            ),
+            "logging_strategy": getattr(self.calt_config, "logging_strategy", "steps"),
             "logging_steps": getattr(self.calt_config, "logging_steps", 50),
             "report_to": report_to,
             "run_name": run_name,
