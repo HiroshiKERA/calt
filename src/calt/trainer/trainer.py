@@ -38,6 +38,13 @@ class Trainer(HTrainer):
         if self.compute_metrics is None:
             self.compute_metrics = self._compute_metrics
 
+    @property
+    def _tokenizer_or_processor(self):
+        """Tokenizers/processor for generation; works with both HF 4.x (tokenizer) and 5.x (processing_class)."""
+        return getattr(self, "processing_class", None) or getattr(
+            self, "tokenizer", None
+        )
+
     def _prepare_inputs(self, inputs):
         """Move every tensor in "inputs" onto ``self.args.device``.
 
@@ -198,7 +205,7 @@ class Trainer(HTrainer):
         eval_dataloader = self.get_eval_dataloader(self.eval_dataset)
 
         self.model.eval()
-        tokenizer = self.processing_class
+        tokenizer = self._tokenizer_or_processor
 
         for batch in eval_dataloader:
             if batch is None:

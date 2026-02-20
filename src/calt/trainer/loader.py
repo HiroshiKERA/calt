@@ -11,7 +11,14 @@ from typing import Any, Optional
 
 from omegaconf import DictConfig
 from torch.utils.data import Dataset
-from transformers import PreTrainedModel, PreTrainedTokenizerFast, TrainingArguments
+from transformers import (
+    PreTrainedModel,
+    PreTrainedTokenizerFast,
+    TrainingArguments,
+)
+from transformers import (
+    Trainer as HfTrainer,
+)
 
 from ..io.base import StandardDataCollator
 from .trainer import Trainer
@@ -221,11 +228,18 @@ class StandardTrainerLoader(TrainerLoader):
         if self.data_collator is None:
             raise ValueError("data_collator is required to build trainer")
 
+        # Transformers 5.x uses processing_class instead of tokenizer
+        sig = inspect.signature(HfTrainer.__init__)
+        if "processing_class" in sig.parameters:
+            tokenizer_kw = "processing_class"
+        else:
+            tokenizer_kw = "tokenizer"
+
         return Trainer(
             args=self.training_args,
             model=self.model,
-            tokenizer=self.tokenizer,
             data_collator=self.data_collator,
             train_dataset=self.train_dataset,
             eval_dataset=self.eval_dataset,
+            **{tokenizer_kw: self.tokenizer},
         )
