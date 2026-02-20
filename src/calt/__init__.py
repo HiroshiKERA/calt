@@ -2,10 +2,12 @@ from importlib.metadata import version as _version
 
 __version__ = _version("calt-x")
 
-from . import dataset  # ensure calt.dataset subpackage is loadable
-from . import io
-from . import models
-from . import trainer
+from . import (
+    dataset,  # ensure calt.dataset subpackage is loadable
+    io,
+    models,
+    trainer,
+)
 from .dataset import DatasetPipeline
 from .dataset.sympy.dataset_generator import DatasetGenerator
 from .dataset.sympy.utils.polynomial_sampler import PolynomialSampler
