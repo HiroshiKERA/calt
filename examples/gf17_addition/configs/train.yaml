@@ -26,7 +26,7 @@ train:
     project: calt
     group: gf17_addition
     name: gf17_addition
-    no_wandb: False
+    no_wandb: True
 
 data:
   train_dataset_path: ./data/train_raw.txt
