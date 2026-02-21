@@ -135,12 +135,16 @@ class StandardTrainerLoader(TrainerLoader):
             else "linear"
         )
 
-        # Determine report_to (wandb or None)
+        # Determine report_to (wandb or no reporting)
         report_to = getattr(self.calt_config, "report_to", "wandb")
         if hasattr(self.calt_config, "wandb") and getattr(
             self.calt_config.wandb, "no_wandb", False
         ):
-            report_to = None
+            # Use "none" so both v4 (accepts str "none") and v5 (accepts None/"none") work.
+            # Do not use []: in some v4 builds it can end up as [[]] and raise.
+            report_to = getattr(self.calt_config, "report_to", "none")
+            if report_to is None or report_to == []:
+                report_to = "none"
 
         # Determine run_name from wandb config or explicit run_name
         run_name = getattr(self.calt_config, "run_name", None)
