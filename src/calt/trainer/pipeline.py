@@ -93,8 +93,8 @@ class TrainerPipeline:
 
         if no_wandb:
             os.environ["WANDB_DISABLED"] = "true"
-            # Explicitly disable reporting
-            setattr(self.config, "report_to", None)
+            # Empty list = no reporting (None is invalid in HF Trainer)
+            setattr(self.config, "report_to", [])
             return
 
         os.environ.pop("WANDB_DISABLED", None)
