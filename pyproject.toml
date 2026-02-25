@@ -25,6 +25,14 @@ dependencies = [
     "IPython>=8.18.1",
 ]
 
+[project.optional-dependencies]
+kaggle = [
+    "kaggle",
+]
+
+[project.scripts]
+calt = "calt.cli:main"
+
 [dependency-groups]
 dev = [
     "mypy>=1.15.0",
