@@ -5,6 +5,7 @@ __version__ = _version("calt-x")
 from . import (
     dataset,  # ensure calt.dataset subpackage is loadable
     io,
+    kaggle,
     models,
     trainer,
 )
@@ -25,6 +26,12 @@ from .io.preprocessor import (
 )
 from .io.tokenizer import get_tokenizer
 from .models import ModelPipeline
+from .kaggle import (
+    KaggleJobError,
+    KaggleKernelConfig,
+    KaggleRunResult,
+    run_kaggle_job,
+)
 from .trainer import TrainerPipeline
 from .trainer.trainer import Trainer
 from .trainer.utils import count_cuda_devices
