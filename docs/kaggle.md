@@ -42,6 +42,8 @@ Notes:
 
 - `--source-dir` is copied and uploaded as the Kaggle job package.
 - `--include-path` can be repeated to include extra local files/directories.
+- CALT injects a bootstrap entrypoint so bundled sources (e.g. `calt/`) are
+  added to `sys.path` before your training script runs.
 - By default, the command waits for completion and downloads outputs to `--output-dir`.
 - Use `--no-wait` to submit and exit immediately.
 
@@ -52,6 +54,7 @@ Notes:
 - `--private/--no-private`: toggle kernel visibility.
 - `--timeout-sec`: timeout for submission/waiting.
 - `--poll-interval-sec`: polling interval while waiting for status.
+- `--debug-package`: keep and print packaged job directory + manifest path.
 
 ## Troubleshooting
 

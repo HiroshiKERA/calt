@@ -5,7 +5,12 @@ from __future__ import annotations
 import argparse
 import sys
 
-from .kaggle import KaggleJobError, KaggleKernelConfig, run_kaggle_job
+from .kaggle import (
+    MANIFEST_FILE_NAME,
+    KaggleJobError,
+    KaggleKernelConfig,
+    run_kaggle_job,
+)
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -74,6 +79,11 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Keep local job package directory after submission",
     )
     run_parser.add_argument(
+        "--debug-package",
+        action="store_true",
+        help="Keep and print packaged job directory/manifest for debugging",
+    )
+    run_parser.add_argument(
         "--wait",
         dest="wait",
         action=argparse.BooleanOptionalAction,
@@ -124,8 +134,10 @@ def _handle_kaggle_run(args: argparse.Namespace) -> int:
         wait=args.wait,
         timeout_sec=args.timeout_sec,
         poll_interval_sec=args.poll_interval_sec,
-        keep_job_dir=args.keep_job_dir,
+        keep_job_dir=(args.keep_job_dir or args.debug_package),
         job_dir=args.job_dir,
+        use_bootstrap_entrypoint=True,
+        write_manifest=True,
     )
     print(f"Kernel: {result.kernel_id}")
     print(f"Submit output: {result.submit_output}")
@@ -133,6 +145,9 @@ def _handle_kaggle_run(args: argparse.Namespace) -> int:
         print("Job completed.")
         if result.output_dir is not None:
             print(f"Outputs downloaded to: {result.output_dir}")
+    if args.debug_package:
+        print(f"Packaged job dir: {result.job_dir}")
+        print(f"Manifest: {result.job_dir / MANIFEST_FILE_NAME}")
     return 0
 
 

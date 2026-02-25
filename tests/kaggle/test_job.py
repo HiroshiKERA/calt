@@ -7,6 +7,8 @@ from pathlib import Path
 from types import SimpleNamespace
 
 from calt.kaggle.job import (
+    ENTRYPOINT_SCRIPT_NAME,
+    MANIFEST_FILE_NAME,
     KaggleKernelConfig,
     build_kernel_metadata,
     download_output,
@@ -51,9 +53,13 @@ def test_prepare_job_copies_source_and_include(tmp_path: Path) -> None:
         assert (prepared.job_dir / "train.py").exists()
         assert (prepared.job_dir / "configs" / "train.yaml").exists()
         assert (prepared.job_dir / "extra" / "notes.txt").exists()
+        assert (prepared.job_dir / ENTRYPOINT_SCRIPT_NAME).exists()
+        assert (prepared.job_dir / MANIFEST_FILE_NAME).exists()
+        assert prepared.code_file == ENTRYPOINT_SCRIPT_NAME
+        assert prepared.target_script == "train.py"
         metadata_text = prepared.metadata_path.read_text(encoding="utf-8")
         assert '"id": "alice/test-kernel"' in metadata_text
-        assert '"code_file": "train.py"' in metadata_text
+        assert f'"code_file": "{ENTRYPOINT_SCRIPT_NAME}"' in metadata_text
     finally:
         # Cleanup is covered in run flow; explicit removal keeps test independent.
         if prepared.job_dir.exists():

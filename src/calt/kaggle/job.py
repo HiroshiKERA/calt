@@ -12,6 +12,8 @@ from pathlib import Path
 from typing import Any
 
 DEFAULT_POLL_INTERVAL_SEC = 20
+ENTRYPOINT_SCRIPT_NAME = "__calt_kaggle_entrypoint__.py"
+MANIFEST_FILE_NAME = "__calt_job_manifest__.txt"
 
 
 class KaggleJobError(RuntimeError):
@@ -43,6 +45,8 @@ class PreparedKaggleJob:
     job_dir: Path
     metadata_path: Path
     code_file: str
+    target_script: str
+    manifest_path: Path | None = None
     managed_temp_dir: bool = False
 
 
@@ -124,6 +128,51 @@ def _to_kaggle_bool(value: bool) -> str:
     return "true" if value else "false"
 
 
+def _write_bootstrap_entrypoint(job_root: Path, target_script: str) -> Path:
+    entrypoint_path = job_root / ENTRYPOINT_SCRIPT_NAME
+    entrypoint_path.write_text(
+        (
+            "from __future__ import annotations\n"
+            "\n"
+            "import runpy\n"
+            "import sys\n"
+            "from pathlib import Path\n"
+            "\n"
+            "JOB_ROOT = Path(__file__).resolve().parent\n"
+            f"TARGET_SCRIPT = JOB_ROOT / {target_script!r}\n"
+            "\n"
+            "# Ensure bundled project sources are importable (e.g., calt package).\n"
+            "candidate_paths = [\n"
+            "    JOB_ROOT,\n"
+            "    JOB_ROOT / 'src',\n"
+            "    JOB_ROOT / 'calt',\n"
+            "]\n"
+            "for path in candidate_paths:\n"
+            "    if path.exists():\n"
+            "        path_str = str(path)\n"
+            "        if path_str not in sys.path:\n"
+            "            sys.path.insert(0, path_str)\n"
+            "\n"
+            "if not TARGET_SCRIPT.exists():\n"
+            "    raise FileNotFoundError(f'Target script not found: {TARGET_SCRIPT}')\n"
+            "\n"
+            "runpy.run_path(str(TARGET_SCRIPT), run_name='__main__')\n"
+        ),
+        encoding="utf-8",
+    )
+    return entrypoint_path
+
+
+def _write_manifest(job_root: Path) -> Path:
+    manifest_path = job_root / MANIFEST_FILE_NAME
+    lines = []
+    for path in sorted(job_root.rglob("*")):
+        if path.is_file():
+            lines.append(path.relative_to(job_root).as_posix())
+    manifest_path.write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return manifest_path
+
+
 def build_kernel_metadata(config: KaggleKernelConfig, code_file: str) -> dict[str, Any]:
     """Build a kernel-metadata.json payload for Kaggle kernels push."""
     return {
@@ -149,6 +198,8 @@ def prepare_job(
     config: KaggleKernelConfig,
     include_paths: list[str] | None = None,
     job_dir: str | Path | None = None,
+    use_bootstrap_entrypoint: bool = True,
+    write_manifest: bool = True,
 ) -> PreparedKaggleJob:
     """Create a Kaggle-ready job directory with metadata and local inputs."""
     source_root = Path(source_dir).resolve()
@@ -174,16 +225,24 @@ def prepare_job(
             include_path = (source_root / include_path).resolve()
         _copy_path(include_path, job_root, source_root)
 
-    code_file = script_path.resolve().relative_to(source_root).as_posix()
+    target_script = script_path.resolve().relative_to(source_root).as_posix()
+    code_file = target_script
+    if use_bootstrap_entrypoint:
+        _write_bootstrap_entrypoint(job_root, target_script)
+        code_file = ENTRYPOINT_SCRIPT_NAME
+
     metadata = build_kernel_metadata(config, code_file=code_file)
     metadata_path = job_root / "kernel-metadata.json"
     metadata_path.write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
+    manifest_path = _write_manifest(job_root) if write_manifest else None
 
     return PreparedKaggleJob(
         kernel_id=config.kernel_id,
         job_dir=job_root,
         metadata_path=metadata_path,
         code_file=code_file,
+        target_script=target_script,
+        manifest_path=manifest_path,
         managed_temp_dir=managed_temp_dir,
     )
 
@@ -303,6 +362,8 @@ def run_kaggle_job(
     poll_interval_sec: int = DEFAULT_POLL_INTERVAL_SEC,
     keep_job_dir: bool = False,
     job_dir: str | Path | None = None,
+    use_bootstrap_entrypoint: bool = True,
+    write_manifest: bool = True,
 ) -> KaggleRunResult:
     """Prepare, submit, optionally wait, and download output for a Kaggle run."""
     prepared = prepare_job(
@@ -311,6 +372,8 @@ def run_kaggle_job(
         config=config,
         include_paths=include_paths,
         job_dir=job_dir,
+        use_bootstrap_entrypoint=use_bootstrap_entrypoint,
+        write_manifest=write_manifest,
     )
     try:
         submit_output = submit_job(

@@ -2,6 +2,8 @@
 
 from .job import (
     DEFAULT_POLL_INTERVAL_SEC,
+    ENTRYPOINT_SCRIPT_NAME,
+    MANIFEST_FILE_NAME,
     KaggleJobError,
     KaggleKernelConfig,
     KaggleRunResult,
@@ -19,9 +21,11 @@ from .job import (
 
 __all__ = [
     "DEFAULT_POLL_INTERVAL_SEC",
+    "ENTRYPOINT_SCRIPT_NAME",
     "KaggleJobError",
     "KaggleKernelConfig",
     "KaggleRunResult",
+    "MANIFEST_FILE_NAME",
     "PreparedKaggleJob",
     "build_kernel_metadata",
     "cleanup_job_dir",
