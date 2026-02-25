@@ -107,8 +107,10 @@ def test_entrypoint_contains_fallback_resolution(tmp_path: Path) -> None:
     try:
         entrypoint = prepared.job_dir / ENTRYPOINT_SCRIPT_NAME
         content = entrypoint.read_text(encoding="utf-8")
+        assert "TARGET_SCRIPT_TEXT" in content
         assert "Path('/kaggle/input')" in content
         assert "rglob(TARGET_SCRIPT_REL.name)" in content
+        assert "Path('/kaggle/working/calt_runtime')" in content
         assert "_add_candidate_package_roots()" in content
     finally:
         if prepared.job_dir.exists():
@@ -127,6 +129,7 @@ def test_create_or_update_bundle_dataset_create(monkeypatch, tmp_path: Path) -> 
 
     monkeypatch.setattr("calt.kaggle.job._dataset_exists", lambda dataset_id: False)
     monkeypatch.setattr("calt.kaggle.job._run_command", fake_run)
+    monkeypatch.setattr("calt.kaggle.job._wait_for_dataset_ready", lambda *a, **k: None)
 
     result = create_or_update_bundle_dataset(
         source_dir=source_dir,

@@ -1,6 +1,11 @@
+from importlib.metadata import PackageNotFoundError
 from importlib.metadata import version as _version
 
-__version__ = _version("calt-x")
+try:
+    __version__ = _version("calt-x")
+except PackageNotFoundError:
+    # Source-only environments (e.g., Kaggle dataset bundles) may not include wheel metadata.
+    __version__ = "0+unknown"
 
 from . import (
     dataset,  # ensure calt.dataset subpackage is loadable
@@ -25,13 +30,13 @@ from .io.preprocessor import (
     UnifiedLexer,
 )
 from .io.tokenizer import get_tokenizer
-from .models import ModelPipeline
 from .kaggle import (
     KaggleJobError,
     KaggleKernelConfig,
     KaggleRunResult,
     run_kaggle_job,
 )
+from .models import ModelPipeline
 from .trainer import TrainerPipeline
 from .trainer.trainer import Trainer
 from .trainer.utils import count_cuda_devices

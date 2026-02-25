@@ -15,6 +15,7 @@ from typing import Any
 DEFAULT_POLL_INTERVAL_SEC = 20
 ENTRYPOINT_SCRIPT_NAME = "__calt_kaggle_entrypoint__.py"
 MANIFEST_FILE_NAME = "__calt_job_manifest__.txt"
+DEFAULT_DATASET_READY_TIMEOUT_SEC = 300
 
 
 class KaggleJobError(RuntimeError):
@@ -149,6 +150,35 @@ def _dataset_exists(dataset_id: str) -> bool:
     return result.returncode == 0
 
 
+def _wait_for_dataset_ready(
+    dataset_id: str,
+    *,
+    timeout_sec: int = DEFAULT_DATASET_READY_TIMEOUT_SEC,
+    poll_interval_sec: int = 5,
+) -> None:
+    deadline = time.time() + timeout_sec
+    while time.time() < deadline:
+        result = subprocess.run(
+            ["kaggle", "datasets", "status", dataset_id],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+        status_text = (result.stdout or result.stderr or "").lower()
+        if result.returncode == 0 and (
+            "ready" in status_text or "complete" in status_text
+        ):
+            return
+        if "error" in status_text or "failed" in status_text:
+            raise KaggleJobError(
+                f"Dataset '{dataset_id}' is not ready: {status_text.strip()}"
+            )
+        time.sleep(poll_interval_sec)
+    raise KaggleJobError(
+        f"Timed out waiting for dataset '{dataset_id}' to become ready."
+    )
+
+
 def _write_dataset_metadata(dataset_dir: Path, dataset_id: str, title: str) -> Path:
     metadata_path = dataset_dir / "dataset-metadata.json"
     metadata = {
@@ -228,21 +258,28 @@ def create_or_update_bundle_dataset(
     finally:
         shutil.rmtree(bundle_dir, ignore_errors=True)
 
+    _wait_for_dataset_ready(dataset_id)
     return dataset_id
 
 
-def _write_bootstrap_entrypoint(job_root: Path, target_script: str) -> Path:
+def _write_bootstrap_entrypoint(
+    job_root: Path,
+    target_script: str,
+    target_script_text: str,
+) -> Path:
     entrypoint_path = job_root / ENTRYPOINT_SCRIPT_NAME
     entrypoint_path.write_text(
         (
             "from __future__ import annotations\n"
             "\n"
             "import runpy\n"
+            "import shutil\n"
             "import sys\n"
             "from pathlib import Path\n"
             "\n"
             "JOB_ROOT = Path(__file__).resolve().parent\n"
             f"TARGET_SCRIPT_REL = Path({target_script!r})\n"
+            f"TARGET_SCRIPT_TEXT = {target_script_text!r}\n"
             "\n"
             "def _add_to_syspath(path: Path) -> None:\n"
             "    if path.exists():\n"
@@ -273,8 +310,9 @@ def _write_bootstrap_entrypoint(job_root: Path, target_script: str) -> Path:
             "    if kaggle_input.exists():\n"
             "        input_listing = sorted(p.name for p in kaggle_input.iterdir())\n"
             "    raise FileNotFoundError(\n"
-            "        f'Target script not found: {JOB_ROOT / TARGET_SCRIPT_REL}. '\n"
-            "        f'JOB_ROOT files={src_listing}, /kaggle/input entries={input_listing}'\n"
+            "        f'Target script not found on filesystem: {JOB_ROOT / TARGET_SCRIPT_REL}. '\n"
+            "        f'JOB_ROOT files={src_listing}, /kaggle/input entries={input_listing}. '\n"
+            "        'Falling back to embedded script text.'\n"
             "    )\n"
             "\n"
             "def _add_candidate_package_roots() -> None:\n"
@@ -292,11 +330,38 @@ def _write_bootstrap_entrypoint(job_root: Path, target_script: str) -> Path:
             "                if (parent_src / 'calt').exists():\n"
             "                    _add_to_syspath(parent_src)\n"
             "\n"
-            "target_script = _resolve_target_script()\n"
             "_add_candidate_package_roots()\n"
             "import os\n"
-            "os.chdir(str(target_script.parent))\n"
-            "runpy.run_path(str(target_script), run_name='__main__')\n"
+            "try:\n"
+            "    target_script = _resolve_target_script()\n"
+            "except FileNotFoundError as exc:\n"
+            "    print(str(exc))\n"
+            "    target_script = None\n"
+            "\n"
+            "if target_script is not None:\n"
+            "    runtime_script = target_script\n"
+            "    if str(target_script).startswith('/kaggle/input/'):\n"
+            "        runtime_root = Path('/kaggle/working/calt_runtime')\n"
+            "        if runtime_root.exists():\n"
+            "            shutil.rmtree(runtime_root, ignore_errors=True)\n"
+            "        shutil.copytree(target_script.parent, runtime_root, dirs_exist_ok=True)\n"
+            "        _add_to_syspath(runtime_root)\n"
+            "        _add_to_syspath(runtime_root / 'src')\n"
+            "        if (runtime_root / 'calt').exists():\n"
+            "            _add_to_syspath(runtime_root)\n"
+            "        runtime_script = runtime_root / target_script.name\n"
+            "        os.chdir(str(runtime_root))\n"
+            "    else:\n"
+            "        os.chdir(str(target_script.parent))\n"
+            "    runpy.run_path(str(runtime_script), run_name='__main__')\n"
+            "else:\n"
+            "    os.chdir('/kaggle/working')\n"
+            "    embedded_globals = {\n"
+            "        '__name__': '__main__',\n"
+            "        '__file__': str(JOB_ROOT / TARGET_SCRIPT_REL),\n"
+            "        '__package__': None,\n"
+            "    }\n"
+            "    exec(compile(TARGET_SCRIPT_TEXT, embedded_globals['__file__'], 'exec'), embedded_globals)\n"
         ),
         encoding="utf-8",
     )
@@ -349,6 +414,7 @@ def prepare_job(
     script_path = source_root / script
     if not script_path.exists():
         raise KaggleJobError(f"script not found: {script_path}")
+    target_script_text = script_path.read_text(encoding="utf-8")
 
     managed_temp_dir = False
     if job_dir is None:
@@ -368,7 +434,7 @@ def prepare_job(
     target_script = script_path.resolve().relative_to(source_root).as_posix()
     code_file = target_script
     if use_bootstrap_entrypoint:
-        _write_bootstrap_entrypoint(job_root, target_script)
+        _write_bootstrap_entrypoint(job_root, target_script, target_script_text)
         code_file = ENTRYPOINT_SCRIPT_NAME
 
     metadata = build_kernel_metadata(config, code_file=code_file)
