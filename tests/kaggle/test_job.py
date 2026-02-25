@@ -11,9 +11,11 @@ from calt.kaggle.job import (
     MANIFEST_FILE_NAME,
     KaggleKernelConfig,
     build_kernel_metadata,
+    create_or_update_bundle_dataset,
     download_output,
     parse_status_text,
     prepare_job,
+    run_kaggle_job,
     submit_job,
 )
 
@@ -94,3 +96,84 @@ def test_parse_status_text() -> None:
     assert parse_status_text("status: running") == "running"
     assert parse_status_text("status: complete") == "complete"
     assert parse_status_text("status: error") == "failed"
+
+
+def test_entrypoint_contains_fallback_resolution(tmp_path: Path) -> None:
+    source_dir = tmp_path / "source"
+    source_dir.mkdir()
+    (source_dir / "train.py").write_text("print('ok')\n", encoding="utf-8")
+    config = KaggleKernelConfig(kernel_id="alice/test-kernel")
+    prepared = prepare_job(source_dir=source_dir, script="train.py", config=config)
+    try:
+        entrypoint = prepared.job_dir / ENTRYPOINT_SCRIPT_NAME
+        content = entrypoint.read_text(encoding="utf-8")
+        assert "Path('/kaggle/input')" in content
+        assert "rglob(TARGET_SCRIPT_REL.name)" in content
+        assert "_add_candidate_package_roots()" in content
+    finally:
+        if prepared.job_dir.exists():
+            shutil.rmtree(prepared.job_dir, ignore_errors=True)
+
+
+def test_create_or_update_bundle_dataset_create(monkeypatch, tmp_path: Path) -> None:
+    source_dir = tmp_path / "source"
+    source_dir.mkdir()
+    (source_dir / "train.py").write_text("print('ok')\n", encoding="utf-8")
+    calls: list[list[str]] = []
+
+    def fake_run(args, **kwargs):  # noqa: ANN001, ANN003
+        calls.append(args)
+        return SimpleNamespace(stdout="ok", stderr="")
+
+    monkeypatch.setattr("calt.kaggle.job._dataset_exists", lambda dataset_id: False)
+    monkeypatch.setattr("calt.kaggle.job._run_command", fake_run)
+
+    result = create_or_update_bundle_dataset(
+        source_dir=source_dir,
+        include_paths=[],
+        dataset_id="alice/test-bundle",
+        title="CALT bundle test",
+    )
+    assert result == "alice/test-bundle"
+    assert calls
+    assert calls[0][:3] == ["kaggle", "datasets", "create"]
+
+
+def test_run_kaggle_job_adds_bundle_dataset_source(monkeypatch, tmp_path: Path) -> None:
+    source_dir = tmp_path / "source"
+    source_dir.mkdir()
+    (source_dir / "train.py").write_text("print('ok')\n", encoding="utf-8")
+
+    captured_dataset_sources: list[str] = []
+
+    def fake_bundle(**kwargs):  # noqa: ANN003
+        return "alice/test-bundle"
+
+    def fake_prepare_job(**kwargs):  # noqa: ANN003
+        captured_dataset_sources.extend(kwargs["config"].dataset_sources)
+        return SimpleNamespace(
+            kernel_id="alice/test-kernel",
+            job_dir=tmp_path / "job",
+            metadata_path=tmp_path / "job" / "kernel-metadata.json",
+            code_file=ENTRYPOINT_SCRIPT_NAME,
+            target_script="train.py",
+            manifest_path=None,
+            managed_temp_dir=False,
+        )
+
+    monkeypatch.setattr("calt.kaggle.job.create_or_update_bundle_dataset", fake_bundle)
+    monkeypatch.setattr("calt.kaggle.job.prepare_job", fake_prepare_job)
+    monkeypatch.setattr("calt.kaggle.job.submit_job", lambda *a, **k: "submitted")
+    monkeypatch.setattr("calt.kaggle.job.download_output", lambda *a, **k: "downloaded")
+    monkeypatch.setattr(
+        "calt.kaggle.job.wait_for_job", lambda *a, **k: "alice/test-kernel has status complete"
+    )
+
+    run_kaggle_job(
+        source_dir=source_dir,
+        script="train.py",
+        config=KaggleKernelConfig(kernel_id="alice/test-kernel"),
+        output_dir=tmp_path / "out",
+        include_paths=["extra"],
+    )
+    assert "alice/test-bundle" in captured_dataset_sources

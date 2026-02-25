@@ -84,6 +84,21 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Keep and print packaged job directory/manifest for debugging",
     )
     run_parser.add_argument(
+        "--bundle-dataset-id",
+        default=None,
+        help="Optional Kaggle dataset id (<owner>/<slug>) used to upload include paths",
+    )
+    run_parser.add_argument(
+        "--bundle-dataset-title",
+        default=None,
+        help="Optional title for auto-created/updated include bundle dataset",
+    )
+    run_parser.add_argument(
+        "--bundle-dataset-public",
+        action="store_true",
+        help="Create include bundle dataset as public (default: private)",
+    )
+    run_parser.add_argument(
         "--wait",
         dest="wait",
         action=argparse.BooleanOptionalAction,
@@ -138,6 +153,10 @@ def _handle_kaggle_run(args: argparse.Namespace) -> int:
         job_dir=args.job_dir,
         use_bootstrap_entrypoint=True,
         write_manifest=True,
+        bundle_include_paths_as_dataset=True,
+        bundle_dataset_id=args.bundle_dataset_id,
+        bundle_dataset_title=args.bundle_dataset_title,
+        bundle_dataset_public=args.bundle_dataset_public,
     )
     print(f"Kernel: {result.kernel_id}")
     print(f"Submit output: {result.submit_output}")

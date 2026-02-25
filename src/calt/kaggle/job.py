@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import json
+import re
 import shutil
 import subprocess
 import tempfile
 import time
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
@@ -98,6 +99,9 @@ def _copy_tree(src: Path, dst: Path) -> None:
             "*.pyc",
             "*.pyo",
             ".DS_Store",
+            "wandb",
+            "results",
+            ".pytest_cache",
         ),
     )
 
@@ -128,6 +132,105 @@ def _to_kaggle_bool(value: bool) -> str:
     return "true" if value else "false"
 
 
+def _slugify(value: str) -> str:
+    lowered = value.lower().strip()
+    lowered = re.sub(r"[^a-z0-9]+", "-", lowered)
+    return lowered.strip("-")
+
+
+def _dataset_exists(dataset_id: str) -> bool:
+    _ensure_kaggle_installed()
+    result = subprocess.run(
+        ["kaggle", "datasets", "status", dataset_id],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return result.returncode == 0
+
+
+def _write_dataset_metadata(dataset_dir: Path, dataset_id: str, title: str) -> Path:
+    metadata_path = dataset_dir / "dataset-metadata.json"
+    metadata = {
+        "title": title,
+        "id": dataset_id,
+        "licenses": [{"name": "CC0-1.0"}],
+    }
+    metadata_path.write_text(json.dumps(metadata, indent=2) + "\n", encoding="utf-8")
+    return metadata_path
+
+
+def _derive_bundle_dataset_id(kernel_id: str) -> str:
+    owner, slug = kernel_id.split("/", 1)
+    return f"{owner}/{_slugify(slug)}-bundle"
+
+
+def _derive_bundle_dataset_title(kernel_id: str) -> str:
+    _, slug = kernel_id.split("/", 1)
+    return f"CALT bundle {_slugify(slug)}"
+
+
+def create_or_update_bundle_dataset(
+    *,
+    source_dir: str | Path,
+    include_paths: list[str],
+    dataset_id: str,
+    title: str,
+    public: bool = False,
+    version_message: str = "Update bundle from calt kaggle run",
+) -> str:
+    """Create or update a Kaggle dataset containing source/include files."""
+    source_root = Path(source_dir).resolve()
+    if not source_root.is_dir():
+        raise KaggleJobError(f"source_dir does not exist or is not a directory: {source_root}")
+    if "/" not in dataset_id:
+        raise KaggleJobError("dataset_id must be in format <owner>/<slug>")
+
+    bundle_dir = Path(tempfile.mkdtemp(prefix="calt-kaggle-bundle-"))
+    try:
+        _copy_tree(source_root, bundle_dir)
+        for include in include_paths:
+            include_path = Path(include).expanduser()
+            if not include_path.is_absolute():
+                include_path = (source_root / include_path).resolve()
+            _copy_path(include_path, bundle_dir, source_root)
+
+        _write_dataset_metadata(bundle_dir, dataset_id, title)
+        if _dataset_exists(dataset_id):
+            _run_command(
+                [
+                    "kaggle",
+                    "datasets",
+                    "version",
+                    "-p",
+                    str(bundle_dir),
+                    "-m",
+                    version_message,
+                    "-r",
+                    "zip",
+                    "-q",
+                ]
+            )
+        else:
+            command = [
+                "kaggle",
+                "datasets",
+                "create",
+                "-p",
+                str(bundle_dir),
+                "-r",
+                "zip",
+                "-q",
+            ]
+            if public:
+                command.append("-u")
+            _run_command(command)
+    finally:
+        shutil.rmtree(bundle_dir, ignore_errors=True)
+
+    return dataset_id
+
+
 def _write_bootstrap_entrypoint(job_root: Path, target_script: str) -> Path:
     entrypoint_path = job_root / ENTRYPOINT_SCRIPT_NAME
     entrypoint_path.write_text(
@@ -139,24 +242,61 @@ def _write_bootstrap_entrypoint(job_root: Path, target_script: str) -> Path:
             "from pathlib import Path\n"
             "\n"
             "JOB_ROOT = Path(__file__).resolve().parent\n"
-            f"TARGET_SCRIPT = JOB_ROOT / {target_script!r}\n"
+            f"TARGET_SCRIPT_REL = Path({target_script!r})\n"
             "\n"
-            "# Ensure bundled project sources are importable (e.g., calt package).\n"
-            "candidate_paths = [\n"
-            "    JOB_ROOT,\n"
-            "    JOB_ROOT / 'src',\n"
-            "    JOB_ROOT / 'calt',\n"
-            "]\n"
-            "for path in candidate_paths:\n"
+            "def _add_to_syspath(path: Path) -> None:\n"
             "    if path.exists():\n"
             "        path_str = str(path)\n"
             "        if path_str not in sys.path:\n"
             "            sys.path.insert(0, path_str)\n"
             "\n"
-            "if not TARGET_SCRIPT.exists():\n"
-            "    raise FileNotFoundError(f'Target script not found: {TARGET_SCRIPT}')\n"
+            "def _resolve_target_script() -> Path:\n"
+            "    direct_candidates = [\n"
+            "        JOB_ROOT / TARGET_SCRIPT_REL,\n"
+            "        JOB_ROOT / TARGET_SCRIPT_REL.name,\n"
+            "        Path('/kaggle/input') / TARGET_SCRIPT_REL,\n"
+            "        Path('/kaggle/working') / TARGET_SCRIPT_REL,\n"
+            "    ]\n"
+            "    for candidate in direct_candidates:\n"
+            "        if candidate.exists():\n"
+            "            return candidate\n"
             "\n"
-            "runpy.run_path(str(TARGET_SCRIPT), run_name='__main__')\n"
+            "    kaggle_input = Path('/kaggle/input')\n"
+            "    if kaggle_input.exists():\n"
+            "        matches = sorted(kaggle_input.rglob(TARGET_SCRIPT_REL.name))\n"
+            "        for match in matches:\n"
+            "            if match.is_file():\n"
+            "                return match\n"
+            "\n"
+            "    src_listing = sorted(p.name for p in JOB_ROOT.iterdir()) if JOB_ROOT.exists() else []\n"
+            "    input_listing = []\n"
+            "    if kaggle_input.exists():\n"
+            "        input_listing = sorted(p.name for p in kaggle_input.iterdir())\n"
+            "    raise FileNotFoundError(\n"
+            "        f'Target script not found: {JOB_ROOT / TARGET_SCRIPT_REL}. '\n"
+            "        f'JOB_ROOT files={src_listing}, /kaggle/input entries={input_listing}'\n"
+            "    )\n"
+            "\n"
+            "def _add_candidate_package_roots() -> None:\n"
+            "    base_candidates = [JOB_ROOT, JOB_ROOT / 'src', Path('/kaggle/working')]\n"
+            "    for base in base_candidates:\n"
+            "        _add_to_syspath(base)\n"
+            "\n"
+            "    for base in (Path('/kaggle/input'), Path('/kaggle/working')):\n"
+            "        if not base.exists():\n"
+            "            continue\n"
+            "        for calt_dir in base.rglob('calt'):\n"
+            "            if calt_dir.is_dir() and (calt_dir / '__init__.py').exists():\n"
+            "                _add_to_syspath(calt_dir.parent)\n"
+            "                parent_src = calt_dir.parent / 'src'\n"
+            "                if (parent_src / 'calt').exists():\n"
+            "                    _add_to_syspath(parent_src)\n"
+            "\n"
+            "target_script = _resolve_target_script()\n"
+            "_add_candidate_package_roots()\n"
+            "import os\n"
+            "os.chdir(str(target_script.parent))\n"
+            "runpy.run_path(str(target_script), run_name='__main__')\n"
         ),
         encoding="utf-8",
     )
@@ -364,13 +504,35 @@ def run_kaggle_job(
     job_dir: str | Path | None = None,
     use_bootstrap_entrypoint: bool = True,
     write_manifest: bool = True,
+    bundle_include_paths_as_dataset: bool = True,
+    bundle_dataset_id: str | None = None,
+    bundle_dataset_title: str | None = None,
+    bundle_dataset_public: bool = False,
+    bundle_dataset_version_message: str = "Update bundle from calt kaggle run",
 ) -> KaggleRunResult:
     """Prepare, submit, optionally wait, and download output for a Kaggle run."""
+    effective_config = config
+    if include_paths and bundle_include_paths_as_dataset:
+        dataset_id = bundle_dataset_id or _derive_bundle_dataset_id(config.kernel_id)
+        dataset_title = bundle_dataset_title or _derive_bundle_dataset_title(config.kernel_id)
+        attached_dataset = create_or_update_bundle_dataset(
+            source_dir=source_dir,
+            include_paths=include_paths,
+            dataset_id=dataset_id,
+            title=dataset_title,
+            public=bundle_dataset_public,
+            version_message=bundle_dataset_version_message,
+        )
+        dataset_sources = list(config.dataset_sources)
+        if attached_dataset not in dataset_sources:
+            dataset_sources.append(attached_dataset)
+        effective_config = replace(config, dataset_sources=dataset_sources)
+
     prepared = prepare_job(
         source_dir=source_dir,
         script=script,
-        config=config,
-        include_paths=include_paths,
+        config=effective_config,
+        include_paths=None,
         job_dir=job_dir,
         use_bootstrap_entrypoint=use_bootstrap_entrypoint,
         write_manifest=write_manifest,

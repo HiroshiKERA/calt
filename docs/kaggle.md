@@ -41,7 +41,9 @@ calt kaggle run \
 Notes:
 
 - `--source-dir` is copied and uploaded as the Kaggle job package.
-- `--include-path` can be repeated to include extra local files/directories.
+- `--include-path` is uploaded as a Kaggle Dataset bundle and attached to the kernel.
+  This is required because Kaggle script execution does not reliably expose arbitrary
+  extra files from the kernel upload directory.
 - CALT injects a bootstrap entrypoint so bundled sources (e.g. `calt/`) are
   added to `sys.path` before your training script runs.
 - By default, the command waits for completion and downloads outputs to `--output-dir`.
@@ -55,6 +57,9 @@ Notes:
 - `--timeout-sec`: timeout for submission/waiting.
 - `--poll-interval-sec`: polling interval while waiting for status.
 - `--debug-package`: keep and print packaged job directory + manifest path.
+- `--bundle-dataset-id`: specify the dataset id for include bundle upload.
+- `--bundle-dataset-title`: title for include bundle dataset.
+- `--bundle-dataset-public`: make include bundle dataset public.
 
 ## Troubleshooting
 
