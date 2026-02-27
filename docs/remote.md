@@ -1,6 +1,6 @@
-# Kaggle Job Runner
+# Remote Job Runner
 
-This page explains how to run CALT training jobs on Kaggle from your local terminal.
+This page explains how to run CALT training jobs on a remote backend (Kaggle) from your local terminal.
 
 ## Install
 
@@ -68,7 +68,6 @@ Notes:
   added to `sys.path` before your training script runs.
 - By default, the command waits for completion and downloads outputs to `--output-dir`.
 - Use `--no-wait` to submit and exit immediately.
-- `calt kaggle run` is still accepted as a backward-compatible alias.
 
 ## Common options
 

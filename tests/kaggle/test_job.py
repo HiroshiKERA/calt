@@ -1,4 +1,4 @@
-"""Tests for calt.kaggle.job."""
+"""Tests for calt.remote.job."""
 
 from __future__ import annotations
 
@@ -13,22 +13,22 @@ from calt.cli import (
     _handle_remote_init,
     _handle_remote_list,
 )
-from calt.kaggle.job import (
+from calt.remote.job import (
     ENTRYPOINT_SCRIPT_NAME,
     MANIFEST_FILE_NAME,
-    KaggleKernelConfig,
+    RemoteRunConfig,
     build_kernel_metadata,
     create_or_update_bundle_dataset,
     download_output,
     parse_status_text,
     prepare_job,
-    run_kaggle_job,
+    run_remote_job,
     submit_job,
 )
 
 
 def test_build_kernel_metadata_defaults() -> None:
-    config = KaggleKernelConfig(kernel_id="alice/my-kernel")
+    config = RemoteRunConfig(kernel_id="alice/my-kernel")
     metadata = build_kernel_metadata(config, code_file="train.py")
 
     assert metadata["id"] == "alice/my-kernel"
@@ -52,7 +52,7 @@ def test_prepare_job_copies_source_and_include(tmp_path: Path) -> None:
     extra_dir.mkdir()
     (extra_dir / "notes.txt").write_text("hello\n", encoding="utf-8")
 
-    config = KaggleKernelConfig(kernel_id="alice/test-kernel")
+    config = RemoteRunConfig(kernel_id="alice/test-kernel")
     prepared = prepare_job(
         source_dir=source_dir,
         script="train.py",
@@ -90,7 +90,7 @@ def test_submit_and_download_build_commands(monkeypatch, tmp_path: Path) -> None
     source_dir = tmp_path / "source"
     source_dir.mkdir()
     (source_dir / "train.py").write_text("print('ok')\n", encoding="utf-8")
-    config = KaggleKernelConfig(kernel_id="alice/test-kernel")
+    config = RemoteRunConfig(kernel_id="alice/test-kernel")
     prepared = prepare_job(source_dir=source_dir, script="train.py", config=config)
 
     submit_job(prepared, accelerator="NvidiaTeslaT4")
@@ -111,7 +111,7 @@ def test_entrypoint_contains_fallback_resolution(tmp_path: Path) -> None:
     source_dir = tmp_path / "source"
     source_dir.mkdir()
     (source_dir / "train.py").write_text("print('ok')\n", encoding="utf-8")
-    config = KaggleKernelConfig(kernel_id="alice/test-kernel")
+    config = RemoteRunConfig(kernel_id="alice/test-kernel")
     prepared = prepare_job(source_dir=source_dir, script="train.py", config=config)
     try:
         entrypoint = prepared.job_dir / ENTRYPOINT_SCRIPT_NAME
@@ -151,7 +151,7 @@ def test_create_or_update_bundle_dataset_create(monkeypatch, tmp_path: Path) -> 
     assert calls[0][:3] == ["kaggle", "datasets", "create"]
 
 
-def test_run_kaggle_job_adds_bundle_dataset_source(monkeypatch, tmp_path: Path) -> None:
+def test_run_remote_job_adds_bundle_dataset_source(monkeypatch, tmp_path: Path) -> None:
     source_dir = tmp_path / "source"
     source_dir.mkdir()
     (source_dir / "train.py").write_text("print('ok')\n", encoding="utf-8")
@@ -182,17 +182,17 @@ def test_run_kaggle_job_adds_bundle_dataset_source(monkeypatch, tmp_path: Path) 
         lambda *a, **k: "alice/test-kernel has status complete",
     )
 
-    run_kaggle_job(
+    run_remote_job(
         source_dir=source_dir,
         script="train.py",
-        config=KaggleKernelConfig(kernel_id="alice/test-kernel"),
+        config=RemoteRunConfig(kernel_id="alice/test-kernel"),
         output_dir=tmp_path / "out",
         include_paths=["extra"],
     )
     assert "alice/test-bundle" in captured_dataset_sources
 
 
-def test_cli_supports_remote_run_and_legacy_alias() -> None:
+def test_cli_supports_remote_run() -> None:
     parser = _build_parser()
     remote_args = parser.parse_args(
         [
@@ -209,24 +209,6 @@ def test_cli_supports_remote_run_and_legacy_alias() -> None:
         ]
     )
     assert remote_args.command == "remote"
-    assert remote_args.legacy_alias is False
-
-    legacy_args = parser.parse_args(
-        [
-            "kaggle",
-            "run",
-            "--source-dir",
-            "examples/gf17_addition",
-            "--script",
-            "train.py",
-            "--kernel-id",
-            "alice/my-kernel",
-            "--output-dir",
-            "./out",
-        ]
-    )
-    assert legacy_args.command == "kaggle"
-    assert legacy_args.legacy_alias is True
 
 
 def test_cli_supports_remote_init_and_doctor() -> None:
@@ -259,7 +241,6 @@ def test_remote_init_access_token_writes_file(monkeypatch, tmp_path: Path) -> No
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
     args = SimpleNamespace(
-        legacy_alias=False,
         store="access-token",
         token="dummy-token",
         username=None,
@@ -277,7 +258,7 @@ def test_remote_doctor_reports_missing_cli(monkeypatch, tmp_path: Path) -> None:
     fake_home.mkdir()
     monkeypatch.setenv("HOME", str(fake_home))
     monkeypatch.setattr("calt.cli.shutil.which", lambda _: None)
-    args = SimpleNamespace(legacy_alias=False, skip_api_test=True)
+    args = SimpleNamespace(skip_api_test=True)
     rc = _handle_remote_doctor(args)
     assert rc == 2
 
@@ -296,7 +277,7 @@ def test_remote_list_and_delete_handlers(monkeypatch) -> None:
     monkeypatch.setattr(
         "calt.cli.get_jobs_registry_path", lambda: Path("/tmp/jobs.jsonl")
     )
-    rc_list = _handle_remote_list(SimpleNamespace(legacy_alias=False, limit=10))
+    rc_list = _handle_remote_list(SimpleNamespace(limit=10))
     assert rc_list == 0
 
     deleted = {"kernel": None, "dataset": None}
@@ -315,7 +296,6 @@ def test_remote_list_and_delete_handlers(monkeypatch) -> None:
     monkeypatch.setattr("calt.cli.utc_now_iso", lambda: "2026-01-01T00:00:01+00:00")
     rc_delete = _handle_remote_delete(
         SimpleNamespace(
-            legacy_alias=False,
             job_id="job-123",
             delete_bundle=True,
             yes=True,

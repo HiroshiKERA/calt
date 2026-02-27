@@ -205,7 +205,7 @@ def create_or_update_bundle_dataset(
     dataset_id: str,
     title: str,
     public: bool = False,
-    version_message: str = "Update bundle from calt kaggle run",
+    version_message: str = "Update bundle from calt remote run",
 ) -> str:
     """Create or update a Kaggle dataset containing source/include files."""
     source_root = Path(source_dir).resolve()
@@ -579,7 +579,7 @@ def run_kaggle_job(
     bundle_dataset_id: str | None = None,
     bundle_dataset_title: str | None = None,
     bundle_dataset_public: bool = False,
-    bundle_dataset_version_message: str = "Update bundle from calt kaggle run",
+    bundle_dataset_version_message: str = "Update bundle from calt remote run",
 ) -> KaggleRunResult:
     """Prepare, submit, optionally wait, and download output for a Kaggle run."""
     attached_dataset: str | None = None

@@ -10,8 +10,8 @@ except PackageNotFoundError:
 from . import (
     dataset,  # ensure calt.dataset subpackage is loadable
     io,
-    kaggle,
     models,
+    remote,
     trainer,
 )
 from .dataset import DatasetPipeline
@@ -30,13 +30,13 @@ from .io.preprocessor import (
     UnifiedLexer,
 )
 from .io.tokenizer import get_tokenizer
-from .kaggle import (
-    KaggleJobError,
-    KaggleKernelConfig,
-    KaggleRunResult,
-    run_kaggle_job,
-)
 from .models import ModelPipeline
+from .remote import (
+    RemoteJobError,
+    RemoteRunConfig,
+    RemoteRunResult,
+    run_remote_job,
+)
 from .trainer import TrainerPipeline
 from .trainer.trainer import Trainer
 from .trainer.utils import count_cuda_devices

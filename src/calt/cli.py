@@ -12,20 +12,18 @@ import subprocess
 import sys
 from pathlib import Path
 
-from .kaggle import (
+from .remote import (
     MANIFEST_FILE_NAME,
-    KaggleJobError,
-    KaggleKernelConfig,
+    RemoteJobError,
+    RemoteRunConfig,
+    append_job_record,
     delete_dataset,
     delete_kernel,
-    run_kaggle_job,
-)
-from .remote_jobs import (
-    append_job_record,
     find_job_record,
     generate_job_id,
     get_jobs_registry_path,
     load_job_records,
+    run_remote_job,
     utc_now_iso,
 )
 
@@ -192,7 +190,7 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Submit a local training job to Kaggle and optionally wait/download outputs.",
     )
     _add_run_arguments(remote_run_parser)
-    remote_run_parser.set_defaults(handler=_handle_kaggle_run, legacy_alias=False)
+    remote_run_parser.set_defaults(handler=_handle_remote_run)
     remote_init_parser = remote_subparsers.add_parser(
         "init",
         help="Initialize Kaggle credentials for remote runs.",
@@ -218,7 +216,7 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Skip API connectivity test after writing credentials.",
     )
-    remote_init_parser.set_defaults(handler=_handle_remote_init, legacy_alias=False)
+    remote_init_parser.set_defaults(handler=_handle_remote_init)
     remote_doctor_parser = remote_subparsers.add_parser(
         "doctor",
         help="Check remote(Kaggle) CLI/auth setup.",
@@ -228,7 +226,7 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Skip calling Kaggle API and only check local config.",
     )
-    remote_doctor_parser.set_defaults(handler=_handle_remote_doctor, legacy_alias=False)
+    remote_doctor_parser.set_defaults(handler=_handle_remote_doctor)
     remote_list_parser = remote_subparsers.add_parser(
         "list",
         help="List local remote job records.",
@@ -239,7 +237,7 @@ def _build_parser() -> argparse.ArgumentParser:
         default=20,
         help="Maximum number of recent jobs to show.",
     )
-    remote_list_parser.set_defaults(handler=_handle_remote_list, legacy_alias=False)
+    remote_list_parser.set_defaults(handler=_handle_remote_list)
     remote_delete_parser = remote_subparsers.add_parser(
         "delete",
         help="Delete a remote job by local job id.",
@@ -255,60 +253,20 @@ def _build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="Skip confirmation prompt.",
     )
-    remote_delete_parser.set_defaults(handler=_handle_remote_delete, legacy_alias=False)
-
-    # Backward-compatible alias: `calt kaggle run`
-    kaggle_parser = subparsers.add_parser(
-        "kaggle",
-        help=argparse.SUPPRESS,
-    )
-    kaggle_subparsers = kaggle_parser.add_subparsers(dest="kaggle_command")
-    kaggle_run_parser = kaggle_subparsers.add_parser("run", help=argparse.SUPPRESS)
-    _add_run_arguments(kaggle_run_parser)
-    kaggle_run_parser.set_defaults(handler=_handle_kaggle_run, legacy_alias=True)
-    kaggle_init_parser = kaggle_subparsers.add_parser("init", help=argparse.SUPPRESS)
-    kaggle_init_parser.add_argument(
-        "--store",
-        choices=["access-token", "kaggle-json", "env"],
-        default="access-token",
-    )
-    kaggle_init_parser.add_argument("--token", default=None)
-    kaggle_init_parser.add_argument("--username", default=None)
-    kaggle_init_parser.add_argument("--no-test", action="store_true")
-    kaggle_init_parser.set_defaults(handler=_handle_remote_init, legacy_alias=True)
-    kaggle_doctor_parser = kaggle_subparsers.add_parser(
-        "doctor", help=argparse.SUPPRESS
-    )
-    kaggle_doctor_parser.add_argument("--skip-api-test", action="store_true")
-    kaggle_doctor_parser.set_defaults(handler=_handle_remote_doctor, legacy_alias=True)
-    kaggle_list_parser = kaggle_subparsers.add_parser("list", help=argparse.SUPPRESS)
-    kaggle_list_parser.add_argument("--limit", type=int, default=20)
-    kaggle_list_parser.set_defaults(handler=_handle_remote_list, legacy_alias=True)
-    kaggle_delete_parser = kaggle_subparsers.add_parser(
-        "delete", help=argparse.SUPPRESS
-    )
-    kaggle_delete_parser.add_argument("--job-id", required=True)
-    kaggle_delete_parser.add_argument("--delete-bundle", action="store_true")
-    kaggle_delete_parser.add_argument("--yes", action="store_true")
-    kaggle_delete_parser.set_defaults(handler=_handle_remote_delete, legacy_alias=True)
+    remote_delete_parser.set_defaults(handler=_handle_remote_delete)
 
     return parser
 
 
-def _handle_kaggle_run(args: argparse.Namespace) -> int:
-    if getattr(args, "legacy_alias", False):
-        print(
-            "Deprecated: use `calt remote run ...` instead of `calt kaggle run ...`.",
-            file=sys.stderr,
-        )
-    config = KaggleKernelConfig(
+def _handle_remote_run(args: argparse.Namespace) -> int:
+    config = RemoteRunConfig(
         kernel_id=args.kernel_id,
         title=args.title,
         enable_gpu=args.enable_gpu,
         enable_internet=args.enable_internet,
         is_private=args.is_private,
     )
-    result = run_kaggle_job(
+    result = run_remote_job(
         source_dir=args.source_dir,
         script=args.script,
         config=config,
@@ -354,11 +312,6 @@ def _handle_kaggle_run(args: argparse.Namespace) -> int:
 
 
 def _handle_remote_init(args: argparse.Namespace) -> int:
-    if getattr(args, "legacy_alias", False):
-        print(
-            "Deprecated: use `calt remote init ...` instead of `calt kaggle init ...`.",
-            file=sys.stderr,
-        )
     token = args.token or getpass.getpass("Kaggle API token: ").strip()
     if not token:
         print("[calt remote] token is empty.", file=sys.stderr)
@@ -394,11 +347,6 @@ def _handle_remote_init(args: argparse.Namespace) -> int:
 
 
 def _handle_remote_doctor(args: argparse.Namespace) -> int:
-    if getattr(args, "legacy_alias", False):
-        print(
-            "Deprecated: use `calt remote doctor ...` instead of `calt kaggle doctor ...`.",
-            file=sys.stderr,
-        )
 
     ok = True
     kaggle_bin = shutil.which("kaggle")
@@ -438,11 +386,6 @@ def _handle_remote_doctor(args: argparse.Namespace) -> int:
 
 
 def _handle_remote_list(args: argparse.Namespace) -> int:
-    if getattr(args, "legacy_alias", False):
-        print(
-            "Deprecated: use `calt remote list ...` instead of `calt kaggle list ...`.",
-            file=sys.stderr,
-        )
     records = load_job_records()
     if not records:
         print(f"No local records found at: {get_jobs_registry_path()}")
@@ -462,11 +405,6 @@ def _handle_remote_list(args: argparse.Namespace) -> int:
 
 
 def _handle_remote_delete(args: argparse.Namespace) -> int:
-    if getattr(args, "legacy_alias", False):
-        print(
-            "Deprecated: use `calt remote delete ...` instead of `calt kaggle delete ...`.",
-            file=sys.stderr,
-        )
     record = find_job_record(args.job_id)
     if record is None:
         print(f"[calt remote] job_id not found: {args.job_id}", file=sys.stderr)
@@ -518,7 +456,7 @@ def main(argv: list[str] | None = None) -> int:
         return 1
     try:
         return handler(args)
-    except KaggleJobError as exc:
+    except RemoteJobError as exc:
         print(f"[calt remote] {exc}", file=sys.stderr)
         return 2
 

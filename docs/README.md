@@ -23,7 +23,7 @@ under `calt/examples/*` and customise only the dataset generator and configurati
 - **Trainer pipeline** – model and high-level training flow.
     - [Overview](trainer.md), [Model pipeline](model_pipeline.md)
 - **Execution utilities**
-    - [Kaggle job runner](kaggle.md)
+    - [Remote job runner](remote.md)
 - **Configuration** – how `data.yaml`, `lexer.yaml`, and `train.yaml` work together.
     - [Configuration](configuration.md)
 
