@@ -3,7 +3,14 @@
 from __future__ import annotations
 
 import argparse
+import getpass
+import json
+import os
+import shutil
+import stat
+import subprocess
 import sys
+from pathlib import Path
 
 from .kaggle import (
     MANIFEST_FILE_NAME,
@@ -11,6 +18,50 @@ from .kaggle import (
     KaggleKernelConfig,
     run_kaggle_job,
 )
+
+
+def _kaggle_dir() -> Path:
+    return Path.home() / ".kaggle"
+
+
+def _chmod_user_only(path: Path) -> None:
+    path.chmod(stat.S_IRUSR | stat.S_IWUSR)
+
+
+def _write_access_token(token: str) -> Path:
+    kaggle_dir = _kaggle_dir()
+    kaggle_dir.mkdir(parents=True, exist_ok=True)
+    kaggle_dir.chmod(stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+    token_path = kaggle_dir / "access_token"
+    token_path.write_text(token.strip() + "\n", encoding="utf-8")
+    _chmod_user_only(token_path)
+    return token_path
+
+
+def _write_kaggle_json(username: str, token: str) -> Path:
+    kaggle_dir = _kaggle_dir()
+    kaggle_dir.mkdir(parents=True, exist_ok=True)
+    kaggle_dir.chmod(stat.S_IRUSR | stat.S_IWUSR | stat.S_IXUSR)
+    json_path = kaggle_dir / "kaggle.json"
+    payload = {"username": username.strip(), "key": token.strip()}
+    json_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    _chmod_user_only(json_path)
+    return json_path
+
+
+def _run_kaggle_healthcheck() -> tuple[bool, str]:
+    if shutil.which("kaggle") is None:
+        return False, "kaggle CLI not found"
+    proc = subprocess.run(
+        ["kaggle", "kernels", "list", "--page-size", "1"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if proc.returncode == 0:
+        return True, "kaggle API check passed"
+    detail = (proc.stderr or proc.stdout or "unknown error").strip()
+    return False, f"kaggle API check failed: {detail}"
 
 
 def _add_run_arguments(run_parser: argparse.ArgumentParser) -> None:
@@ -132,6 +183,42 @@ def _build_parser() -> argparse.ArgumentParser:
     )
     _add_run_arguments(remote_run_parser)
     remote_run_parser.set_defaults(handler=_handle_kaggle_run, legacy_alias=False)
+    remote_init_parser = remote_subparsers.add_parser(
+        "init",
+        help="Initialize Kaggle credentials for remote runs.",
+    )
+    remote_init_parser.add_argument(
+        "--store",
+        choices=["access-token", "kaggle-json", "env"],
+        default="access-token",
+        help="Credential storage mode (default: access-token).",
+    )
+    remote_init_parser.add_argument(
+        "--token",
+        default=None,
+        help="Kaggle API token value. If omitted, prompt securely.",
+    )
+    remote_init_parser.add_argument(
+        "--username",
+        default=None,
+        help="Kaggle username (required for --store kaggle-json).",
+    )
+    remote_init_parser.add_argument(
+        "--no-test",
+        action="store_true",
+        help="Skip API connectivity test after writing credentials.",
+    )
+    remote_init_parser.set_defaults(handler=_handle_remote_init, legacy_alias=False)
+    remote_doctor_parser = remote_subparsers.add_parser(
+        "doctor",
+        help="Check remote(Kaggle) CLI/auth setup.",
+    )
+    remote_doctor_parser.add_argument(
+        "--skip-api-test",
+        action="store_true",
+        help="Skip calling Kaggle API and only check local config.",
+    )
+    remote_doctor_parser.set_defaults(handler=_handle_remote_doctor, legacy_alias=False)
 
     # Backward-compatible alias: `calt kaggle run`
     kaggle_parser = subparsers.add_parser(
@@ -142,6 +229,19 @@ def _build_parser() -> argparse.ArgumentParser:
     kaggle_run_parser = kaggle_subparsers.add_parser("run", help=argparse.SUPPRESS)
     _add_run_arguments(kaggle_run_parser)
     kaggle_run_parser.set_defaults(handler=_handle_kaggle_run, legacy_alias=True)
+    kaggle_init_parser = kaggle_subparsers.add_parser("init", help=argparse.SUPPRESS)
+    kaggle_init_parser.add_argument(
+        "--store",
+        choices=["access-token", "kaggle-json", "env"],
+        default="access-token",
+    )
+    kaggle_init_parser.add_argument("--token", default=None)
+    kaggle_init_parser.add_argument("--username", default=None)
+    kaggle_init_parser.add_argument("--no-test", action="store_true")
+    kaggle_init_parser.set_defaults(handler=_handle_remote_init, legacy_alias=True)
+    kaggle_doctor_parser = kaggle_subparsers.add_parser("doctor", help=argparse.SUPPRESS)
+    kaggle_doctor_parser.add_argument("--skip-api-test", action="store_true")
+    kaggle_doctor_parser.set_defaults(handler=_handle_remote_doctor, legacy_alias=True)
 
     return parser
 
@@ -188,6 +288,87 @@ def _handle_kaggle_run(args: argparse.Namespace) -> int:
         print(f"Packaged job dir: {result.job_dir}")
         print(f"Manifest: {result.job_dir / MANIFEST_FILE_NAME}")
     return 0
+
+
+def _handle_remote_init(args: argparse.Namespace) -> int:
+    if getattr(args, "legacy_alias", False):
+        print(
+            "Deprecated: use `calt remote init ...` instead of `calt kaggle init ...`.",
+            file=sys.stderr,
+        )
+    token = args.token or getpass.getpass("Kaggle API token: ").strip()
+    if not token:
+        print("[calt remote] token is empty.", file=sys.stderr)
+        return 2
+
+    if args.store == "access-token":
+        saved_path = _write_access_token(token)
+        print(f"Saved Kaggle token to: {saved_path}")
+    elif args.store == "kaggle-json":
+        username = args.username or input("Kaggle username: ").strip()
+        if not username:
+            print("[calt remote] username is required for kaggle-json store.", file=sys.stderr)
+            return 2
+        saved_path = _write_kaggle_json(username, token)
+        print(f"Saved Kaggle credentials to: {saved_path}")
+    else:
+        os.environ["KAGGLE_API_TOKEN"] = token
+        print("Set KAGGLE_API_TOKEN for current process.")
+        print("Add this to your shell profile if needed:")
+        print("export KAGGLE_API_TOKEN=<your-token>")
+
+    if args.no_test:
+        return 0
+    ok, message = _run_kaggle_healthcheck()
+    if ok:
+        print(message)
+        return 0
+    print(f"[calt remote] {message}", file=sys.stderr)
+    return 2
+
+
+def _handle_remote_doctor(args: argparse.Namespace) -> int:
+    if getattr(args, "legacy_alias", False):
+        print(
+            "Deprecated: use `calt remote doctor ...` instead of `calt kaggle doctor ...`.",
+            file=sys.stderr,
+        )
+
+    ok = True
+    kaggle_bin = shutil.which("kaggle")
+    if kaggle_bin:
+        print(f"CLI: ok ({kaggle_bin})")
+    else:
+        print("CLI: missing (`pip install \"calt-x[kaggle]\"`)", file=sys.stderr)
+        ok = False
+
+    token_env = bool(os.environ.get("KAGGLE_API_TOKEN"))
+    access_token_file = _kaggle_dir() / "access_token"
+    kaggle_json_file = _kaggle_dir() / "kaggle.json"
+    token_file = access_token_file.exists()
+    json_file = kaggle_json_file.exists()
+    if token_env or token_file or json_file:
+        source = []
+        if token_env:
+            source.append("env")
+        if token_file:
+            source.append(str(access_token_file))
+        if json_file:
+            source.append(str(kaggle_json_file))
+        print(f"Auth: found ({', '.join(source)})")
+    else:
+        print("Auth: missing (run `calt remote init`)", file=sys.stderr)
+        ok = False
+
+    if not args.skip_api_test:
+        health_ok, message = _run_kaggle_healthcheck()
+        if health_ok:
+            print(f"API: ok ({message})")
+        else:
+            print(f"API: fail ({message})", file=sys.stderr)
+            ok = False
+
+    return 0 if ok else 2
 
 
 def main(argv: list[str] | None = None) -> int:

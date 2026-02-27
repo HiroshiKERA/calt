@@ -6,7 +6,7 @@ import shutil
 from pathlib import Path
 from types import SimpleNamespace
 
-from calt.cli import _build_parser
+from calt.cli import _build_parser, _handle_remote_doctor, _handle_remote_init
 from calt.kaggle.job import (
     ENTRYPOINT_SCRIPT_NAME,
     MANIFEST_FILE_NAME,
@@ -218,3 +218,52 @@ def test_cli_supports_remote_run_and_legacy_alias() -> None:
     )
     assert legacy_args.command == "kaggle"
     assert legacy_args.legacy_alias is True
+
+
+def test_cli_supports_remote_init_and_doctor() -> None:
+    parser = _build_parser()
+    init_args = parser.parse_args(
+        [
+            "remote",
+            "init",
+            "--store",
+            "access-token",
+            "--token",
+            "dummy",
+            "--no-test",
+        ]
+    )
+    assert init_args.command == "remote"
+    assert init_args.remote_command == "init"
+
+    doctor_args = parser.parse_args(["remote", "doctor", "--skip-api-test"])
+    assert doctor_args.command == "remote"
+    assert doctor_args.remote_command == "doctor"
+
+
+def test_remote_init_access_token_writes_file(monkeypatch, tmp_path: Path) -> None:
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+    args = SimpleNamespace(
+        legacy_alias=False,
+        store="access-token",
+        token="dummy-token",
+        username=None,
+        no_test=True,
+    )
+    rc = _handle_remote_init(args)
+    assert rc == 0
+    token_file = fake_home / ".kaggle" / "access_token"
+    assert token_file.exists()
+    assert token_file.read_text(encoding="utf-8").strip() == "dummy-token"
+
+
+def test_remote_doctor_reports_missing_cli(monkeypatch, tmp_path: Path) -> None:
+    fake_home = tmp_path / "home"
+    fake_home.mkdir()
+    monkeypatch.setenv("HOME", str(fake_home))
+    monkeypatch.setattr("calt.cli.shutil.which", lambda _: None)
+    args = SimpleNamespace(legacy_alias=False, skip_api_test=True)
+    rc = _handle_remote_doctor(args)
+    assert rc == 2

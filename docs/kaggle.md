@@ -20,9 +20,23 @@ pip install kaggle
 
 You need Kaggle API credentials before running jobs.
 
-- Option A: set `KAGGLE_API_TOKEN`
-- Option B: store token in `~/.kaggle/access_token`
-- Option C (legacy): store `kaggle.json` in `~/.kaggle/kaggle.json`
+Recommended first step:
+
+```bash
+calt remote init
+```
+
+This command can store credentials as:
+
+- `access-token` (default): `~/.kaggle/access_token`
+- `kaggle-json` (legacy): `~/.kaggle/kaggle.json`
+- `env`: current process `KAGGLE_API_TOKEN`
+
+You can run a setup check anytime:
+
+```bash
+calt remote doctor
+```
 
 ## Run a job
 
