@@ -6,6 +6,7 @@ import shutil
 from pathlib import Path
 from types import SimpleNamespace
 
+from calt.cli import _build_parser
 from calt.kaggle.job import (
     ENTRYPOINT_SCRIPT_NAME,
     MANIFEST_FILE_NAME,
@@ -180,3 +181,40 @@ def test_run_kaggle_job_adds_bundle_dataset_source(monkeypatch, tmp_path: Path) 
         include_paths=["extra"],
     )
     assert "alice/test-bundle" in captured_dataset_sources
+
+
+def test_cli_supports_remote_run_and_legacy_alias() -> None:
+    parser = _build_parser()
+    remote_args = parser.parse_args(
+        [
+            "remote",
+            "run",
+            "--source-dir",
+            "examples/gf17_addition",
+            "--script",
+            "train.py",
+            "--kernel-id",
+            "alice/my-kernel",
+            "--output-dir",
+            "./out",
+        ]
+    )
+    assert remote_args.command == "remote"
+    assert remote_args.legacy_alias is False
+
+    legacy_args = parser.parse_args(
+        [
+            "kaggle",
+            "run",
+            "--source-dir",
+            "examples/gf17_addition",
+            "--script",
+            "train.py",
+            "--kernel-id",
+            "alice/my-kernel",
+            "--output-dir",
+            "./out",
+        ]
+    )
+    assert legacy_args.command == "kaggle"
+    assert legacy_args.legacy_alias is True

@@ -13,17 +13,7 @@ from .kaggle import (
 )
 
 
-def _build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="calt")
-    subparsers = parser.add_subparsers(dest="command")
-
-    kaggle_parser = subparsers.add_parser("kaggle", help="Run jobs on Kaggle kernels")
-    kaggle_subparsers = kaggle_parser.add_subparsers(dest="kaggle_command")
-    run_parser = kaggle_subparsers.add_parser(
-        "run",
-        help="Submit a local training job to Kaggle and optionally wait/download outputs.",
-    )
-
+def _add_run_arguments(run_parser: argparse.ArgumentParser) -> None:
     run_parser.add_argument("--source-dir", required=True, help="Job source directory")
     run_parser.add_argument(
         "--script",
@@ -126,12 +116,42 @@ def _build_parser() -> argparse.ArgumentParser:
         default=True,
         help="Create/update kernel as private (default: true)",
     )
-    run_parser.set_defaults(handler=_handle_kaggle_run)
+
+
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(prog="calt")
+    subparsers = parser.add_subparsers(dest="command")
+
+    remote_parser = subparsers.add_parser(
+        "remote", help="Run jobs on remote backends (Kaggle)."
+    )
+    remote_subparsers = remote_parser.add_subparsers(dest="remote_command")
+    remote_run_parser = remote_subparsers.add_parser(
+        "run",
+        help="Submit a local training job to Kaggle and optionally wait/download outputs.",
+    )
+    _add_run_arguments(remote_run_parser)
+    remote_run_parser.set_defaults(handler=_handle_kaggle_run, legacy_alias=False)
+
+    # Backward-compatible alias: `calt kaggle run`
+    kaggle_parser = subparsers.add_parser(
+        "kaggle",
+        help=argparse.SUPPRESS,
+    )
+    kaggle_subparsers = kaggle_parser.add_subparsers(dest="kaggle_command")
+    kaggle_run_parser = kaggle_subparsers.add_parser("run", help=argparse.SUPPRESS)
+    _add_run_arguments(kaggle_run_parser)
+    kaggle_run_parser.set_defaults(handler=_handle_kaggle_run, legacy_alias=True)
 
     return parser
 
 
 def _handle_kaggle_run(args: argparse.Namespace) -> int:
+    if getattr(args, "legacy_alias", False):
+        print(
+            "Deprecated: use `calt remote run ...` instead of `calt kaggle run ...`.",
+            file=sys.stderr,
+        )
     config = KaggleKernelConfig(
         kernel_id=args.kernel_id,
         title=args.title,
@@ -181,7 +201,7 @@ def main(argv: list[str] | None = None) -> int:
     try:
         return handler(args)
     except KaggleJobError as exc:
-        print(f"[calt kaggle] {exc}", file=sys.stderr)
+        print(f"[calt remote] {exc}", file=sys.stderr)
         return 2
 
 

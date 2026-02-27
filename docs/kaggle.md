@@ -29,7 +29,7 @@ You need Kaggle API credentials before running jobs.
 Example with `examples/gf17_addition`:
 
 ```bash
-calt kaggle run \
+calt remote run \
   --source-dir examples/gf17_addition \
   --script train.py \
   --kernel-id <your-kaggle-username>/calt-gf17-addition \
@@ -48,6 +48,7 @@ Notes:
   added to `sys.path` before your training script runs.
 - By default, the command waits for completion and downloads outputs to `--output-dir`.
 - Use `--no-wait` to submit and exit immediately.
+- `calt kaggle run` is still accepted as a backward-compatible alias.
 
 ## Common options
 
