@@ -38,6 +38,12 @@ You can run a setup check anytime:
 calt remote doctor
 ```
 
+List local job records:
+
+```bash
+calt remote list
+```
+
 ## Run a job
 
 Example with `examples/gf17_addition`:
@@ -81,3 +87,17 @@ Notes:
 - `kaggle CLI not found`: install `kaggle` or `calt-x[kaggle]`.
 - Authentication errors: verify token setup in Kaggle settings.
 - Job failed on Kaggle: run `kaggle kernels status <username/slug>` and inspect logs/output.
+
+## Delete a submitted job later
+
+Each `calt remote run` prints a local `Job ID`. You can delete the remote kernel later:
+
+```bash
+calt remote delete --job-id <job-id> --yes
+```
+
+Also delete the attached include bundle dataset if recorded:
+
+```bash
+calt remote delete --job-id <job-id> --delete-bundle --yes
+```

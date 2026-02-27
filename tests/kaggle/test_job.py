@@ -6,7 +6,13 @@ import shutil
 from pathlib import Path
 from types import SimpleNamespace
 
-from calt.cli import _build_parser, _handle_remote_doctor, _handle_remote_init
+from calt.cli import (
+    _build_parser,
+    _handle_remote_delete,
+    _handle_remote_doctor,
+    _handle_remote_init,
+    _handle_remote_list,
+)
 from calt.kaggle.job import (
     ENTRYPOINT_SCRIPT_NAME,
     MANIFEST_FILE_NAME,
@@ -38,7 +44,9 @@ def test_prepare_job_copies_source_and_include(tmp_path: Path) -> None:
     source_dir.mkdir()
     (source_dir / "train.py").write_text("print('ok')\n", encoding="utf-8")
     (source_dir / "configs").mkdir()
-    (source_dir / "configs" / "train.yaml").write_text("train:\n  seed: 42\n", encoding="utf-8")
+    (source_dir / "configs" / "train.yaml").write_text(
+        "train:\n  seed: 42\n", encoding="utf-8"
+    )
 
     extra_dir = tmp_path / "extra"
     extra_dir.mkdir()
@@ -170,7 +178,8 @@ def test_run_kaggle_job_adds_bundle_dataset_source(monkeypatch, tmp_path: Path) 
     monkeypatch.setattr("calt.kaggle.job.submit_job", lambda *a, **k: "submitted")
     monkeypatch.setattr("calt.kaggle.job.download_output", lambda *a, **k: "downloaded")
     monkeypatch.setattr(
-        "calt.kaggle.job.wait_for_job", lambda *a, **k: "alice/test-kernel has status complete"
+        "calt.kaggle.job.wait_for_job",
+        lambda *a, **k: "alice/test-kernel has status complete",
     )
 
     run_kaggle_job(
@@ -239,6 +248,10 @@ def test_cli_supports_remote_init_and_doctor() -> None:
     doctor_args = parser.parse_args(["remote", "doctor", "--skip-api-test"])
     assert doctor_args.command == "remote"
     assert doctor_args.remote_command == "doctor"
+    list_args = parser.parse_args(["remote", "list"])
+    assert list_args.remote_command == "list"
+    delete_args = parser.parse_args(["remote", "delete", "--job-id", "job-abc"])
+    assert delete_args.remote_command == "delete"
 
 
 def test_remote_init_access_token_writes_file(monkeypatch, tmp_path: Path) -> None:
@@ -267,3 +280,47 @@ def test_remote_doctor_reports_missing_cli(monkeypatch, tmp_path: Path) -> None:
     args = SimpleNamespace(legacy_alias=False, skip_api_test=True)
     rc = _handle_remote_doctor(args)
     assert rc == 2
+
+
+def test_remote_list_and_delete_handlers(monkeypatch) -> None:
+    records = [
+        {
+            "job_id": "job-123",
+            "kernel_id": "alice/k1",
+            "status": "submitted",
+            "created_at": "2026-01-01T00:00:00+00:00",
+            "bundle_dataset_id": "alice/bundle1",
+        }
+    ]
+    monkeypatch.setattr("calt.cli.load_job_records", lambda: records)
+    monkeypatch.setattr(
+        "calt.cli.get_jobs_registry_path", lambda: Path("/tmp/jobs.jsonl")
+    )
+    rc_list = _handle_remote_list(SimpleNamespace(legacy_alias=False, limit=10))
+    assert rc_list == 0
+
+    deleted = {"kernel": None, "dataset": None}
+    monkeypatch.setattr("calt.cli.find_job_record", lambda _job_id: records[0])
+    monkeypatch.setattr(
+        "calt.cli.delete_kernel",
+        lambda kernel_id, yes=True: deleted.__setitem__("kernel", kernel_id),
+    )
+    monkeypatch.setattr(
+        "calt.cli.delete_dataset",
+        lambda dataset_id, yes=True: deleted.__setitem__("dataset", dataset_id),
+    )
+    monkeypatch.setattr(
+        "calt.cli.append_job_record", lambda rec: Path("/tmp/jobs.jsonl")
+    )
+    monkeypatch.setattr("calt.cli.utc_now_iso", lambda: "2026-01-01T00:00:01+00:00")
+    rc_delete = _handle_remote_delete(
+        SimpleNamespace(
+            legacy_alias=False,
+            job_id="job-123",
+            delete_bundle=True,
+            yes=True,
+        )
+    )
+    assert rc_delete == 0
+    assert deleted["kernel"] == "alice/k1"
+    assert deleted["dataset"] == "alice/bundle1"

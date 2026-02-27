@@ -16,7 +16,17 @@ from .kaggle import (
     MANIFEST_FILE_NAME,
     KaggleJobError,
     KaggleKernelConfig,
+    delete_dataset,
+    delete_kernel,
     run_kaggle_job,
+)
+from .remote_jobs import (
+    append_job_record,
+    find_job_record,
+    generate_job_id,
+    get_jobs_registry_path,
+    load_job_records,
+    utc_now_iso,
 )
 
 
@@ -219,6 +229,33 @@ def _build_parser() -> argparse.ArgumentParser:
         help="Skip calling Kaggle API and only check local config.",
     )
     remote_doctor_parser.set_defaults(handler=_handle_remote_doctor, legacy_alias=False)
+    remote_list_parser = remote_subparsers.add_parser(
+        "list",
+        help="List local remote job records.",
+    )
+    remote_list_parser.add_argument(
+        "--limit",
+        type=int,
+        default=20,
+        help="Maximum number of recent jobs to show.",
+    )
+    remote_list_parser.set_defaults(handler=_handle_remote_list, legacy_alias=False)
+    remote_delete_parser = remote_subparsers.add_parser(
+        "delete",
+        help="Delete a remote job by local job id.",
+    )
+    remote_delete_parser.add_argument("--job-id", required=True, help="Local job id")
+    remote_delete_parser.add_argument(
+        "--delete-bundle",
+        action="store_true",
+        help="Also delete attached bundle dataset if recorded.",
+    )
+    remote_delete_parser.add_argument(
+        "--yes",
+        action="store_true",
+        help="Skip confirmation prompt.",
+    )
+    remote_delete_parser.set_defaults(handler=_handle_remote_delete, legacy_alias=False)
 
     # Backward-compatible alias: `calt kaggle run`
     kaggle_parser = subparsers.add_parser(
@@ -239,9 +276,21 @@ def _build_parser() -> argparse.ArgumentParser:
     kaggle_init_parser.add_argument("--username", default=None)
     kaggle_init_parser.add_argument("--no-test", action="store_true")
     kaggle_init_parser.set_defaults(handler=_handle_remote_init, legacy_alias=True)
-    kaggle_doctor_parser = kaggle_subparsers.add_parser("doctor", help=argparse.SUPPRESS)
+    kaggle_doctor_parser = kaggle_subparsers.add_parser(
+        "doctor", help=argparse.SUPPRESS
+    )
     kaggle_doctor_parser.add_argument("--skip-api-test", action="store_true")
     kaggle_doctor_parser.set_defaults(handler=_handle_remote_doctor, legacy_alias=True)
+    kaggle_list_parser = kaggle_subparsers.add_parser("list", help=argparse.SUPPRESS)
+    kaggle_list_parser.add_argument("--limit", type=int, default=20)
+    kaggle_list_parser.set_defaults(handler=_handle_remote_list, legacy_alias=True)
+    kaggle_delete_parser = kaggle_subparsers.add_parser(
+        "delete", help=argparse.SUPPRESS
+    )
+    kaggle_delete_parser.add_argument("--job-id", required=True)
+    kaggle_delete_parser.add_argument("--delete-bundle", action="store_true")
+    kaggle_delete_parser.add_argument("--yes", action="store_true")
+    kaggle_delete_parser.set_defaults(handler=_handle_remote_delete, legacy_alias=True)
 
     return parser
 
@@ -278,6 +327,20 @@ def _handle_kaggle_run(args: argparse.Namespace) -> int:
         bundle_dataset_title=args.bundle_dataset_title,
         bundle_dataset_public=args.bundle_dataset_public,
     )
+    job_id = generate_job_id()
+    append_job_record(
+        {
+            "job_id": job_id,
+            "created_at": utc_now_iso(),
+            "kernel_id": result.kernel_id,
+            "bundle_dataset_id": result.bundle_dataset_id,
+            "output_dir": str(args.output_dir),
+            "source_dir": str(args.source_dir),
+            "script": str(args.script),
+            "status": "submitted",
+        }
+    )
+    print(f"Job ID: {job_id}")
     print(f"Kernel: {result.kernel_id}")
     print(f"Submit output: {result.submit_output}")
     if args.wait:
@@ -307,7 +370,10 @@ def _handle_remote_init(args: argparse.Namespace) -> int:
     elif args.store == "kaggle-json":
         username = args.username or input("Kaggle username: ").strip()
         if not username:
-            print("[calt remote] username is required for kaggle-json store.", file=sys.stderr)
+            print(
+                "[calt remote] username is required for kaggle-json store.",
+                file=sys.stderr,
+            )
             return 2
         saved_path = _write_kaggle_json(username, token)
         print(f"Saved Kaggle credentials to: {saved_path}")
@@ -339,7 +405,7 @@ def _handle_remote_doctor(args: argparse.Namespace) -> int:
     if kaggle_bin:
         print(f"CLI: ok ({kaggle_bin})")
     else:
-        print("CLI: missing (`pip install \"calt-x[kaggle]\"`)", file=sys.stderr)
+        print('CLI: missing (`pip install "calt-x[kaggle]"`)', file=sys.stderr)
         ok = False
 
     token_env = bool(os.environ.get("KAGGLE_API_TOKEN"))
@@ -369,6 +435,77 @@ def _handle_remote_doctor(args: argparse.Namespace) -> int:
             ok = False
 
     return 0 if ok else 2
+
+
+def _handle_remote_list(args: argparse.Namespace) -> int:
+    if getattr(args, "legacy_alias", False):
+        print(
+            "Deprecated: use `calt remote list ...` instead of `calt kaggle list ...`.",
+            file=sys.stderr,
+        )
+    records = load_job_records()
+    if not records:
+        print(f"No local records found at: {get_jobs_registry_path()}")
+        return 0
+    limit = max(1, int(args.limit))
+    selected = records[-limit:]
+    print("job_id\tkernel_id\tstatus\tcreated_at\tbundle_dataset_id")
+    for rec in reversed(selected):
+        print(
+            f"{rec.get('job_id', '-')}\t"
+            f"{rec.get('kernel_id', '-')}\t"
+            f"{rec.get('status', '-')}\t"
+            f"{rec.get('created_at', '-')}\t"
+            f"{rec.get('bundle_dataset_id') or '-'}"
+        )
+    return 0
+
+
+def _handle_remote_delete(args: argparse.Namespace) -> int:
+    if getattr(args, "legacy_alias", False):
+        print(
+            "Deprecated: use `calt remote delete ...` instead of `calt kaggle delete ...`.",
+            file=sys.stderr,
+        )
+    record = find_job_record(args.job_id)
+    if record is None:
+        print(f"[calt remote] job_id not found: {args.job_id}", file=sys.stderr)
+        return 2
+
+    kernel_id = record.get("kernel_id")
+    if not kernel_id:
+        print(
+            f"[calt remote] kernel_id missing for job_id: {args.job_id}",
+            file=sys.stderr,
+        )
+        return 2
+
+    if not args.yes:
+        confirm = input(f"Delete remote kernel '{kernel_id}'? [y/N]: ").strip().lower()
+        if confirm not in {"y", "yes"}:
+            print("Cancelled.")
+            return 1
+
+    delete_kernel(kernel_id, yes=True)
+    print(f"Deleted kernel: {kernel_id}")
+
+    dataset_id = record.get("bundle_dataset_id")
+    if args.delete_bundle and dataset_id:
+        delete_dataset(dataset_id, yes=True)
+        print(f"Deleted bundle dataset: {dataset_id}")
+    elif args.delete_bundle and not dataset_id:
+        print("No bundle dataset recorded for this job.")
+
+    append_job_record(
+        {
+            "job_id": args.job_id,
+            "created_at": utc_now_iso(),
+            "kernel_id": kernel_id,
+            "bundle_dataset_id": dataset_id,
+            "status": "deleted",
+        }
+    )
+    return 0
 
 
 def main(argv: list[str] | None = None) -> int:

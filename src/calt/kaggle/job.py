@@ -56,7 +56,7 @@ def _ensure_kaggle_installed() -> None:
     if shutil.which("kaggle") is None:
         raise KaggleJobError(
             "kaggle CLI not found. Install with `pip install kaggle` "
-            "or `pip install \"calt-x[kaggle]\"`."
+            'or `pip install "calt-x[kaggle]"`.'
         )
 
 
@@ -79,9 +79,7 @@ def _run_command(
         stderr = (exc.stderr or "").strip()
         stdout = (exc.stdout or "").strip()
         details = stderr or stdout or str(exc)
-        raise KaggleJobError(
-            f"Command failed: {' '.join(args)}\n{details}"
-        ) from exc
+        raise KaggleJobError(f"Command failed: {' '.join(args)}\n{details}") from exc
     except subprocess.TimeoutExpired as exc:
         raise KaggleJobError(
             f"Command timed out after {timeout_sec}s: {' '.join(args)}"
@@ -212,7 +210,9 @@ def create_or_update_bundle_dataset(
     """Create or update a Kaggle dataset containing source/include files."""
     source_root = Path(source_dir).resolve()
     if not source_root.is_dir():
-        raise KaggleJobError(f"source_dir does not exist or is not a directory: {source_root}")
+        raise KaggleJobError(
+            f"source_dir does not exist or is not a directory: {source_root}"
+        )
     if "/" not in dataset_id:
         raise KaggleJobError("dataset_id must be in format <owner>/<slug>")
 
@@ -409,7 +409,9 @@ def prepare_job(
     """Create a Kaggle-ready job directory with metadata and local inputs."""
     source_root = Path(source_dir).resolve()
     if not source_root.is_dir():
-        raise KaggleJobError(f"source_dir does not exist or is not a directory: {source_root}")
+        raise KaggleJobError(
+            f"source_dir does not exist or is not a directory: {source_root}"
+        )
 
     script_path = source_root / script
     if not script_path.exists():
@@ -505,7 +507,9 @@ def wait_for_job(
         if state == "complete":
             return raw_status
         if state in {"failed", "cancelled"}:
-            raise KaggleJobError(f"Kaggle kernel ended with state '{state}'.\n{raw_status}")
+            raise KaggleJobError(
+                f"Kaggle kernel ended with state '{state}'.\n{raw_status}"
+            )
         if deadline is not None and time.time() > deadline:
             raise KaggleJobError(
                 f"Timed out waiting for kernel '{kernel_id}' after {timeout_sec} seconds."
@@ -553,6 +557,7 @@ class KaggleRunResult:
     submit_output: str
     final_status: str | None = None
     output_dir: Path | None = None
+    bundle_dataset_id: str | None = None
 
 
 def run_kaggle_job(
@@ -577,10 +582,13 @@ def run_kaggle_job(
     bundle_dataset_version_message: str = "Update bundle from calt kaggle run",
 ) -> KaggleRunResult:
     """Prepare, submit, optionally wait, and download output for a Kaggle run."""
+    attached_dataset: str | None = None
     effective_config = config
     if include_paths and bundle_include_paths_as_dataset:
         dataset_id = bundle_dataset_id or _derive_bundle_dataset_id(config.kernel_id)
-        dataset_title = bundle_dataset_title or _derive_bundle_dataset_title(config.kernel_id)
+        dataset_title = bundle_dataset_title or _derive_bundle_dataset_title(
+            config.kernel_id
+        )
         attached_dataset = create_or_update_bundle_dataset(
             source_dir=source_dir,
             include_paths=include_paths,
@@ -613,6 +621,7 @@ def run_kaggle_job(
             kernel_id=prepared.kernel_id,
             job_dir=prepared.job_dir,
             submit_output=submit_output,
+            bundle_dataset_id=attached_dataset,
         )
         if wait:
             result.final_status = wait_for_job(
@@ -626,3 +635,23 @@ def run_kaggle_job(
     finally:
         if not keep_job_dir:
             cleanup_job_dir(prepared)
+
+
+def delete_kernel(kernel_id: str, *, yes: bool = True) -> str:
+    """Delete a Kaggle kernel."""
+    _ensure_kaggle_installed()
+    command = ["kaggle", "kernels", "delete", kernel_id]
+    if yes:
+        command.append("--yes")
+    result = _run_command(command)
+    return result.stdout.strip()
+
+
+def delete_dataset(dataset_id: str, *, yes: bool = True) -> str:
+    """Delete a Kaggle dataset."""
+    _ensure_kaggle_installed()
+    command = ["kaggle", "datasets", "delete", dataset_id]
+    if yes:
+        command.append("--yes")
+    result = _run_command(command)
+    return result.stdout.strip()
