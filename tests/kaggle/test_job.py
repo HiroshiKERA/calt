@@ -84,8 +84,10 @@ def test_submit_and_download_build_commands(monkeypatch, tmp_path: Path) -> None
         calls.append(args)
         return SimpleNamespace(stdout="ok", stderr="")
 
-    monkeypatch.setattr("calt.kaggle.job._ensure_kaggle_installed", lambda: None)
-    monkeypatch.setattr("calt.kaggle.job._run_command", fake_run_command)
+    monkeypatch.setattr(
+        "calt.remote.backends.kaggle._ensure_kaggle_installed", lambda: None
+    )
+    monkeypatch.setattr("calt.remote.backends.kaggle._run_command", fake_run_command)
 
     source_dir = tmp_path / "source"
     source_dir.mkdir()
@@ -136,9 +138,13 @@ def test_create_or_update_bundle_dataset_create(monkeypatch, tmp_path: Path) -> 
         calls.append(args)
         return SimpleNamespace(stdout="ok", stderr="")
 
-    monkeypatch.setattr("calt.kaggle.job._dataset_exists", lambda dataset_id: False)
-    monkeypatch.setattr("calt.kaggle.job._run_command", fake_run)
-    monkeypatch.setattr("calt.kaggle.job._wait_for_dataset_ready", lambda *a, **k: None)
+    monkeypatch.setattr(
+        "calt.remote.backends.kaggle._dataset_exists", lambda dataset_id: False
+    )
+    monkeypatch.setattr("calt.remote.backends.kaggle._run_command", fake_run)
+    monkeypatch.setattr(
+        "calt.remote.backends.kaggle._wait_for_dataset_ready", lambda *a, **k: None
+    )
 
     result = create_or_update_bundle_dataset(
         source_dir=source_dir,
@@ -173,12 +179,18 @@ def test_run_remote_job_adds_bundle_dataset_source(monkeypatch, tmp_path: Path) 
             managed_temp_dir=False,
         )
 
-    monkeypatch.setattr("calt.kaggle.job.create_or_update_bundle_dataset", fake_bundle)
-    monkeypatch.setattr("calt.kaggle.job.prepare_job", fake_prepare_job)
-    monkeypatch.setattr("calt.kaggle.job.submit_job", lambda *a, **k: "submitted")
-    monkeypatch.setattr("calt.kaggle.job.download_output", lambda *a, **k: "downloaded")
     monkeypatch.setattr(
-        "calt.kaggle.job.wait_for_job",
+        "calt.remote.backends.kaggle.create_or_update_bundle_dataset", fake_bundle
+    )
+    monkeypatch.setattr("calt.remote.backends.kaggle.prepare_job", fake_prepare_job)
+    monkeypatch.setattr(
+        "calt.remote.backends.kaggle.submit_job", lambda *a, **k: "submitted"
+    )
+    monkeypatch.setattr(
+        "calt.remote.backends.kaggle.download_output", lambda *a, **k: "downloaded"
+    )
+    monkeypatch.setattr(
+        "calt.remote.backends.kaggle.wait_for_job",
         lambda *a, **k: "alice/test-kernel has status complete",
     )
 

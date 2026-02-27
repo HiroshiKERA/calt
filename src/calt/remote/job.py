@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ..kaggle.job import (
+from .backends.kaggle import (
     DEFAULT_DATASET_READY_TIMEOUT_SEC,
     DEFAULT_POLL_INTERVAL_SEC,
     ENTRYPOINT_SCRIPT_NAME,

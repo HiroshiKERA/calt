@@ -347,7 +347,6 @@ def _handle_remote_init(args: argparse.Namespace) -> int:
 
 
 def _handle_remote_doctor(args: argparse.Namespace) -> int:
-
     ok = True
     kaggle_bin = shutil.which("kaggle")
     if kaggle_bin:
