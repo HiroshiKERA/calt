@@ -11,7 +11,7 @@ CALT is a simple Python library for learning arithmetic and symbolic computation
 
 It offers a basic Transformer model and training pipeline, and non-experts of deep learning can focus on constructing datasets to train and evaluate the model. 
 
-## Quick Start
+## 🚀 Quick Start
 
 ### Installation
 
