@@ -33,7 +33,7 @@ def int_sum_generator(seed, N=5, lb=-10, ub=10):
     return problem, answer
 ```
 
-Feeding the generator to `DataPieline` generates training and evaluation sets. The `data.yaml` gives a full control over the generation process. 
+Feeding the generator to `DataPipeline` generates training and evaluation sets. The `data.yaml` gives a full control over the generation process. 
 ```python
 cfg = OmegaConf.load("configs/data.yaml")
 pipeline = DatasetPipeline.from_config(
