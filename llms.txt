@@ -18,5 +18,6 @@
 - [Load preprocessors](https://hiroshikera.github.io/calt/io_load_preprocessors/index.md)
 - [Overview](https://hiroshikera.github.io/calt/io_pipeline/index.md)
 - [Visualization](https://hiroshikera.github.io/calt/io_visualization/index.md)
+- [Remote job runner](https://hiroshikera.github.io/calt/remote/index.md)
 - [Overview](https://hiroshikera.github.io/calt/trainer/index.md)
 

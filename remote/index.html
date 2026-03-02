@@ -10,23 +10,29 @@
     
     
     
+      <link rel="canonical" href="https://hiroshikera.github.io/calt/remote/">
     
     
+      <link rel="prev" href="../model_pipeline/">
     
-    <link rel="icon" href="/calt/assets/logo-light.png" sizes="any">
-    <link rel="icon" href="/calt/assets/logo-auto.svg" type="image/svg+xml">
+    
+      <link rel="next" href="../configuration/">
+    
+    
+    <link rel="icon" href="../assets/logo-light.png" sizes="any">
+    <link rel="icon" href="../assets/logo-auto.svg" type="image/svg+xml">
     <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.6.14">
 
     
       
-        <title>CALT library</title>
+        <title>Remote job runner - CALT library</title>
       
     
     
-      <link rel="stylesheet" href="/calt/assets/stylesheets/main.84d31ad4.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.84d31ad4.min.css">
       
         
-        <link rel="stylesheet" href="/calt/assets/stylesheets/palette.06af60db.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.06af60db.min.css">
       
       
 
@@ -40,16 +46,16 @@
         
         
         
-        <link rel="stylesheet" href="/calt/assets/external/fonts.googleapis.com/css.49ea35f2.css">
+        <link rel="stylesheet" href="../assets/external/fonts.googleapis.com/css.49ea35f2.css">
         <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
       
     
     
-      <link rel="stylesheet" href="/calt/assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
     
-      <link rel="stylesheet" href="/calt/stylesheets/extra.css">
+      <link rel="stylesheet" href="../stylesheets/extra.css">
     
-    <script>__md_scope=new URL("/calt/",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -74,6 +80,11 @@
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
       
+        
+        <a href="#remote-job-runner" class="md-skip">
+          Skip to content
+        </a>
+      
     </div>
     <div data-md-component="announce">
       
@@ -90,10 +101,10 @@
 
 <header class="md-header md-header--shadow md-header--lifted" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="/calt/." title="CALT library" class="md-header__button md-logo" aria-label="CALT library" data-md-component="logo">
+    <a href=".." title="CALT library" class="md-header__button md-logo" aria-label="CALT library" data-md-component="logo">
       <!-- Logo -->
-<img src="/calt/assets/logo-light.svg" alt="logo" class="logo-light" />
-<img src="/calt/assets/logo-dark.svg" alt="logo" class="logo-dark" />
+<img src="../assets/logo-light.svg" alt="logo" class="logo-light" />
+<img src="../assets/logo-dark.svg" alt="logo" class="logo-dark" />
     </a>
     <label class="md-header__button md-icon" for="__drawer">
       
@@ -109,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              
+              Remote job runner
             
           </span>
         </div>
@@ -212,11 +223,13 @@
   
   
   
+    
+  
   
     
     
-      <li class="md-tabs__item">
-        <a href="/calt/." class="md-tabs__link">
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href=".." class="md-tabs__link">
           
   
   
@@ -256,10 +269,10 @@
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="/calt/." title="CALT library" class="md-nav__button md-logo" aria-label="CALT library" data-md-component="logo">
+    <a href=".." title="CALT library" class="md-nav__button md-logo" aria-label="CALT library" data-md-component="logo">
       <!-- Logo -->
-<img src="/calt/assets/logo-light.svg" alt="logo" class="logo-light" />
-<img src="/calt/assets/logo-dark.svg" alt="logo" class="logo-dark" />
+<img src="../assets/logo-light.svg" alt="logo" class="logo-light" />
+<img src="../assets/logo-dark.svg" alt="logo" class="logo-dark" />
     </a>
     CALT library
   </label>
@@ -282,26 +295,31 @@
       
   
   
+    
   
   
+  
     
     
     
     
+      
+        
+        
       
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1" checked>
         
           
-          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_1" id="__nav_1_label" tabindex="">
             
   
   
@@ -314,7 +332,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_1_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_1">
             <span class="md-nav__icon md-icon"></span>
             User Guide
@@ -328,7 +346,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/calt/." class="md-nav__link">
+      <a href=".." class="md-nav__link">
         
   
   
@@ -348,26 +366,31 @@
                 
   
   
+    
   
   
+  
     
     
     
     
       
       
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_2" >
         
           
-          <label class="md-nav__link" for="__nav_1_2" id="__nav_1_2_label" tabindex="0">
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_1_2" id="__nav_1_2_label" tabindex="">
             
   
   
@@ -380,7 +403,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_2_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_1_2_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_1_2">
             <span class="md-nav__icon md-icon"></span>
             CALT Components
@@ -437,7 +460,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/calt/dataset_generator/" class="md-nav__link">
+      <a href="../dataset_generator/" class="md-nav__link">
         
   
   
@@ -460,7 +483,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/calt/dataset_sagemath/" class="md-nav__link">
+      <a href="../dataset_sagemath/" class="md-nav__link">
         
   
   
@@ -483,7 +506,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/calt/dataset_sympy/" class="md-nav__link">
+      <a href="../dataset_sympy/" class="md-nav__link">
         
   
   
@@ -557,7 +580,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/calt/io_pipeline/" class="md-nav__link">
+      <a href="../io_pipeline/" class="md-nav__link">
         
   
   
@@ -580,7 +603,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/calt/io_lexer/" class="md-nav__link">
+      <a href="../io_lexer/" class="md-nav__link">
         
   
   
@@ -603,7 +626,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/calt/io_load_preprocessors/" class="md-nav__link">
+      <a href="../io_load_preprocessors/" class="md-nav__link">
         
   
   
@@ -626,7 +649,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/calt/io_visualization/" class="md-nav__link">
+      <a href="../io_visualization/" class="md-nav__link">
         
   
   
@@ -700,7 +723,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/calt/trainer/" class="md-nav__link">
+      <a href="../trainer/" class="md-nav__link">
         
   
   
@@ -723,7 +746,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/calt/model_pipeline/" class="md-nav__link">
+      <a href="../model_pipeline/" class="md-nav__link">
         
   
   
@@ -751,8 +774,10 @@
                 
   
   
+    
   
   
+  
     
     
     
@@ -763,11 +788,11 @@
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_2_4" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_1_2_4" checked>
         
           
           <label class="md-nav__link" for="__nav_1_2_4" id="__nav_1_2_4_label" tabindex="0">
@@ -783,7 +808,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_1_2_4_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_1_2_4_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_1_2_4">
             <span class="md-nav__icon md-icon"></span>
             Execution utilities
@@ -794,10 +819,32 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="/calt/remote/" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    Remote job runner
+    
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         
   
   
@@ -808,6 +855,82 @@
   
 
       </a>
+      
+        
+
+  
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#install" class="md-nav__link">
+    <span class="md-ellipsis">
+      Install
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#authenticate-kaggle-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      Authenticate Kaggle CLI
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-a-job" class="md-nav__link">
+    <span class="md-ellipsis">
+      Run a job
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Common options
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Troubleshooting
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#delete-a-submitted-job-later" class="md-nav__link">
+    <span class="md-ellipsis">
+      Delete a submitted job later
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -828,7 +951,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/calt/configuration/" class="md-nav__link">
+      <a href="../configuration/" class="md-nav__link">
         
   
   
@@ -878,6 +1001,70 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#install" class="md-nav__link">
+    <span class="md-ellipsis">
+      Install
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#authenticate-kaggle-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      Authenticate Kaggle CLI
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#run-a-job" class="md-nav__link">
+    <span class="md-ellipsis">
+      Run a job
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#common-options" class="md-nav__link">
+    <span class="md-ellipsis">
+      Common options
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#troubleshooting" class="md-nav__link">
+    <span class="md-ellipsis">
+      Troubleshooting
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#delete-a-submitted-job-later" class="md-nav__link">
+    <span class="md-ellipsis">
+      Delete a submitted job later
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -889,8 +1076,98 @@
             <div class="md-content" data-md-component="content">
               <article class="md-content__inner md-typeset">
                 
-  <h1>404 - Not found</h1>
+                  
 
+
+  
+  
+
+
+<h1 id="remote-job-runner">Remote Job Runner<a class="headerlink" href="#remote-job-runner" title="Permanent link">&para;</a></h1>
+<p>This page explains how to run CALT training jobs on a remote backend (Kaggle) from your local terminal.</p>
+<h2 id="install">Install<a class="headerlink" href="#install" title="Permanent link">&para;</a></h2>
+<p>Install CALT with Kaggle support:</p>
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span><span class="s2">&quot;calt-x[kaggle]&quot;</span>
+</code></pre></div>
+<p>Or install Kaggle separately:</p>
+<div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>kaggle
+</code></pre></div>
+<h2 id="authenticate-kaggle-cli">Authenticate Kaggle CLI<a class="headerlink" href="#authenticate-kaggle-cli" title="Permanent link">&para;</a></h2>
+<p>You need Kaggle API credentials before running jobs.</p>
+<p>Recommended first step:</p>
+<div class="highlight"><pre><span></span><code>calt<span class="w"> </span>remote<span class="w"> </span>init
+</code></pre></div>
+<p>This command can store credentials as:</p>
+<ul>
+<li><code>access-token</code> (default): <code>~/.kaggle/access_token</code></li>
+<li><code>kaggle-json</code> (legacy): <code>~/.kaggle/kaggle.json</code></li>
+<li><code>env</code>: current process <code>KAGGLE_API_TOKEN</code></li>
+</ul>
+<p>You can run a setup check anytime:</p>
+<div class="highlight"><pre><span></span><code>calt<span class="w"> </span>remote<span class="w"> </span>doctor
+</code></pre></div>
+<p>List local job records:</p>
+<div class="highlight"><pre><span></span><code>calt<span class="w"> </span>remote<span class="w"> </span>list
+</code></pre></div>
+<h2 id="run-a-job">Run a job<a class="headerlink" href="#run-a-job" title="Permanent link">&para;</a></h2>
+<p>Example with <code>examples/gf17_addition</code>:</p>
+<div class="highlight"><pre><span></span><code>calt<span class="w"> </span>remote<span class="w"> </span>run<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--source-dir<span class="w"> </span>examples/gf17_addition<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--script<span class="w"> </span>train.py<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--kernel-id<span class="w"> </span>&lt;your-kaggle-username&gt;/calt-gf17-addition<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--output-dir<span class="w"> </span>./kaggle_outputs/gf17_addition<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--include-path<span class="w"> </span>data<span class="w"> </span><span class="se">\</span>
+<span class="w">  </span>--accelerator<span class="w"> </span>NvidiaTeslaT4
+</code></pre></div>
+<p>Notes:</p>
+<ul>
+<li><code>--source-dir</code> is copied and uploaded as the Kaggle job package.</li>
+<li><code>--include-path</code> is uploaded as a Kaggle Dataset bundle and attached to the kernel.
+  This is required because Kaggle script execution does not reliably expose arbitrary
+  extra files from the kernel upload directory.</li>
+<li>CALT injects a bootstrap entrypoint so bundled sources (e.g. <code>calt/</code>) are
+  added to <code>sys.path</code> before your training script runs.</li>
+<li>By default, the command waits for completion and downloads outputs to <code>--output-dir</code>.</li>
+<li>Use <code>--no-wait</code> to submit and exit immediately.</li>
+</ul>
+<h2 id="common-options">Common options<a class="headerlink" href="#common-options" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>--gpu/--no-gpu</code>: enable or disable GPU runtime.</li>
+<li><code>--internet/--no-internet</code>: toggle internet access in Kaggle runtime.</li>
+<li><code>--private/--no-private</code>: toggle kernel visibility.</li>
+<li><code>--timeout-sec</code>: timeout for submission/waiting.</li>
+<li><code>--poll-interval-sec</code>: polling interval while waiting for status.</li>
+<li><code>--debug-package</code>: keep and print packaged job directory + manifest path.</li>
+<li><code>--bundle-dataset-id</code>: specify the dataset id for include bundle upload.</li>
+<li><code>--bundle-dataset-title</code>: title for include bundle dataset.</li>
+<li><code>--bundle-dataset-public</code>: make include bundle dataset public.</li>
+</ul>
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>kaggle CLI not found</code>: install <code>kaggle</code> or <code>calt-x[kaggle]</code>.</li>
+<li>Authentication errors: verify token setup in Kaggle settings.</li>
+<li>Job failed on Kaggle: run <code>kaggle kernels status &lt;username/slug&gt;</code> and inspect logs/output.</li>
+</ul>
+<h2 id="delete-a-submitted-job-later">Delete a submitted job later<a class="headerlink" href="#delete-a-submitted-job-later" title="Permanent link">&para;</a></h2>
+<p>Each <code>calt remote run</code> prints a local <code>Job ID</code>. You can delete the remote kernel later:</p>
+<div class="highlight"><pre><span></span><code>calt<span class="w"> </span>remote<span class="w"> </span>delete<span class="w"> </span>--job-id<span class="w"> </span>&lt;job-id&gt;<span class="w"> </span>--yes
+</code></pre></div>
+<p>Also delete the attached include bundle dataset if recorded:</p>
+<div class="highlight"><pre><span></span><code>calt<span class="w"> </span>remote<span class="w"> </span>delete<span class="w"> </span>--job-id<span class="w"> </span>&lt;job-id&gt;<span class="w"> </span>--delete-bundle<span class="w"> </span>--yes
+</code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
               </article>
             </div>
           
@@ -947,12 +1224,12 @@
     
     
       
-      <script id="__config" type="application/json">{"base": "/calt/", "features": ["content.code.copy", "content.code.select", "navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "search.highlight", "content.code.copy"], "search": "/calt/assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"base": "..", "features": ["content.code.copy", "content.code.select", "navigation.instant", "navigation.instant.prefetch", "navigation.instant.progress", "navigation.tabs", "navigation.tabs.sticky", "navigation.sections", "navigation.top", "search.highlight", "content.code.copy"], "search": "../assets/javascripts/workers/search.973d3a69.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"provider": "mike"}}</script>
     
     
-      <script src="/calt/assets/javascripts/bundle.f55a23d4.min.js"></script>
+      <script src="../assets/javascripts/bundle.f55a23d4.min.js"></script>
       
-        <script src="/calt/assets/external/unpkg.com/mermaid@11/dist/mermaid.min.js"></script>
+        <script src="../assets/external/unpkg.com/mermaid@11/dist/mermaid.min.js"></script>
       
     
   </body>

@@ -18,6 +18,8 @@ For most users, the recommended entry point is to start from one of the example 
   - [Overview](io_pipeline/), [Lexer and vocabulary](io_lexer/), [Load preprocessors](io_load_preprocessors/), [Visualization](io_visualization/)
 - **Trainer pipeline** – model and high-level training flow.
   - [Overview](trainer/), [Model pipeline](model_pipeline/)
+- **Execution utilities**
+  - [Remote job runner](remote/)
 - **Configuration** – how `data.yaml`, `lexer.yaml`, and `train.yaml` work together.
   - [Configuration](configuration/)
 

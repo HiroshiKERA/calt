@@ -142,7 +142,7 @@ def evaluate_and_save_generation(
     eval_dataloader = self.get_eval_dataloader(self.eval_dataset)
 
     self.model.eval()
-    tokenizer = self.processing_class
+    tokenizer = self._tokenizer_or_processor
 
     for batch in eval_dataloader:
         if batch is None:
