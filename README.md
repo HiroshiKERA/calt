@@ -26,7 +26,7 @@ For minimal usage, users only need to implement an instance generator for their 
 def int_sum_generator(seed, N=5, lb=-10, ub=10):
     random.seed(seed)
 
-    # get N random integers from [-10, 10]
+    # get N random integers from [lb, ub]
     problem = [random.randint(lb, ub) for _ in range(N)]
     answer = sum(problem)
 
