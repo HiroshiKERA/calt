@@ -61,6 +61,19 @@ trainer_pipeline.evaluate_and_save_generation()
 ### Examples
 See `examples/` directory. 
 
+### For users without a local GPU
+
+If you do not have a local GPU, you can still try CALT in two ways:
+
+1. **Run the demo on Google Colab**  
+   Use the demo notebook from your browser:
+   <https://colab.research.google.com/github/HiroshiKERA/calt/blob/dev/examples/demos/minimal_demo.ipynb>
+
+2. **Use remote jobs on Kaggle**  
+   Submit and monitor training jobs from your local terminal using `calt remote ...`.
+   See the remote job documentation:
+   <https://hiroshikera.github.io/calt/remote/>
+
 
 ## Citation
 
