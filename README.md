@@ -59,7 +59,7 @@ trainer_pipeline.evaluate_and_save_generation()
 ```
 
 ### Examples
-See `exmamples/` directories. 
+See `examples/` directories. 
 
 
 ## Citation
