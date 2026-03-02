@@ -59,12 +59,12 @@ trainer_pipeline.evaluate_and_save_generation()
 ```
 
 ### Examples
-See `examples/` directories. 
+See `examples/` directory. 
 
 
 ## Citation
 
-If you use this code in your research, please cite our paper:
+If you use CALT in your project, please cite our paper:
 
 ```bibtex
 @misc{kera2025calt,
