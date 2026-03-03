@@ -81,6 +81,8 @@ nav:
       - Trainer pipeline:
         - Overview: trainer.md
         - Model pipeline: model_pipeline.md
+      - Execution utilities:
+        - Remote job runner: remote.md
       - Configuration: configuration.md
 
 exclude_docs: |
@@ -141,6 +143,7 @@ plugins:
           - io_load_preprocessors.md
           - io_visualization.md
           - trainer.md
+          - remote.md
 
 extra:
   social:

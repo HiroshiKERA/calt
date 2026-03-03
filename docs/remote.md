@@ -1,0 +1,102 @@
+# Remote Job Runner
+
+This page explains how to run CALT training jobs on a remote backend (Kaggle) from your local terminal.
+
+## Install
+
+Install CALT with Kaggle support:
+
+```bash
+pip install "calt-x[kaggle]"
+```
+
+Or install Kaggle separately:
+
+```bash
+pip install kaggle
+```
+
+## Authenticate Kaggle CLI
+
+You need Kaggle API credentials before running jobs.
+
+Recommended first step:
+
+```bash
+calt remote init
+```
+
+This command can store credentials as:
+
+- `access-token` (default): `~/.kaggle/access_token`
+- `kaggle-json` (legacy): `~/.kaggle/kaggle.json`
+- `env`: current process `KAGGLE_API_TOKEN`
+
+You can run a setup check anytime:
+
+```bash
+calt remote doctor
+```
+
+List local job records:
+
+```bash
+calt remote list
+```
+
+## Run a job
+
+Example with `examples/gf17_addition`:
+
+```bash
+calt remote run \
+  --source-dir examples/gf17_addition \
+  --script train.py \
+  --kernel-id <your-kaggle-username>/calt-gf17-addition \
+  --output-dir ./kaggle_outputs/gf17_addition \
+  --include-path data \
+  --accelerator NvidiaTeslaT4
+```
+
+Notes:
+
+- `--source-dir` is copied and uploaded as the Kaggle job package.
+- `--include-path` is uploaded as a Kaggle Dataset bundle and attached to the kernel.
+  This is required because Kaggle script execution does not reliably expose arbitrary
+  extra files from the kernel upload directory.
+- CALT injects a bootstrap entrypoint so bundled sources (e.g. `calt/`) are
+  added to `sys.path` before your training script runs.
+- By default, the command waits for completion and downloads outputs to `--output-dir`.
+- Use `--no-wait` to submit and exit immediately.
+
+## Common options
+
+- `--gpu/--no-gpu`: enable or disable GPU runtime.
+- `--internet/--no-internet`: toggle internet access in Kaggle runtime.
+- `--private/--no-private`: toggle kernel visibility.
+- `--timeout-sec`: timeout for submission/waiting.
+- `--poll-interval-sec`: polling interval while waiting for status.
+- `--debug-package`: keep and print packaged job directory + manifest path.
+- `--bundle-dataset-id`: specify the dataset id for include bundle upload.
+- `--bundle-dataset-title`: title for include bundle dataset.
+- `--bundle-dataset-public`: make include bundle dataset public.
+
+## Troubleshooting
+
+- `kaggle CLI not found`: install `kaggle` or `calt-x[kaggle]`.
+- Authentication errors: verify token setup in Kaggle settings.
+- Job failed on Kaggle: run `kaggle kernels status <username/slug>` and inspect logs/output.
+
+## Delete a submitted job later
+
+Each `calt remote run` prints a local `Job ID`. You can delete the remote kernel later:
+
+```bash
+calt remote delete --job-id <job-id> --yes
+```
+
+Also delete the attached include bundle dataset if recorded:
+
+```bash
+calt remote delete --job-id <job-id> --delete-bundle --yes
+```

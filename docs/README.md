@@ -22,6 +22,8 @@ under `calt/examples/*` and customise only the dataset generator and configurati
     - [Overview](io_pipeline.md), [Lexer and vocabulary](io_lexer.md), [Load preprocessors](io_load_preprocessors.md), [Visualization](io_visualization.md)
 - **Trainer pipeline** – model and high-level training flow.
     - [Overview](trainer.md), [Model pipeline](model_pipeline.md)
+- **Execution utilities**
+    - [Remote job runner](remote.md)
 - **Configuration** – how `data.yaml`, `lexer.yaml`, and `train.yaml` work together.
     - [Configuration](configuration.md)
 
