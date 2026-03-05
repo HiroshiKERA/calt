@@ -1,7 +1,7 @@
 """Simplified tests for training pipeline.
 
 This module tests that training pipeline can be set up and run with minimal configuration.
-Parametrized over generic (Transformer) and BART models to cover generation-related flows.
+Parametrized over generic/BART/GPT-2/BERT model types.
 """
 
 import os
@@ -21,10 +21,12 @@ EXAMPLES_DIR = Path(__file__).parent.parent.parent / "examples"
 # Get sample data directory
 SAMPLE_DATA_DIR = Path(__file__).parent / "sample_data"
 
-# (example_dir, model_type): generic = Transformer, bart = BART
+# (example_dir, model_type)
 TRAIN_PIPELINE_PARAMS = [
     ("gf17_addition", "generic"),
     ("eigvec_3x3", "bart"),
+    ("gf17_addition", "gpt2"),
+    ("gf17_addition", "bert"),
 ]
 
 

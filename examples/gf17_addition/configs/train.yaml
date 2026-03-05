@@ -1,5 +1,5 @@
 model:
-  model_type: generic
+  model_type: gpt2
   num_encoder_layers: 6
   num_encoder_heads: 8
   num_decoder_layers: 6

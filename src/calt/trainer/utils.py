@@ -177,6 +177,15 @@ def load_from_checkpoint(
             from transformers import BartForConditionalGeneration
 
             model = BartForConditionalGeneration.from_pretrained(str(model_dir))
+        elif model_type == "gpt2":
+            from ..models.gpt2.model import GPT2ForPromptedGeneration
+
+            model = GPT2ForPromptedGeneration.from_pretrained(str(model_dir))
+            tokenizer.padding_side = "left"
+        elif model_type == "bert":
+            from ..models.bert.model import BertForSingleTokenClassification
+
+            model = BertForSingleTokenClassification.from_pretrained(str(model_dir))
         elif model_type in ("generic", "transformer", "calt"):
             from ..models.generic.model import Transformer
 
