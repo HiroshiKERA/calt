@@ -64,7 +64,9 @@ class ModelRegistry:
         self.register_config_mapping("bart", create_bart_config)
 
         # Register GPT-2 decoder-only model
-        self.register("gpt2", GPT2ForPromptedGeneration, GPT2ForPromptedGeneration.config_class)
+        self.register(
+            "gpt2", GPT2ForPromptedGeneration, GPT2ForPromptedGeneration.config_class
+        )
         self.register_config_mapping("gpt2", create_gpt2_config)
 
         # Register BERT encoder-only classification model

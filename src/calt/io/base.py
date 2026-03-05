@@ -170,10 +170,15 @@ class StandardDataCollator:
                 batch_dict["attention_mask"] = inputs["attention_mask"]
 
             elif attribute == "target":
-                # Tokenize the target sequences.
+                # Tokenize target with right padding even when tokenizer is set
+                # to left padding (e.g., GPT-2 prompt generation). This keeps
+                # decoder labels aligned as [y1, y2, ..., eos, -100, ...].
+                original_padding_side = getattr(self.tokenizer, "padding_side", "right")
+                self.tokenizer.padding_side = "right"
                 targets = self.tokenizer(
                     attribute_batch, padding="longest", return_tensors="pt"
                 )
+                self.tokenizer.padding_side = original_padding_side
                 # Prepare decoder input ids (remove the last token, usually EOS).
                 batch_dict["decoder_input_ids"] = targets["input_ids"][
                     :, :-1

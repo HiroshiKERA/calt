@@ -60,7 +60,9 @@ class Trainer(HTrainer):
             for k, v in inputs.items()
         }
 
-    def _extract_class_labels(self, labels: torch.Tensor, ignore_index: int) -> torch.Tensor:
+    def _extract_class_labels(
+        self, labels: torch.Tensor, ignore_index: int
+    ) -> torch.Tensor:
         """Extract a single class ID from token labels.
 
         For encoder-only classification models, labels can still arrive in
@@ -70,14 +72,18 @@ class Trainer(HTrainer):
         if labels.dim() == 1:
             return labels
         if labels.dim() != 2:
-            raise ValueError(f"Unsupported labels shape for classification: {labels.shape}")
+            raise ValueError(
+                f"Unsupported labels shape for classification: {labels.shape}"
+            )
 
         valid_mask = labels != ignore_index
         has_valid = valid_mask.any(dim=1)
         first_indices = valid_mask.float().argmax(dim=1)
         batch_indices = torch.arange(labels.size(0), device=labels.device)
         class_labels = labels[batch_indices, first_indices]
-        class_labels = torch.where(has_valid, class_labels, torch.zeros_like(class_labels))
+        class_labels = torch.where(
+            has_valid, class_labels, torch.zeros_like(class_labels)
+        )
         return class_labels
 
     def _compute_metrics(self, eval_preds, ignore_index=-100):
@@ -133,7 +139,9 @@ class Trainer(HTrainer):
                     continue
                 pred_seq = predictions[i][seq_mask]
                 label_seq = labels[i][seq_mask]
-                if pred_seq.shape == label_seq.shape and torch.equal(pred_seq, label_seq):
+                if pred_seq.shape == label_seq.shape and torch.equal(
+                    pred_seq, label_seq
+                ):
                     exact_matches += 1
             success_rate = exact_matches / batch_size if batch_size > 0 else 0.0
             return {"token_accuracy": token_acc, "success_rate": success_rate}
@@ -141,12 +149,16 @@ class Trainer(HTrainer):
         # Classification case: predictions are class logits
         if predictions.dim() == 2:
             pred_classes = predictions.argmax(dim=-1)
-            label_classes = self._extract_class_labels(labels, ignore_index=ignore_index)
+            label_classes = self._extract_class_labels(
+                labels, ignore_index=ignore_index
+            )
             correct = (pred_classes == label_classes).float()
             accuracy = correct.mean().item() if correct.numel() > 0 else 0.0
             return {"token_accuracy": accuracy, "success_rate": accuracy}
 
-        raise ValueError(f"Unsupported prediction shape for metrics: {predictions.shape}")
+        raise ValueError(
+            f"Unsupported prediction shape for metrics: {predictions.shape}"
+        )
 
     def evaluate(
         self,
@@ -220,10 +232,14 @@ class Trainer(HTrainer):
 
         model_type = getattr(getattr(self.model, "config", None), "model_type", "")
         if model_type in {"bert"}:
-            logger.info("Skipping generation evaluation for encoder-only model type: bert")
+            logger.info(
+                "Skipping generation evaluation for encoder-only model type: bert"
+            )
             return 0.0
         if not hasattr(self.model, "generate"):
-            logger.info("Skipping generation evaluation because model has no generate()")
+            logger.info(
+                "Skipping generation evaluation because model has no generate()"
+            )
             return 0.0
 
         all_generated_texts = []

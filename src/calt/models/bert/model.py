@@ -30,7 +30,9 @@ class BertForSingleTokenClassification(PreTrainedModel):
         first_indices = valid_mask.float().argmax(dim=1)
         batch_indices = torch.arange(labels.size(0), device=labels.device)
         class_labels = labels[batch_indices, first_indices]
-        class_labels = torch.where(has_valid, class_labels, torch.zeros_like(class_labels))
+        class_labels = torch.where(
+            has_valid, class_labels, torch.zeros_like(class_labels)
+        )
         return class_labels
 
     def forward(
