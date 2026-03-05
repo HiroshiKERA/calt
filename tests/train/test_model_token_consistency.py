@@ -1,4 +1,4 @@
-"""Tests that generic and BART models use the same special token IDs for a given setup.
+"""Tests that generation-capable models use the same special token IDs for a given setup.
 
 When both models are built from the same config and tokenizer, pad_token_id,
 bos_token_id, and eos_token_id must match each other and the tokenizer so that
@@ -15,6 +15,7 @@ from calt.io import IOPipeline
 from calt.models import ModelPipeline
 from calt.models.bart.config_mapping import create_bart_config
 from calt.models.generic.config_mapping import create_transformer_config
+from calt.models.gpt2.config_mapping import create_gpt2_config
 
 EXAMPLES_DIR = Path(__file__).parent.parent.parent / "examples"
 SAMPLE_DATA_DIR = Path(__file__).parent / "sample_data"
@@ -58,25 +59,29 @@ def _build_tokenizer_and_model_config(example_dir: str):
 
 
 @pytest.mark.parametrize("example_dir", CONSISTENCY_TEST_EXAMPLES)
-def test_generic_and_bart_config_same_special_token_ids(example_dir: str):
-    """Generic and BART configs must have identical pad/bos/eos token IDs for the same setup."""
+def test_generic_bart_gpt2_config_same_special_token_ids(example_dir: str):
+    """Generic/BART/GPT-2 configs must share pad/bos/eos IDs for the same setup."""
     tokenizer, model_config = _build_tokenizer_and_model_config(example_dir)
 
     transformer_config = create_transformer_config(model_config, tokenizer)
     bart_config = create_bart_config(model_config, tokenizer)
+    gpt2_config = create_gpt2_config(model_config, tokenizer)
 
-    assert transformer_config.pad_token_id == bart_config.pad_token_id, (
-        f"pad_token_id mismatch: generic={transformer_config.pad_token_id}, "
-        f"bart={bart_config.pad_token_id}"
-    )
-    assert transformer_config.bos_token_id == bart_config.bos_token_id, (
-        f"bos_token_id mismatch: generic={transformer_config.bos_token_id}, "
-        f"bart={bart_config.bos_token_id}"
-    )
-    assert transformer_config.eos_token_id == bart_config.eos_token_id, (
-        f"eos_token_id mismatch: generic={transformer_config.eos_token_id}, "
-        f"bart={bart_config.eos_token_id}"
-    )
+    assert (
+        transformer_config.pad_token_id
+        == bart_config.pad_token_id
+        == gpt2_config.pad_token_id
+    ), "pad_token_id mismatch among generic/bart/gpt2"
+    assert (
+        transformer_config.bos_token_id
+        == bart_config.bos_token_id
+        == gpt2_config.bos_token_id
+    ), "bos_token_id mismatch among generic/bart/gpt2"
+    assert (
+        transformer_config.eos_token_id
+        == bart_config.eos_token_id
+        == gpt2_config.eos_token_id
+    ), "eos_token_id mismatch among generic/bart/gpt2"
 
     if tokenizer.pad_token_id is not None:
         assert transformer_config.pad_token_id == tokenizer.pad_token_id
@@ -88,7 +93,7 @@ def test_generic_and_bart_config_same_special_token_ids(example_dir: str):
 
 @pytest.mark.parametrize("example_dir", CONSISTENCY_TEST_EXAMPLES)
 def test_model_pipeline_same_special_token_ids(example_dir: str):
-    """Models built via ModelPipeline (generic vs bart) must have same special token IDs."""
+    """Models built via ModelPipeline (generic/bart/gpt2) must share special token IDs."""
     example_path = EXAMPLES_DIR / example_dir
     config_path = example_path / "configs" / "train.yaml"
     if not config_path.exists():
@@ -115,18 +120,15 @@ def test_model_pipeline_same_special_token_ids(example_dir: str):
         model_generic = ModelPipeline.from_io_dict(cfg.model, io_dict).build()
         cfg.model.model_type = "bart"
         model_bart = ModelPipeline.from_io_dict(cfg.model, io_dict).build()
+        cfg.model.model_type = "gpt2"
+        model_gpt2 = ModelPipeline.from_io_dict(cfg.model, io_dict).build()
 
         gen_cfg = model_generic.config
         bart_cfg = model_bart.config
+        gpt2_cfg = model_gpt2.config
 
-        assert gen_cfg.pad_token_id == bart_cfg.pad_token_id, (
-            f"pad_token_id mismatch: generic={gen_cfg.pad_token_id}, bart={bart_cfg.pad_token_id}"
-        )
-        assert gen_cfg.bos_token_id == bart_cfg.bos_token_id, (
-            f"bos_token_id mismatch: generic={gen_cfg.bos_token_id}, bart={bart_cfg.bos_token_id}"
-        )
-        assert gen_cfg.eos_token_id == bart_cfg.eos_token_id, (
-            f"eos_token_id mismatch: generic={gen_cfg.eos_token_id}, bart={bart_cfg.eos_token_id}"
-        )
+        assert gen_cfg.pad_token_id == bart_cfg.pad_token_id == gpt2_cfg.pad_token_id
+        assert gen_cfg.bos_token_id == bart_cfg.bos_token_id == gpt2_cfg.bos_token_id
+        assert gen_cfg.eos_token_id == bart_cfg.eos_token_id == gpt2_cfg.eos_token_id
     finally:
         os.chdir(original_cwd)

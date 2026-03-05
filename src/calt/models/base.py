@@ -41,11 +41,15 @@ class ModelRegistry:
     def _register_defaults(self):
         """Register default model types."""
         # Import here to avoid circular import
-        from transformers import BartConfig, BartForConditionalGeneration
+        from transformers import BartConfig, BartForConditionalGeneration, BertConfig
 
         from .bart.config_mapping import create_bart_config
+        from .bert.config_mapping import create_bert_config
+        from .bert.model import BertForSingleTokenClassification
         from .generic.config_mapping import create_transformer_config
         from .generic.model import Transformer, TransformerConfig
+        from .gpt2.config_mapping import create_gpt2_config
+        from .gpt2.model import GPT2ForPromptedGeneration
 
         # Register generic transformer model (aliases: transformer, calt, generic)
         self.register("transformer", Transformer, TransformerConfig)
@@ -58,6 +62,14 @@ class ModelRegistry:
         # Register BART model
         self.register("bart", BartForConditionalGeneration, BartConfig)
         self.register_config_mapping("bart", create_bart_config)
+
+        # Register GPT-2 decoder-only model
+        self.register("gpt2", GPT2ForPromptedGeneration, GPT2ForPromptedGeneration.config_class)
+        self.register_config_mapping("gpt2", create_gpt2_config)
+
+        # Register BERT encoder-only classification model
+        self.register("bert", BertForSingleTokenClassification, BertConfig)
+        self.register_config_mapping("bert", create_bert_config)
 
     def register(
         self,

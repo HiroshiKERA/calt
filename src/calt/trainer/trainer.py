@@ -60,6 +60,26 @@ class Trainer(HTrainer):
             for k, v in inputs.items()
         }
 
+    def _extract_class_labels(self, labels: torch.Tensor, ignore_index: int) -> torch.Tensor:
+        """Extract a single class ID from token labels.
+
+        For encoder-only classification models, labels can still arrive in
+        sequence format due to the shared collator. This helper maps them to
+        one class ID per sample.
+        """
+        if labels.dim() == 1:
+            return labels
+        if labels.dim() != 2:
+            raise ValueError(f"Unsupported labels shape for classification: {labels.shape}")
+
+        valid_mask = labels != ignore_index
+        has_valid = valid_mask.any(dim=1)
+        first_indices = valid_mask.float().argmax(dim=1)
+        batch_indices = torch.arange(labels.size(0), device=labels.device)
+        class_labels = labels[batch_indices, first_indices]
+        class_labels = torch.where(has_valid, class_labels, torch.zeros_like(class_labels))
+        return class_labels
+
     def _compute_metrics(self, eval_preds, ignore_index=-100):
         """Compute metrics at each prediction step.
 
@@ -93,41 +113,40 @@ class Trainer(HTrainer):
         if isinstance(labels, np.ndarray):
             labels = torch.tensor(labels)
 
-        # If predictions are logits (3D: batch_size, seq_len, vocab_size), convert to token IDs
+        # Seq2seq/generative case: predictions are token logits
         if predictions.dim() == 3:
             predictions = predictions.argmax(dim=-1)
+            # Mask tokens with ignore_index
+            mask = labels != ignore_index
+            valid_count = mask.sum().item()
+            if valid_count == 0:
+                return {"token_accuracy": 0.0, "success_rate": 0.0}
+            correct = (predictions == labels) & mask
+            token_acc = correct.sum().item() / valid_count
 
-        # Mask tokens with ignore_index
-        mask = labels != ignore_index
-        correct = (predictions == labels) & mask
-        token_acc = correct.sum().item() / mask.sum().item()
+            # Compute success rate (exact sequence match)
+            batch_size = predictions.shape[0]
+            exact_matches = 0
+            for i in range(batch_size):
+                seq_mask = mask[i]
+                if seq_mask.sum().item() == 0:
+                    continue
+                pred_seq = predictions[i][seq_mask]
+                label_seq = labels[i][seq_mask]
+                if pred_seq.shape == label_seq.shape and torch.equal(pred_seq, label_seq):
+                    exact_matches += 1
+            success_rate = exact_matches / batch_size if batch_size > 0 else 0.0
+            return {"token_accuracy": token_acc, "success_rate": success_rate}
 
-        # Compute success rate (exact sequence match)
-        # For each sequence, check if all non-ignored tokens match exactly
-        batch_size = predictions.shape[0]
-        exact_matches = 0
+        # Classification case: predictions are class logits
+        if predictions.dim() == 2:
+            pred_classes = predictions.argmax(dim=-1)
+            label_classes = self._extract_class_labels(labels, ignore_index=ignore_index)
+            correct = (pred_classes == label_classes).float()
+            accuracy = correct.mean().item() if correct.numel() > 0 else 0.0
+            return {"token_accuracy": accuracy, "success_rate": accuracy}
 
-        for i in range(batch_size):
-            # Get valid tokens (non-ignored) for this sequence
-            seq_mask = mask[i]
-            if seq_mask.sum().item() == 0:
-                # Skip sequences with no valid tokens
-                continue
-
-            # Compare only the valid tokens
-            pred_seq = predictions[i][seq_mask]
-            label_seq = labels[i][seq_mask]
-
-            # Check if sequences match exactly
-            if pred_seq.shape == label_seq.shape and torch.equal(pred_seq, label_seq):
-                exact_matches += 1
-
-        success_rate = exact_matches / batch_size if batch_size > 0 else 0.0
-
-        return {
-            "token_accuracy": token_acc,
-            "success_rate": success_rate,
-        }
+        raise ValueError(f"Unsupported prediction shape for metrics: {predictions.shape}")
 
     def evaluate(
         self,
@@ -199,6 +218,14 @@ class Trainer(HTrainer):
             )
             return 0.0
 
+        model_type = getattr(getattr(self.model, "config", None), "model_type", "")
+        if model_type in {"bert"}:
+            logger.info("Skipping generation evaluation for encoder-only model type: bert")
+            return 0.0
+        if not hasattr(self.model, "generate"):
+            logger.info("Skipping generation evaluation because model has no generate()")
+            return 0.0
+
         all_generated_texts = []
         all_reference_texts = []
 
@@ -221,13 +248,19 @@ class Trainer(HTrainer):
                 continue
 
             with torch.no_grad():
-                generated_ids = self.model.generate(
-                    input_ids=input_ids,
-                    attention_mask=attention_mask,
-                    max_length=max_length,
-                    # Optional: specify ``pad_token_id`` / ``eos_token_id`` as
-                    # keyword arguments if the model configuration requires.
-                )
+                try:
+                    generated_ids = self.model.generate(
+                        input_ids=input_ids,
+                        attention_mask=attention_mask,
+                        max_length=max_length,
+                        # Optional: specify ``pad_token_id`` / ``eos_token_id`` as
+                        # keyword arguments if the model configuration requires.
+                    )
+                except (AttributeError, NotImplementedError, TypeError) as exc:
+                    logger.info(
+                        f"Skipping generation evaluation because generate() failed: {exc}"
+                    )
+                    return 0.0
 
             # generated_ids shape (batch_size, sequence_length)
             current_generated_texts = tokenizer.batch_decode(

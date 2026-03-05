@@ -76,4 +76,11 @@ class ModelPipeline:
             model_config=self.calt_config,
             tokenizer=self.tokenizer,
         )
+
+        # Decoder-only generation models should use left padding so that
+        # prompt tokens stay adjacent to generated tokens.
+        model_type = getattr(self.calt_config, "model_type", "").lower()
+        if model_type == "gpt2" and self.tokenizer is not None:
+            self.tokenizer.padding_side = "left"
+
         return self.model
