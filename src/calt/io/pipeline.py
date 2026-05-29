@@ -301,6 +301,7 @@ class IOPipeline:
                 print(f"  [{i}] input:  {inp!r}")
                 print(f"      target: {tgt!r}")
             print()
+
         # ---- Pre-tokenized JSONL fast-path (no online tokenization) ----
         # Detect by sniffing the first JSONL line for "input_ids" key.
         def _is_pretokenized_jsonl(path):
@@ -332,7 +333,11 @@ class IOPipeline:
                         )
                     inputs.append(rec["input_ids"])
                     targets.append(rec["target_ids"])
-                    if max_samples is not None and max_samples > 0 and len(inputs) >= max_samples:
+                    if (
+                        max_samples is not None
+                        and max_samples > 0
+                        and len(inputs) >= max_samples
+                    ):
                         break
             print(f"Loaded {len(inputs)} pre-tokenized samples from {path}")
             return inputs, targets

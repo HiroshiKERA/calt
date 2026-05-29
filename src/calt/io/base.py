@@ -167,7 +167,10 @@ class StandardDataCollator:
             pretokenized = (
                 len(attribute_batch) > 0
                 and isinstance(attribute_batch[0], list)
-                and (len(attribute_batch[0]) == 0 or isinstance(attribute_batch[0][0], int))
+                and (
+                    len(attribute_batch[0]) == 0
+                    or isinstance(attribute_batch[0][0], int)
+                )
             )
 
             if attribute == "input":

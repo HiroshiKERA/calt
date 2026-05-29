@@ -10,19 +10,13 @@ Covers:
 """
 
 import json
-import os
-import tempfile
 
 import pytest
 import torch
 from omegaconf import OmegaConf
 
-from calt.io import IOPipeline, StandardDataCollator
-from calt.io.tokenizer import get_tokenizer
-from calt.io.preprocessor.lexer import NumberPolicy, UnifiedLexer
-from calt.io.vocabulary import VocabConfig
 from calt import preprocess as pp
-
+from calt.io import IOPipeline, StandardDataCollator
 
 # --------------------------------------------------------------------------- #
 # Fixtures                                                                      #
@@ -63,7 +57,14 @@ def raw_data(tmp_path):
 def data_cfg():
     """Minimal data.yaml-like config with a sampler section (feeds the hash)."""
     return OmegaConf.create(
-        {"sampler": {"symbols": "x,y", "field_str": "QQ", "order": "degrevlex", "max_degree": 4}}
+        {
+            "sampler": {
+                "symbols": "x,y",
+                "field_str": "QQ",
+                "order": "degrevlex",
+                "max_degree": 4,
+            }
+        }
     )
 
 
@@ -92,6 +93,7 @@ def tokenizer(lexer_yaml_file):
 # Hashing                                                                       #
 # --------------------------------------------------------------------------- #
 
+
 def test_config_hash_deterministic(cfg, data_cfg):
     h1 = pp.compute_config_hash(cfg, data_cfg, "degrevlex")
     h2 = pp.compute_config_hash(cfg, data_cfg, "degrevlex")
@@ -106,7 +108,9 @@ def test_config_hash_changes_with_order(cfg, data_cfg):
 
 def test_config_hash_changes_with_extra_bytes(cfg, data_cfg):
     base = pp.compute_config_hash(cfg, data_cfg, "degrevlex")
-    with_extra = pp.compute_config_hash(cfg, data_cfg, "degrevlex", extra_hash_bytes=b"hook")
+    with_extra = pp.compute_config_hash(
+        cfg, data_cfg, "degrevlex", extra_hash_bytes=b"hook"
+    )
     assert base != with_extra
 
 
@@ -120,6 +124,7 @@ def test_pretok_hash_differs_from_config_hash(cfg, data_cfg, tokenizer):
 # Round-trip: offline tokenization == online tokenization                       #
 # --------------------------------------------------------------------------- #
 
+
 def test_tokenize_to_ids_matches_online(lexer_yaml_file):
     lexer, tok = pp._build_lexer_and_tokenizer(lexer_yaml_file)
     for text in ["x^2 + y", "x*y", "y^2 - x", "x + 1"]:
@@ -132,14 +137,19 @@ def test_tokenize_to_ids_matches_online(lexer_yaml_file):
 # Strings cache                                                                 #
 # --------------------------------------------------------------------------- #
 
+
 def test_run_preprocess_creates_cache(cfg, data_cfg):
-    cache_dir = pp.run_preprocess(cfg, data_cfg, "degrevlex", "raw", load_preprocessor=None)
+    cache_dir = pp.run_preprocess(
+        cfg, data_cfg, "degrevlex", "raw", load_preprocessor=None
+    )
     assert cache_dir.exists()
     assert (cache_dir / "train_processed.jsonl").exists()
     assert (cache_dir / "test_processed.jsonl").exists()
     assert (cache_dir / "_hash.txt").exists()
     # First record must be {"problem", "answer"}
-    first = json.loads((cache_dir / "train_processed.jsonl").read_text().splitlines()[0])
+    first = json.loads(
+        (cache_dir / "train_processed.jsonl").read_text().splitlines()[0]
+    )
     assert "problem" in first and "answer" in first
 
 
@@ -153,15 +163,20 @@ def test_maybe_use_processed_cache_hit_and_stale(cfg, data_cfg):
     data_cfg2 = OmegaConf.create(OmegaConf.to_container(data_cfg, resolve=True))
     data_cfg2.sampler.max_degree = 999
     cfg_stale = OmegaConf.create(OmegaConf.to_container(cfg, resolve=True))
-    assert pp.maybe_use_processed_cache(cfg_stale, data_cfg2, "degrevlex", "raw") is False
+    assert (
+        pp.maybe_use_processed_cache(cfg_stale, data_cfg2, "degrevlex", "raw") is False
+    )
 
 
 # --------------------------------------------------------------------------- #
 # Pre-tokenized cache                                                           #
 # --------------------------------------------------------------------------- #
 
+
 def test_preprocess_to_ids_creates_cache(cfg, data_cfg):
-    cache_dir = pp.preprocess_to_ids(cfg, data_cfg, "degrevlex", "raw", load_preprocessor=None)
+    cache_dir = pp.preprocess_to_ids(
+        cfg, data_cfg, "degrevlex", "raw", load_preprocessor=None
+    )
     assert cache_dir.exists()
     assert (cache_dir / "train_ids.jsonl").exists()
     first = json.loads((cache_dir / "train_ids.jsonl").read_text().splitlines()[0])
@@ -173,24 +188,32 @@ def test_preprocess_to_ids_creates_cache(cfg, data_cfg):
 def test_maybe_use_pretokenized_cache_hit_sets_flag(cfg, data_cfg):
     pp.preprocess_to_ids(cfg, data_cfg, "degrevlex", "raw", load_preprocessor=None)
     cfg_hit = OmegaConf.create(OmegaConf.to_container(cfg, resolve=True))
-    assert pp.maybe_use_pretokenized_cache(cfg_hit, data_cfg, "degrevlex", "raw") is True
+    assert (
+        pp.maybe_use_pretokenized_cache(cfg_hit, data_cfg, "degrevlex", "raw") is True
+    )
     assert "_ids" in cfg_hit.data.train_dataset_jsonl
     assert cfg_hit.data.get("_pretokenized") is True
 
 
-def test_maybe_use_pretokenized_cache_stale_on_lexer_change(cfg, data_cfg, lexer_yaml_file):
+def test_maybe_use_pretokenized_cache_stale_on_lexer_change(
+    cfg, data_cfg, lexer_yaml_file
+):
     pp.preprocess_to_ids(cfg, data_cfg, "degrevlex", "raw", load_preprocessor=None)
     # Mutate the lexer.yaml on disk → hash must change → STALE
     modified = dict(LEXER_YAML)
     modified["number_policy"] = {**LEXER_YAML["number_policy"], "digit_group": 2}
     OmegaConf.save(OmegaConf.create(modified), lexer_yaml_file)
     cfg_stale = OmegaConf.create(OmegaConf.to_container(cfg, resolve=True))
-    assert pp.maybe_use_pretokenized_cache(cfg_stale, data_cfg, "degrevlex", "raw") is False
+    assert (
+        pp.maybe_use_pretokenized_cache(cfg_stale, data_cfg, "degrevlex", "raw")
+        is False
+    )
 
 
 # --------------------------------------------------------------------------- #
 # IOPipeline.build detection                                                    #
 # --------------------------------------------------------------------------- #
+
 
 def test_iopipeline_loads_pretokenized(cfg, data_cfg):
     pp.preprocess_to_ids(cfg, data_cfg, "degrevlex", "raw", load_preprocessor=None)
@@ -240,6 +263,7 @@ def test_corrupt_pretokenized_jsonl_raises(tmp_path, cfg):
 # --------------------------------------------------------------------------- #
 # StandardDataCollator: pretok vs string batches                                #
 # --------------------------------------------------------------------------- #
+
 
 def test_collator_pads_pretokenized_batch(tokenizer):
     coll = StandardDataCollator(tokenizer=tokenizer)

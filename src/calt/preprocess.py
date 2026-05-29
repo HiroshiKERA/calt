@@ -73,6 +73,7 @@ PRETOK_VERSION = "v1"
 # Hash & cache-path computation                                                #
 # --------------------------------------------------------------------------- #
 
+
 def _read_bytes(path: str | Path) -> bytes:
     return Path(path).read_bytes()
 
@@ -140,6 +141,7 @@ def get_cache_dir(
 # --------------------------------------------------------------------------- #
 # Cache writer (called by experiments/*/scripts/preprocess.py)                #
 # --------------------------------------------------------------------------- #
+
 
 def _iter_raw_lines(raw_path: Path):
     """Yield (input_text, target_text) pairs from a CALT raw .txt file."""
@@ -213,17 +215,29 @@ def run_preprocess(
     expected_hash = compute_config_hash(cfg, data_cfg, training_order, extra_hash_bytes)
     hash_file = cache_dir / "_hash.txt"
 
-    if not force and hash_file.exists() and hash_file.read_text().strip() == expected_hash:
-        print(f"[preprocess] cache up to date at {cache_dir} (hash {expected_hash[:12]}...)")
+    if (
+        not force
+        and hash_file.exists()
+        and hash_file.read_text().strip() == expected_hash
+    ):
+        print(
+            f"[preprocess] cache up to date at {cache_dir} (hash {expected_hash[:12]}...)"
+        )
         return cache_dir
 
     print(f"[preprocess] writing cache → {cache_dir}")
     print(f"[preprocess]   order={training_order}, lexer_format={lexer_format}")
-    print(f"[preprocess]   load_preprocessor={type(load_preprocessor).__name__ if load_preprocessor else None}")
+    print(
+        f"[preprocess]   load_preprocessor={type(load_preprocessor).__name__ if load_preprocessor else None}"
+    )
 
-    n_train, dt_train = _preprocess_file(raw_train, cache_dir / "train_processed.jsonl", load_preprocessor)
+    n_train, dt_train = _preprocess_file(
+        raw_train, cache_dir / "train_processed.jsonl", load_preprocessor
+    )
     print(f"[preprocess]   train: {n_train} samples in {dt_train:.1f}s")
-    n_test, dt_test = _preprocess_file(raw_test, cache_dir / "test_processed.jsonl", load_preprocessor)
+    n_test, dt_test = _preprocess_file(
+        raw_test, cache_dir / "test_processed.jsonl", load_preprocessor
+    )
     print(f"[preprocess]   test:  {n_test} samples in {dt_test:.1f}s")
 
     meta = {
@@ -232,7 +246,9 @@ def run_preprocess(
         "training_order": training_order,
         "lexer_format": lexer_format,
         "lexer_config": str(cfg.data.lexer_config),
-        "load_preprocessor": type(load_preprocessor).__name__ if load_preprocessor else None,
+        "load_preprocessor": type(load_preprocessor).__name__
+        if load_preprocessor
+        else None,
         "n_train": n_train,
         "n_test": n_test,
     }
@@ -245,6 +261,7 @@ def run_preprocess(
 # --------------------------------------------------------------------------- #
 # Cache reader (called by train.py)                                            #
 # --------------------------------------------------------------------------- #
+
 
 def maybe_use_processed_cache(
     cfg: DictConfig,
@@ -418,7 +435,9 @@ def _pretokenize_file(
                 problem, answer = inp, tgt
             input_ids = _tokenize_to_ids(problem, lexer, tokenizer)
             target_ids = _tokenize_to_ids(answer, lexer, tokenizer)
-            f.write(json.dumps({"input_ids": input_ids, "target_ids": target_ids}) + "\n")
+            f.write(
+                json.dumps({"input_ids": input_ids, "target_ids": target_ids}) + "\n"
+            )
             n += 1
     return n, time.time() - t0
 
@@ -442,16 +461,26 @@ def preprocess_to_ids(
     cache_dir.mkdir(parents=True, exist_ok=True)
 
     lexer, tokenizer = _build_lexer_and_tokenizer(cfg.data.lexer_config)
-    expected_hash = compute_pretok_hash(cfg, data_cfg, training_order, tokenizer, extra_hash_bytes)
+    expected_hash = compute_pretok_hash(
+        cfg, data_cfg, training_order, tokenizer, extra_hash_bytes
+    )
     hash_file = cache_dir / "_hash.txt"
 
-    if not force and hash_file.exists() and hash_file.read_text().strip() == expected_hash:
-        print(f"[preprocess-ids] cache up to date at {cache_dir} (hash {expected_hash[:12]}...)")
+    if (
+        not force
+        and hash_file.exists()
+        and hash_file.read_text().strip() == expected_hash
+    ):
+        print(
+            f"[preprocess-ids] cache up to date at {cache_dir} (hash {expected_hash[:12]}...)"
+        )
         return cache_dir
 
     print(f"[preprocess-ids] writing cache → {cache_dir}")
     print(f"[preprocess-ids]   order={training_order}, lexer_format={lexer_format}")
-    print(f"[preprocess-ids]   load_preprocessor={type(load_preprocessor).__name__ if load_preprocessor else None}")
+    print(
+        f"[preprocess-ids]   load_preprocessor={type(load_preprocessor).__name__ if load_preprocessor else None}"
+    )
     print(f"[preprocess-ids]   tokenizer vocab size={len(tokenizer.get_vocab())}")
 
     n_train, dt_train = _pretokenize_file(
@@ -469,7 +498,9 @@ def preprocess_to_ids(
         "training_order": training_order,
         "lexer_format": lexer_format,
         "lexer_config": str(cfg.data.lexer_config),
-        "load_preprocessor": type(load_preprocessor).__name__ if load_preprocessor else None,
+        "load_preprocessor": type(load_preprocessor).__name__
+        if load_preprocessor
+        else None,
         "tokenizer_vocab_size": len(tokenizer.get_vocab()),
         "n_train": n_train,
         "n_test": n_test,
@@ -505,7 +536,9 @@ def maybe_use_pretokenized_cache(
         return False
 
     _lexer, tokenizer = _build_lexer_and_tokenizer(cfg.data.lexer_config)
-    expected = compute_pretok_hash(cfg, data_cfg, training_order, tokenizer, extra_hash_bytes)
+    expected = compute_pretok_hash(
+        cfg, data_cfg, training_order, tokenizer, extra_hash_bytes
+    )
     actual = hash_file.read_text().strip()
     if actual != expected:
         print(
