@@ -25,7 +25,7 @@ Files written per cache directory
 
 Building the cache offline (run once, e.g. from a preprocess script)
 --------------------------------------------------------------------
-    from calt.preprocess import run_preprocess, preprocess_to_ids
+    from calt.io.preprocess import run_preprocess, preprocess_to_ids
 
     # `load_preprocessor` is the same DatasetLoadPreprocessor you would pass to
     # IOPipeline.dataset_load_preprocessor (or None). `lexer_format` is "raw" or
@@ -39,14 +39,15 @@ Building the cache offline (run once, e.g. from a preprocess script)
 
 Using the cache at training time (auto-detection)
 -------------------------------------------------
-    from calt.preprocess import maybe_use_pretokenized_cache, maybe_use_processed_cache
+    from calt.io.preprocess import build_io_pipeline_with_cache
 
-    # Prefer the most aggressive cache available, then build the pipeline.
-    if maybe_use_pretokenized_cache(cfg, data_cfg, training_order, lexer_format):
-        pass  # cfg.data.{train,test}_dataset_jsonl now point at *_ids.jsonl
-    elif maybe_use_processed_cache(cfg, data_cfg, training_order, lexer_format):
-        pass  # cfg.data.{train,test}_dataset_jsonl now point at *_processed.jsonl
-    io_pipeline = IOPipeline.from_config(cfg.data)  # reads the cache automatically
+    # Picks the most aggressive valid cache (pretok → strings → raw fallback),
+    # wires the load_preprocessor only when no cache is used, and returns the
+    # ready-to-build pipeline plus which cache it used.
+    io_pipeline, cache_kind = build_io_pipeline_with_cache(
+        cfg, data_cfg, training_order, lexer_format, load_preprocessor
+    )
+    io_dict = io_pipeline.build()
 """
 
 from __future__ import annotations
@@ -333,9 +334,9 @@ def _build_lexer_and_tokenizer(lexer_yaml_path):
     IOPipeline.from_config would produce. We mirror its construction exactly so
     the offline IDs match what online tokenization would have produced.
     """
-    from .io.preprocessor.lexer import NumberPolicy, UnifiedLexer
-    from .io.tokenizer import get_tokenizer
-    from .io.vocabulary.config import VocabConfig
+    from .preprocessor.lexer import NumberPolicy, UnifiedLexer
+    from .tokenizer import get_tokenizer
+    from .vocabulary.config import VocabConfig
 
     with open(lexer_yaml_path) as f:
         lexer_config = yaml.safe_load(f)
@@ -552,3 +553,125 @@ def maybe_use_pretokenized_cache(
     # OmegaConf accepts arbitrary keys via merge; set the flag IOPipeline reads.
     cfg.data._pretokenized = True
     return True
+
+
+# =========================================================================== #
+# High-level cache cascade (used by task run_training scripts)                 #
+# =========================================================================== #
+
+
+def _warn_if_other_order_cache_exists(cfg: DictConfig, training_order: str) -> None:
+    """
+    Helpful diagnostic: if no cache matched but a cache exists for the OTHER
+    training_order, the user probably forgot to keep --training_order in sync
+    between the preprocess step and the train step.
+    """
+    data_dir = Path(cfg.data.train_dataset_path).parent
+    other = "degrevlex" if training_order == "lex" else "lex"
+    other_match = sorted(p.name for p in data_dir.glob(f"processed_{other}_*"))
+    if other_match:
+        print(
+            f"[preprocess] ⚠  No cache for --training_order={training_order}, "
+            f"but a cache exists for --training_order={other}:\n"
+            f"    {other_match}\n"
+            f"    → If you meant that order: re-run with --training_order {other}\n"
+            f"    → If you meant {training_order}: build it with "
+            f"`calt preprocess ... --training-order {training_order}`"
+        )
+
+
+def build_io_pipeline_with_cache(
+    cfg: DictConfig,
+    data_cfg: DictConfig | None,
+    training_order: str,
+    lexer_format: str,
+    load_preprocessor: Any | None,
+    extra_hash_bytes: bytes = b"",
+) -> tuple[Any, str]:
+    """
+    Build an IOPipeline, preferring the most aggressive valid offline cache.
+
+    Cascade (first valid one wins):
+      1. pre-tokenized cache (input_ids on disk)   → zero online tokenization
+      2. strings cache (post-load-preprocessor)    → SageMath/FGLM/Expanded skipped
+      3. raw .txt + load_preprocessor              → original CALT behavior
+
+    The `load_preprocessor` is wired onto the pipeline ONLY in case 3 (the cache
+    already embeds its effect in cases 1 and 2). When nothing matches, a
+    diagnostic is printed if a cache exists for the other training_order.
+
+    Returns
+    -------
+    tuple (io_pipeline, cache_kind)
+        cache_kind is "pretokenized", "strings", or "none".
+    """
+    from .pipeline import IOPipeline
+
+    if maybe_use_pretokenized_cache(
+        cfg, data_cfg, training_order, lexer_format, extra_hash_bytes
+    ):
+        return IOPipeline.from_config(cfg.data), "pretokenized"
+
+    if maybe_use_processed_cache(
+        cfg, data_cfg, training_order, lexer_format, extra_hash_bytes
+    ):
+        return IOPipeline.from_config(cfg.data), "strings"
+
+    _warn_if_other_order_cache_exists(cfg, training_order)
+    io_pipeline = IOPipeline.from_config(cfg.data)
+    if load_preprocessor is not None:
+        io_pipeline.dataset_load_preprocessor = load_preprocessor
+    return io_pipeline, "none"
+
+
+# =========================================================================== #
+# SageMath source-ring reconstruction (generic across tasks)                   #
+# =========================================================================== #
+
+
+def parse_field(field_str: str):
+    """
+    Map a field identifier string to a SageMath field object.
+
+    Supported: "QQ", "RR", "ZZ", and "GF<p>" (e.g. "GF7" → GF(7)). These mirror
+    the `field_str` values produced by the dataset samplers.
+    """
+    from sage.all import GF, QQ, RR, ZZ  # lazy: Sage is an optional dependency
+
+    if field_str == "QQ":
+        return QQ
+    if field_str == "RR":
+        return RR
+    if field_str == "ZZ":
+        return ZZ
+    if field_str.startswith("GF"):
+        digits = field_str[2:]
+        if not digits.isdigit():
+            raise ValueError(f"Unsupported field_str for GF: {field_str!r}")
+        return GF(int(digits))
+    raise ValueError(f"Unsupported field_str: {field_str!r}")
+
+
+def build_ring_from_sampler(sampler_cfg: Any):
+    """
+    Reconstruct the source PolynomialRing used at generation time from a sampler
+    config (the `sampler` section of a data.yaml, a DictConfig or plain dict).
+
+    Reads `symbols` (comma-separated variable names), `field_str` and `order`.
+    Generic across tasks — both the Gröbner and border-basis runners rebuild the
+    same ring this way.
+    """
+    from sage.all import PolynomialRing  # lazy: Sage is an optional dependency
+
+    if isinstance(sampler_cfg, dict):
+        sampler = dict(sampler_cfg)
+    else:
+        sampler = dict(OmegaConf.to_container(sampler_cfg, resolve=True))
+
+    symbols = sampler.get("symbols", "x,y")
+    field_str = sampler.get("field_str", "QQ")
+    order = sampler.get("order", "degrevlex")
+
+    field = parse_field(field_str)
+    names = [s.strip() for s in symbols.split(",")]
+    return PolynomialRing(field, names, order=order)

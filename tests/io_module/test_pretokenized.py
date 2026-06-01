@@ -15,8 +15,8 @@ import pytest
 import torch
 from omegaconf import OmegaConf
 
-from calt import preprocess as pp
 from calt.io import IOPipeline, StandardDataCollator
+from calt.io import preprocess as pp
 
 # --------------------------------------------------------------------------- #
 # Fixtures                                                                      #
@@ -289,3 +289,59 @@ def test_collator_string_batch_unchanged(tokenizer):
     assert isinstance(out["input_ids"], torch.Tensor)
     assert out["input_ids"].shape[0] == 2
     assert "labels" in out
+
+
+# --------------------------------------------------------------------------- #
+# build_io_pipeline_with_cache: the cache cascade                               #
+# --------------------------------------------------------------------------- #
+
+
+def test_cascade_picks_pretokenized_first(cfg, data_cfg):
+    pp.preprocess_to_ids(cfg, data_cfg, "degrevlex", "raw", load_preprocessor=None)
+    cfg_run = OmegaConf.create(OmegaConf.to_container(cfg, resolve=True))
+    io, kind = pp.build_io_pipeline_with_cache(
+        cfg_run, data_cfg, "degrevlex", "raw", load_preprocessor=None
+    )
+    assert kind == "pretokenized"
+    assert isinstance(io, IOPipeline)
+
+
+def test_cascade_falls_back_to_strings(cfg, data_cfg):
+    # Only the strings cache exists (no *_ids cache) → cascade must pick "strings".
+    pp.run_preprocess(cfg, data_cfg, "degrevlex", "raw", load_preprocessor=None)
+    cfg_run = OmegaConf.create(OmegaConf.to_container(cfg, resolve=True))
+    io, kind = pp.build_io_pipeline_with_cache(
+        cfg_run, data_cfg, "degrevlex", "raw", load_preprocessor=None
+    )
+    assert kind == "strings"
+    assert isinstance(io, IOPipeline)
+
+
+def test_cascade_no_cache_returns_none(cfg, data_cfg):
+    # No cache built at all → "none"; load_preprocessor must be wired onto pipeline.
+    sentinel = object()
+    cfg_run = OmegaConf.create(OmegaConf.to_container(cfg, resolve=True))
+    io, kind = pp.build_io_pipeline_with_cache(
+        cfg_run, data_cfg, "degrevlex", "raw", load_preprocessor=sentinel
+    )
+    assert kind == "none"
+    assert io.dataset_load_preprocessor is sentinel
+
+
+# --------------------------------------------------------------------------- #
+# Source-ring reconstruction (requires SageMath)                                #
+# --------------------------------------------------------------------------- #
+
+
+def test_parse_field_and_ring(data_cfg):
+    pytest.importorskip("sage.all")
+    from sage.all import GF, QQ
+
+    assert pp.parse_field("QQ") is QQ
+    assert pp.parse_field("GF7") == GF(7)
+    with pytest.raises(ValueError):
+        pp.parse_field("nonsense")
+
+    ring = pp.build_ring_from_sampler(data_cfg.sampler)
+    assert ring.ngens() == 2  # symbols "x,y"
+    assert ring.base_ring() is QQ
