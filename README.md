@@ -11,13 +11,27 @@ CALT is a simple Python library for learning arithmetic and symbolic computation
 
 It offers a basic Transformer model and training pipeline, and non-experts of deep learning can focus on constructing datasets to train and evaluate the model. 
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Installation
 
+We recommend installing CALT in a dedicated conda environment.
+
 ```bash
-pip install calt-x
+conda create -n calt-env python=3.11
+conda activate calt-env
+conda install -c conda-forge calt-x
 ```
+
+CALT currently supports Python `>=3.11,<3.13`.
+
+You can check the available versions with:
+
+```bash
+conda search calt-x --channel conda-forge
+```
+
+The conda-forge feedstock is available here: [conda-forge/calt-x-feedstock](https://github.com/conda-forge/calt-x-feedstock).
 
 ### Instance Generation
 For minimal usage, users only need to implement an instance generator for their own task. For example:
