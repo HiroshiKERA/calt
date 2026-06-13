@@ -161,19 +161,46 @@ class StandardDataCollator:
         for attribute in attributes:
             attribute_batch = [item[attribute] for item in batch]
 
-            if attribute == "input":
-                # Tokenize the input sequences.
-                inputs = self.tokenizer(
-                    attribute_batch, padding="longest", return_tensors="pt"
+            # Detect pre-tokenized inputs: each sample is already a list[int]
+            # produced by an offline pre-tokenization step (see calt.preprocess).
+            # In that case we skip the tokenizer entirely and only pad+tensorize.
+            pretokenized = (
+                len(attribute_batch) > 0
+                and isinstance(attribute_batch[0], list)
+                and (
+                    len(attribute_batch[0]) == 0
+                    or isinstance(attribute_batch[0][0], int)
                 )
+            )
+
+            if attribute == "input":
+                if pretokenized:
+                    # Pad to longest using the existing tokenizer's pad_token_id;
+                    # this produces the SAME tensor as tokenizer(strings) would
+                    # have, given that BOS/EOS were already added at preprocess time.
+                    inputs = self.tokenizer.pad(
+                        {"input_ids": attribute_batch},
+                        padding="longest",
+                        return_tensors="pt",
+                    )
+                else:
+                    inputs = self.tokenizer(
+                        attribute_batch, padding="longest", return_tensors="pt"
+                    )
                 batch_dict["input_ids"] = inputs["input_ids"]
                 batch_dict["attention_mask"] = inputs["attention_mask"]
 
             elif attribute == "target":
-                # Tokenize the target sequences.
-                targets = self.tokenizer(
-                    attribute_batch, padding="longest", return_tensors="pt"
-                )
+                if pretokenized:
+                    targets = self.tokenizer.pad(
+                        {"input_ids": attribute_batch},
+                        padding="longest",
+                        return_tensors="pt",
+                    )
+                else:
+                    targets = self.tokenizer(
+                        attribute_batch, padding="longest", return_tensors="pt"
+                    )
                 # Prepare decoder input ids (remove the last token, usually EOS).
                 batch_dict["decoder_input_ids"] = targets["input_ids"][
                     :, :-1

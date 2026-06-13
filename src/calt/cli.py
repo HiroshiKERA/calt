@@ -177,9 +177,56 @@ def _add_run_arguments(run_parser: argparse.ArgumentParser) -> None:
     )
 
 
+def _add_preprocess_arguments(parser: argparse.ArgumentParser) -> None:
+    parser.add_argument(
+        "--config",
+        required=True,
+        help="Path to train.yaml (its 'data' section is used: lexer_config, "
+        "train_dataset_path, test_dataset_path).",
+    )
+    parser.add_argument(
+        "--data-config",
+        default=None,
+        help="Path to data.yaml. Required for --lexer-format expanded (its "
+        "'sampler' section reconstructs the source ring).",
+    )
+    parser.add_argument(
+        "--lexer-format",
+        choices=["raw", "expanded"],
+        default="raw",
+        help="Tokenization format. 'raw' copies text through; 'expanded' applies "
+        "TextToSage + ExpandedForm offline (default: raw).",
+    )
+    parser.add_argument(
+        "--training-order",
+        default="degrevlex",
+        help="Label stored in the cache path and folded into its hash "
+        "(default: degrevlex). Note: building a 'lex' cache that recomputes the "
+        "basis needs a task-specific preprocessor — use the Python API for that.",
+    )
+    parser.add_argument(
+        "--pretokenize",
+        action="store_true",
+        help="Also run the lexer + tokenizer offline and store input_ids "
+        "(zero tokenization at train time).",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Rebuild the cache even when the hash already matches.",
+    )
+
+
 def _build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="calt")
     subparsers = parser.add_subparsers(dest="command")
+
+    preprocess_parser = subparsers.add_parser(
+        "preprocess",
+        help="Build an offline tokenizer-ready cache from raw .txt datasets.",
+    )
+    _add_preprocess_arguments(preprocess_parser)
+    preprocess_parser.set_defaults(handler=_handle_preprocess)
 
     remote_parser = subparsers.add_parser(
         "remote", help="Run jobs on remote backends (Kaggle)."
@@ -256,6 +303,68 @@ def _build_parser() -> argparse.ArgumentParser:
     remote_delete_parser.set_defaults(handler=_handle_remote_delete)
 
     return parser
+
+
+def _build_builtin_load_preprocessor(lexer_format: str, data_cfg):
+    """
+    Build the generic (library-only) load preprocessor for a given lexer format.
+
+    - "raw"      → None (text is copied through unchanged).
+    - "expanded" → TextToSage + ExpandedForm, needs data_cfg for the source ring.
+
+    Task-specific chains (e.g. Gröbner lex-order recomputation, user hooks) are
+    NOT built here — those require user code and the Python API.
+    """
+    if lexer_format == "raw":
+        return None
+
+    if data_cfg is None or "sampler" not in data_cfg:
+        raise ValueError(
+            "--lexer-format expanded requires --data-config pointing at a "
+            "data.yaml with a 'sampler' section (to rebuild the source ring)."
+        )
+
+    from .io import (
+        ChainLoadPreprocessor,
+        ExpandedFormLoadPreprocessor,
+        TextToSageLoadPreprocessor,
+        build_ring_from_sampler,
+    )
+
+    ring = build_ring_from_sampler(data_cfg.sampler)
+    return ChainLoadPreprocessor(
+        TextToSageLoadPreprocessor(delimiter="|", ring=ring),
+        ExpandedFormLoadPreprocessor(delimiter=" | "),
+    )
+
+
+def _handle_preprocess(args: argparse.Namespace) -> int:
+    from omegaconf import OmegaConf
+
+    from .io.preprocess import preprocess_to_ids, run_preprocess
+
+    cfg = OmegaConf.load(args.config)
+    data_cfg = OmegaConf.load(args.data_config) if args.data_config else None
+
+    try:
+        load_preprocessor = _build_builtin_load_preprocessor(
+            args.lexer_format, data_cfg
+        )
+    except ValueError as exc:
+        print(f"[calt preprocess] {exc}", file=sys.stderr)
+        return 2
+
+    builder = preprocess_to_ids if args.pretokenize else run_preprocess
+    cache_dir = builder(
+        cfg,
+        data_cfg,
+        args.training_order,
+        args.lexer_format,
+        load_preprocessor,
+        force=args.force,
+    )
+    print(f"[calt preprocess] cache ready at: {cache_dir}")
+    return 0
 
 
 def _handle_remote_run(args: argparse.Namespace) -> int:

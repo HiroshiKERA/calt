@@ -4,6 +4,7 @@ This module defines :class:`IOPipeline`, which builds the training and evaluatio
 `Dataset`, `Tokenizer`, and `DataCollator` objects used throughout the library.
 """
 
+import json
 import logging
 from pathlib import Path
 
@@ -300,28 +301,87 @@ class IOPipeline:
                 print(f"  [{i}] input:  {inp!r}")
                 print(f"      target: {tgt!r}")
             print()
-        train_dataset = StandardDataset.load_file(
-            train_path,
-            self.preprocessor,
-            self.num_train_samples,
-            use_jsonl=train_use_jsonl,
-            use_pickle=train_use_pickle,
-            dataset_load_preprocessor=train_preprocessor,
-        )
-        test_dataset = StandardDataset.load_file(
-            test_path,
-            self.preprocessor,
-            self.num_test_samples,
-            use_jsonl=test_use_jsonl,
-            use_pickle=test_use_pickle,
-            dataset_load_preprocessor=test_preprocessor,
-        )
 
-        if self.validate_train_tokens:
+        # ---- Pre-tokenized JSONL fast-path (no online tokenization) ----
+        # Detect by sniffing the first JSONL line for "input_ids" key.
+        def _is_pretokenized_jsonl(path):
+            if not path or not str(path).endswith(".jsonl"):
+                return False
+            try:
+                with open(path, "r", encoding="utf-8") as fh:
+                    first = fh.readline().strip()
+                    if not first:
+                        return False
+                    rec = json.loads(first)
+                    return isinstance(rec, dict) and "input_ids" in rec
+            except (OSError, ValueError):
+                return False
+
+        def _load_pretokenized(path, max_samples):
+            inputs, targets = [], []
+            with open(path, "r", encoding="utf-8") as fh:
+                for lineno, line in enumerate(fh, 1):
+                    line = line.strip()
+                    if not line:
+                        continue
+                    rec = json.loads(line)
+                    if "input_ids" not in rec or "target_ids" not in rec:
+                        raise ValueError(
+                            f"Pre-tokenized JSONL {path} line {lineno} is missing "
+                            f"'input_ids' or 'target_ids'. Rebuild the cache with "
+                            f"preprocess.py --force."
+                        )
+                    inputs.append(rec["input_ids"])
+                    targets.append(rec["target_ids"])
+                    if (
+                        max_samples is not None
+                        and max_samples > 0
+                        and len(inputs) >= max_samples
+                    ):
+                        break
+            print(f"Loaded {len(inputs)} pre-tokenized samples from {path}")
+            return inputs, targets
+
+        train_pretok = _is_pretokenized_jsonl(train_path)
+        test_pretok = _is_pretokenized_jsonl(test_path)
+
+        if train_pretok:
+            # Bypass StandardDataset.load_file's text path entirely.
+            t_in, t_tgt = _load_pretokenized(train_path, self.num_train_samples)
+            # preprocessor=None → __getitem__ returns the list[int] as-is.
+            # The collator detects list[int] and uses tokenizer.pad() instead of tokenizer().
+            train_dataset = StandardDataset(
+                input_texts=t_in, target_texts=t_tgt, preprocessor=None
+            )
+        else:
+            train_dataset = StandardDataset.load_file(
+                train_path,
+                self.preprocessor,
+                self.num_train_samples,
+                use_jsonl=train_use_jsonl,
+                use_pickle=train_use_pickle,
+                dataset_load_preprocessor=train_preprocessor,
+            )
+        if test_pretok:
+            t_in, t_tgt = _load_pretokenized(test_path, self.num_test_samples)
+            test_dataset = StandardDataset(
+                input_texts=t_in, target_texts=t_tgt, preprocessor=None
+            )
+        else:
+            test_dataset = StandardDataset.load_file(
+                test_path,
+                self.preprocessor,
+                self.num_test_samples,
+                use_jsonl=test_use_jsonl,
+                use_pickle=test_use_pickle,
+                dataset_load_preprocessor=test_preprocessor,
+            )
+
+        if self.validate_train_tokens and not train_pretok:
             print("Validating training dataset tokens...", end=" ")
             self.validate_tokens(train_dataset)
             print("passed!")
-        if self.validate_test_tokens:
+        if self.validate_test_tokens and not test_pretok:
             print("Validating test dataset tokens...", end=" ")
             self.validate_tokens(test_dataset)
             print("passed!")
