@@ -25,6 +25,12 @@ conda install -c conda-forge calt-x
 
 CALT currently supports Python `>=3.11,<3.13`.
 
+If you use features that depend on SageMath, install SageMath in the same conda environment:
+
+```bash
+conda install -c conda-forge sage
+```
+
 You can check the available versions with:
 
 ```bash
