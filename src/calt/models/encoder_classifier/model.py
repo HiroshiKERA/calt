@@ -35,6 +35,7 @@ import torch.nn as nn
 from transformers import PretrainedConfig, PreTrainedModel
 from transformers.modeling_outputs import Seq2SeqLMOutput
 
+from ..input_embeddings import get_input_embedding
 from ..positional_embeddings import get_positional_embedding
 
 
@@ -61,6 +62,7 @@ class EncoderClassifierConfig(PretrainedConfig):
         eos_token_id: int = 1,
         bos_token_id: int = 2,
         use_positional_embedding: str = "generic",
+        input_embedding_type: str = "token",
         init_std: float = 0.02,
         seed: int = 42,
         **kwargs,
@@ -84,6 +86,7 @@ class EncoderClassifierConfig(PretrainedConfig):
         self.vocab_size = vocab_size
         self.max_input_len = max_input_len
         self.use_positional_embedding = use_positional_embedding
+        self.input_embedding_type = input_embedding_type
         self.init_std = init_std
         self.seed = seed
         # Read by the trainer to switch to classification-style metrics.
@@ -99,7 +102,9 @@ class EncoderClassifier(PreTrainedModel):
         super().__init__(config)
         self.config = config
 
-        self.embedding = nn.Embedding(config.vocab_size, config.d_model)
+        self.embedding = get_input_embedding(
+            config.input_embedding_type, config.vocab_size, config.d_model
+        )
         self.positional_embedding = get_positional_embedding(
             pe_type=config.use_positional_embedding,
             d_model=config.d_model,
