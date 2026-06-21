@@ -1,12 +1,36 @@
 """
-Factory function for creating positional embedding instances.
+Factory + registry for creating positional embedding instances.
 
-This module provides a function for creating different types of positional embeddings.
+The built-in strategies ("generic"/"learned", "sinusoidal", "rope", "none") are
+registered below. Users can plug in their own positional embedding and select it
+by config (``model.use_positional_embedding``) — symmetric to input embeddings
+and models:
+
+    from calt.models import register_positional_embedding
+
+    register_positional_embedding(
+        "my_pe", lambda d_model, max_len, **kw: MyPositional(d_model, max_len)
+    )
+
+then set ``model.use_positional_embedding: my_pe`` in train.yaml. A factory
+receives at least ``d_model`` and ``max_len`` and returns an ``nn.Module``
+(or ``None`` for "no positional embedding") applied to the token embeddings,
+mapping ``(batch, seq, d_model) -> (batch, seq, d_model)``.
 """
 
-from typing import Optional
+from typing import Callable, Optional
 
 import torch.nn as nn
+
+# name (lowercased) -> factory(d_model, max_len, **kwargs) -> nn.Module | None
+POSITIONAL_EMBEDDING_REGISTRY: dict[str, Callable[..., Optional[nn.Module]]] = {}
+
+
+def register_positional_embedding(
+    name: str, factory: Callable[..., Optional[nn.Module]]
+) -> None:
+    """Register (or override) a positional-embedding factory under ``name``."""
+    POSITIONAL_EMBEDDING_REGISTRY[name.lower()] = factory
 
 
 def get_positional_embedding(
@@ -18,66 +42,62 @@ def get_positional_embedding(
     """Create a positional embedding instance based on the specified type.
 
     Args:
-        pe_type (str): Type of positional embedding. Supported types:
-            - "generic": Learnable embeddings using nn.Embedding
+        pe_type (str): Type of positional embedding. Built-in types:
+            - "generic"/"learned": Learnable embeddings using nn.Embedding
             - "sinusoidal": Fixed sin/cos embeddings (original Transformer)
             - "rope": Rotary Position Embedding (RoFormer)
             - "none": No positional embedding (returns None)
+            Plus any type registered via ``register_positional_embedding``.
         d_model (int): The dimension of the model embeddings.
         max_len (int): Maximum sequence length to support.
-        **kwargs: Additional arguments passed to the positional embedding constructor.
-            For RoPE, supports:
-            - base (float): Base for computing frequencies. Default: 10000.0.
+        **kwargs: Additional arguments passed to the factory (e.g. RoPE ``base``).
 
     Returns:
-        nn.Module | None: Positional embedding module, or None if pe_type is "none".
+        nn.Module | None: Positional embedding module, or None for "none".
 
     Raises:
         ValueError: If pe_type is not supported.
-
-    Examples:
-        >>> # Create a learned positional embedding
-        >>> pe = get_positional_embedding("learned", d_model=128, max_len=512)
-        >>>
-        >>> # Create a sinusoidal positional embedding
-        >>> pe = get_positional_embedding("sinusoidal", d_model=128, max_len=512)
-        >>>
-        >>> # Create a RoPE positional embedding with custom base
-        >>> pe = get_positional_embedding("rope", d_model=128, max_len=512, base=10000.0)
-        >>>
-        >>> # No positional embedding
-        >>> pe = get_positional_embedding("none", d_model=128, max_len=512)
-        >>> assert pe is None
     """
-    # Import here to avoid circular import
-    from .generic import GenericPositionalEmbedding
-    from .rope import RotaryPositionalEmbedding
-    from .sinusoidal import SinusoidalPositionalEmbedding
-
-    pe_type = pe_type.lower() if isinstance(pe_type, str) else pe_type
-
-    if pe_type == "generic":
-        return GenericPositionalEmbedding(
-            d_model=d_model,
-            max_len=max_len,
-        )
-    elif pe_type == "sinusoidal":
-        return SinusoidalPositionalEmbedding(
-            d_model=d_model,
-            max_len=max_len,
-        )
-    elif pe_type == "rope":
-        base = kwargs.get("base", 10000.0)
-        return RotaryPositionalEmbedding(
-            d_model=d_model,
-            max_len=max_len,
-            base=base,
-        )
-    elif pe_type == "none":
-        return None
-    else:
-        supported_types = ["learned", "generic", "sinusoidal", "rope", "none"]
+    key = pe_type.lower() if isinstance(pe_type, str) else pe_type
+    if key not in POSITIONAL_EMBEDDING_REGISTRY:
         raise ValueError(
             f"Unsupported positional embedding type: {pe_type}. "
-            f"Supported types: {supported_types}"
+            f"Supported types: {sorted(POSITIONAL_EMBEDDING_REGISTRY)}"
         )
+    return POSITIONAL_EMBEDDING_REGISTRY[key](
+        d_model=d_model, max_len=max_len, **kwargs
+    )
+
+
+# --------------------------------------------------------------------------- #
+# Built-in factories (registered at import).                                   #
+# --------------------------------------------------------------------------- #
+
+
+def _make_generic(d_model, max_len, **kwargs):
+    from .generic import GenericPositionalEmbedding
+
+    return GenericPositionalEmbedding(d_model=d_model, max_len=max_len)
+
+
+def _make_sinusoidal(d_model, max_len, **kwargs):
+    from .sinusoidal import SinusoidalPositionalEmbedding
+
+    return SinusoidalPositionalEmbedding(d_model=d_model, max_len=max_len)
+
+
+def _make_rope(d_model, max_len, base=10000.0, **kwargs):
+    from .rope import RotaryPositionalEmbedding
+
+    return RotaryPositionalEmbedding(d_model=d_model, max_len=max_len, base=base)
+
+
+def _make_none(**kwargs):
+    return None
+
+
+register_positional_embedding("generic", _make_generic)
+register_positional_embedding("learned", _make_generic)  # backward-compat alias
+register_positional_embedding("sinusoidal", _make_sinusoidal)
+register_positional_embedding("rope", _make_rope)
+register_positional_embedding("none", _make_none)

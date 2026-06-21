@@ -7,7 +7,11 @@ This module provides various positional embedding strategies:
 - RoPE: Rotary Position Embedding (RoFormer)
 """
 
-from .base import get_positional_embedding
+from .base import (
+    POSITIONAL_EMBEDDING_REGISTRY,
+    get_positional_embedding,
+    register_positional_embedding,
+)
 from .generic import GenericPositionalEmbedding
 from .rope import RotaryPositionalEmbedding
 from .sinusoidal import SinusoidalPositionalEmbedding
@@ -21,4 +25,6 @@ __all__ = [
     "LearnedPositionalEmbedding",
     "RotaryPositionalEmbedding",
     "get_positional_embedding",
+    "register_positional_embedding",
+    "POSITIONAL_EMBEDDING_REGISTRY",
 ]

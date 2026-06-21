@@ -93,6 +93,26 @@ class Trainer(HTrainer):
         if isinstance(labels, np.ndarray):
             labels = torch.tensor(labels)
 
+        # Encoder-only classification models (config.is_classification) predict a
+        # single token per sample, not a sequence. predictions is (batch, 1) of
+        # predicted token ids; the target is the first non-ignored label token.
+        # Score them as plain classification accuracy (token == sequence here).
+        model = getattr(self, "model", None)
+        if getattr(getattr(model, "config", None), "is_classification", False):
+            pred_ids = predictions.reshape(predictions.shape[0], -1)[:, 0]
+            # Target class = first non-ignored label token per row (vectorized).
+            valid = labels != ignore_index
+            first_idx = valid.to(torch.float).argmax(dim=1, keepdim=True)
+            target = labels.gather(1, first_idx).squeeze(1)
+            valid_rows = valid.any(dim=1)
+            denom = valid_rows.sum().item()
+            acc = (
+                ((pred_ids == target) & valid_rows).sum().item() / denom
+                if denom > 0
+                else 0.0
+            )
+            return {"token_accuracy": acc, "success_rate": acc}
+
         # If predictions are logits (3D: batch_size, seq_len, vocab_size), convert to token IDs
         if predictions.dim() == 3:
             predictions = predictions.argmax(dim=-1)

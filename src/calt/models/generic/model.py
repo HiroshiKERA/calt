@@ -10,6 +10,7 @@ from transformers import PretrainedConfig, PreTrainedModel
 from transformers.modeling_outputs import Seq2SeqLMOutput
 from transformers.utils import logging
 
+from ..input_embeddings import get_input_embedding
 from ..positional_embeddings import get_positional_embedding
 
 logger = logging.get_logger(__name__)
@@ -43,6 +44,7 @@ class TransformerConfig(PretrainedConfig):
         eos_token_id: int = 1,
         bos_token_id: int = 2,
         use_positional_embedding: str = "learned",
+        input_embedding_type: str = "token",
         init_std: float = 0.02,
         tie_word_embeddings: bool = False,
         seed: int = 42,
@@ -94,6 +96,7 @@ class TransformerConfig(PretrainedConfig):
         self.vocab_size = vocab_size
         self.max_input_len = max_input_len
         self.use_positional_embedding = use_positional_embedding
+        self.input_embedding_type = input_embedding_type
         self.init_std = init_std
         self.tie_word_embeddings = tie_word_embeddings
         self.seed = seed
@@ -114,7 +117,9 @@ class Transformer(PreTrainedModel):
 
         self.config = config
 
-        self.embedding = nn.Embedding(config.vocab_size, config.d_model)
+        self.embedding = get_input_embedding(
+            config.input_embedding_type, config.vocab_size, config.d_model
+        )
 
         # Initialize positional embedding using factory
         self.positional_embedding = get_positional_embedding(

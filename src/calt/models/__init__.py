@@ -1,7 +1,12 @@
 from .base import ModelRegistry, get_model, get_model_from_config
 from .generic.model import Transformer, TransformerConfig
+from .input_embeddings import get_input_embedding, register_input_embedding
 from .loader import ModelLoader
 from .pipeline import ModelPipeline
+from .positional_embeddings import (
+    get_positional_embedding,
+    register_positional_embedding,
+)
 
 
 # Import loaders lazily to avoid circular imports
@@ -20,4 +25,9 @@ __all__ = [
     "ModelPipeline",
     "Transformer",
     "TransformerConfig",
+    # Pluggable embeddings (custom input + positional)
+    "get_input_embedding",
+    "register_input_embedding",
+    "get_positional_embedding",
+    "register_positional_embedding",
 ]

@@ -1,38 +1,26 @@
 """
-Config mapping for Transformer model.
+Config mapping for the encoder-only classification model.
 
-Converts from unified config format (cfg.model) to TransformerConfig.
+Converts the unified config format (cfg.model) into an EncoderClassifierConfig,
+mirroring create_transformer_config but ignoring the decoder-only fields.
 """
 
 from omegaconf import DictConfig
 
-from .model import TransformerConfig
+from .model import EncoderClassifierConfig
 
 
-def create_transformer_config(
+def create_encoder_classifier_config(
     model_config: DictConfig,
     tokenizer=None,
-) -> TransformerConfig:
-    """Create TransformerConfig from unified config format.
-
-    Args:
-        model_config (DictConfig): Model configuration from cfg.model (OmegaConf).
-        tokenizer: Tokenizer instance. When provided, pad_token_id, eos_token_id,
-            and bos_token_id are taken from it so generation aligns with decoding.
-
-    Returns:
-        TransformerConfig: Transformer model configuration.
-    """
-    # Get vocab_size from tokenizer if available, otherwise use default
+) -> EncoderClassifierConfig:
+    """Create an EncoderClassifierConfig from cfg.model (+ tokenizer for vocab/ids)."""
     vocab_size = (
         len(tokenizer.vocab)
         if tokenizer is not None
         else getattr(model_config, "vocab_size", 1000)
     )
 
-    # Align special token IDs with tokenizer so generation (BOS start, EOS stop)
-    # and batch_decode(skip_special_tokens=True) behave correctly. BART does this;
-    # generic was previously using TransformerConfig defaults (0, 1, 2).
     pad_token_id = getattr(model_config, "pad_token_id", None)
     eos_token_id = getattr(model_config, "eos_token_id", None)
     bos_token_id = getattr(model_config, "bos_token_id", None)
@@ -50,12 +38,11 @@ def create_transformer_config(
     if bos_token_id is None:
         bos_token_id = 2
 
-    return TransformerConfig(
+    return EncoderClassifierConfig(
         d_model=model_config.d_model,
-        attention_heads=model_config.num_encoder_heads,  # Use encoder_heads as default
+        attention_heads=model_config.num_encoder_heads,
         num_encoder_layers=model_config.num_encoder_layers,
-        num_decoder_layers=model_config.num_decoder_layers,
-        dim_feedforward=model_config.encoder_ffn_dim,  # Use encoder_ffn_dim as default
+        dim_feedforward=model_config.encoder_ffn_dim,
         max_input_len=model_config.max_sequence_length,
         vocab_size=vocab_size,
         pad_token_id=pad_token_id,
@@ -65,7 +52,6 @@ def create_transformer_config(
             model_config, "use_positional_embedding", "generic"
         ),
         input_embedding_type=getattr(model_config, "input_embedding_type", "token"),
-        # Optional parameters with defaults
         dropout=getattr(model_config, "dropout", 0.1),
         activation=getattr(model_config, "activation", "relu"),
         init_std=getattr(model_config, "init_std", 0.02),
