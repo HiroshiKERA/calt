@@ -74,8 +74,22 @@ def setup_logging():
                 handler.setFormatter(logging.Formatter("%(message)s"))
 
 
-def _worker_init():
+# Worker-process globals. The instance generator and statistics calculator are
+# transmitted ONCE per worker — via the joblib initializer (spawn/loky) or by
+# fork inheritance (multiprocessing on Linux) — instead of being pickled with
+# every task. Passing them per task pickles the (possibly large) generator
+# closure for each sample; see issue #37 (up to ~469x slowdown).
+_WORKER_INSTANCE_GENERATOR = None
+_WORKER_STATISTICS_CALCULATOR = None
+
+
+def _worker_init(instance_generator=None, statistics_calculator=None):
     setup_logging()
+    global _WORKER_INSTANCE_GENERATOR, _WORKER_STATISTICS_CALCULATOR
+    if instance_generator is not None:
+        _WORKER_INSTANCE_GENERATOR = instance_generator
+    if statistics_calculator is not None:
+        _WORKER_STATISTICS_CALCULATOR = statistics_calculator
 
 
 # Setup logging for this module
@@ -177,12 +191,17 @@ class DatasetGenerator:
         self,
         sample_index: int,
         tag: str,
-        instance_generator: Callable,
-        statistics_calculator: Callable | None = None,
     ) -> tuple[
         StringProblemOrAnswer, StringProblemOrAnswer, StatisticsDict | None, float
     ]:
-        """Generate a single sample using the provided instance generator."""
+        """Generate a single sample using the worker's instance generator.
+
+        The instance generator and statistics calculator are read from
+        worker-process globals set once by ``_worker_init`` (see issue #37),
+        rather than received as per-task arguments.
+        """
+        instance_generator = _WORKER_INSTANCE_GENERATOR
+        statistics_calculator = _WORKER_STATISTICS_CALCULATOR
         # Generate a unique seed for this job
         seed = self._generate_seed(sample_index, tag)
 
@@ -242,6 +261,12 @@ class DatasetGenerator:
                 )
                 self.logger.info("Starting parallel processing...")
 
+            # Make the generator/statistics calculator available without
+            # per-task pickling: set them in this process (used by the inline /
+            # n_jobs=1 path and inherited by forked workers) and transmit them
+            # once per worker through the initializer (see issue #37).
+            _worker_init(instance_generator, statistics_calculator)
+
             # Generate samples for current batch in parallel using joblib
             try:
                 results = Parallel(
@@ -249,13 +274,9 @@ class DatasetGenerator:
                     backend=self.backend,
                     verbose=self.verbose,
                     initializer=_worker_init,
+                    initargs=(instance_generator, statistics_calculator),
                 )(
-                    delayed(self._generate_sample)(
-                        batch_start + i,
-                        tag,
-                        instance_generator,
-                        statistics_calculator,
-                    )
+                    delayed(self._generate_sample)(batch_start + i, tag)
                     for i in range(current_batch_size)
                 )
             except (MemoryError, OSError) as e:
