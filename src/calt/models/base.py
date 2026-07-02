@@ -44,6 +44,13 @@ class ModelRegistry:
         from transformers import BartConfig, BartForConditionalGeneration
 
         from .bart.config_mapping import create_bart_config
+        from .encoder_classifier.config_mapping import (
+            create_encoder_classifier_config,
+        )
+        from .encoder_classifier.model import (
+            EncoderClassifier,
+            EncoderClassifierConfig,
+        )
         from .generic.config_mapping import create_transformer_config
         from .generic.model import Transformer, TransformerConfig
 
@@ -58,6 +65,15 @@ class ModelRegistry:
         # Register BART model
         self.register("bart", BartForConditionalGeneration, BartConfig)
         self.register_config_mapping("bart", create_bart_config)
+
+        # Register encoder-only classification model (aliases: encoder_classifier,
+        # encoder_only). Single-token classification for tasks like parity.
+        self.register("encoder_classifier", EncoderClassifier, EncoderClassifierConfig)
+        self.register("encoder_only", EncoderClassifier, EncoderClassifierConfig)
+        self.register_config_mapping(
+            "encoder_classifier", create_encoder_classifier_config
+        )
+        self.register_config_mapping("encoder_only", create_encoder_classifier_config)
 
     def register(
         self,
