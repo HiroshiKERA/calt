@@ -21,7 +21,11 @@ def _poly_terms(poly: Any) -> list[tuple[tuple[int, ...], Any]]:
         pass
     # SageMath polynomial: .dict() -> {exponent_tuple: coefficient}
     if hasattr(poly, "dict"):
-        return [(exp, c) for exp, c in poly.dict().items() if c != 0]
+        return [
+            (exp if isinstance(exp, tuple) else (int(exp),), c)
+            for exp, c in poly.dict().items()
+            if c != 0
+        ]
     raise TypeError(
         f"Expected SymPy PolyElement or SageMath polynomial, got {type(poly).__name__}"
     )
