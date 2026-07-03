@@ -41,7 +41,7 @@ class UnivariateQuoRemGenerator:
 
         q, r = f.quo_rem(g)
 
-        return (f, g), (q, r)
+        return [f, g], [q, r]
 
 
 @click.command()
