@@ -32,7 +32,7 @@ class ReLURecurrenceGenerator:
 
     def __call__(self, seed: int) -> tuple[str, str]:
         set_random_seed(seed)
-        x_list = [randint(self.x_min, self.x_max + 1) for _ in range(self.length)]
+        x_list = [randint(self.x_min, self.x_max) for _ in range(self.length)]
         y_list = [float(x_list[0])]
         for i in range(1, self.length):
             y_list.append(relu(x_list[i] + y_list[i - 1]))
