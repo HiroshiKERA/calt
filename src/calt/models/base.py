@@ -53,6 +53,8 @@ class ModelRegistry:
         )
         from .generic.config_mapping import create_transformer_config
         from .generic.model import Transformer, TransformerConfig
+        from .monomial.config_mapping import create_monomial_config
+        from .monomial.model import MonomialTransformer, MonomialTransformerConfig
 
         # Register generic transformer model (aliases: transformer, calt, generic)
         self.register("transformer", Transformer, TransformerConfig)
@@ -74,6 +76,16 @@ class ModelRegistry:
             "encoder_classifier", create_encoder_classifier_config
         )
         self.register_config_mapping("encoder_only", create_encoder_classifier_config)
+
+        # Register the monomial-embedding encoder-decoder model (aliases:
+        # monomial, monomial_transformer). One sequence position per monomial in
+        # C/E expanded form; factored coefficient/exponent/separator heads.
+        self.register("monomial", MonomialTransformer, MonomialTransformerConfig)
+        self.register(
+            "monomial_transformer", MonomialTransformer, MonomialTransformerConfig
+        )
+        self.register_config_mapping("monomial", create_monomial_config)
+        self.register_config_mapping("monomial_transformer", create_monomial_config)
 
     def register(
         self,
