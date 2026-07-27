@@ -24,6 +24,7 @@ Models are created via an internal `ModelRegistry`. The following types are regi
 | `generic`, `transformer`, `calt` | CALT generic Transformer (encoder–decoder). |
 | `bart` | HuggingFace BART for conditional generation. |
 | `encoder_classifier`, `encoder_only` | Encoder-only single-token classification model (see below). |
+| `monomial`, `monomial_transformer` | Encoder–decoder with monomial-structured embedding for C/E expanded-form data (see below). |
 
 Set `model_type` in the `model` block of `train.yaml` (e.g. `model_type: generic`). Other keys in the `model` block (e.g. `num_encoder_layers`, `d_model`, `max_sequence_length`) are documented under [Configuration — `model`](configuration.md#trainyaml--model-and-training-modelpipeline-trainerpipeline).
 
@@ -43,6 +44,32 @@ model:
 ```
 
 It is a drop-in over the existing seq2seq data path (no IOPipeline / collator change): it consumes the standard `input_ids` / `attention_mask` / `labels` batch and derives the classification target from the first non-ignored token of `labels`. `generate()` returns `[BOS, token, EOS]`, so the exact-match generation evaluation works unchanged. Because the model sets `config.is_classification = True`, the trainer reports `token_accuracy` and `success_rate` as plain classification accuracy. Use it only for fixed single-token answers — variable-length outputs (e.g. Gröbner/border bases) need the encoder–decoder.
+
+## Monomial-embedding model
+
+For polynomial data in **C/E expanded form** (`C<coeff> E<e1> .. E<en>` per term, terms joined by `+`, polynomials by `||` — see [Load preprocessors](io_load_preprocessors.md), `ExpandedFormLoadPreprocessor`), each monomial occupies a fixed number of tokens. `model_type: monomial` (alias `monomial_transformer`) exploits that structure, following the monomial embedding of the HATSolver paper:
+
+- **Input:** the coefficient token, the `n_vars` exponent tokens, and the following separator are embedded together as **one sequence position** (mean of the slot embeddings, with a configurable `coeff_scale` on the coefficient part). Sequences become `n_vars + 2` times shorter than in the flat model.
+- **Output:** instead of one softmax over the whole vocabulary, the decoder predicts each part of the next monomial with **separate heads** — one per coefficient field, one per variable, and one "follow" head choosing between `+`, `||`, and end-of-sequence.
+
+```yaml
+model:
+  model_type: monomial       # alias: monomial_transformer
+  num_variables: 2           # REQUIRED: exponent slots per monomial
+  d_model: 256
+  num_encoder_layers: 3
+  num_decoder_layers: 3
+  num_encoder_heads: 4
+  encoder_ffn_dim: 1024
+  max_sequence_length: 512
+  # optional monomial-specific knobs:
+  # coeff_scale: 1.0         # weight of the coefficient part of the embedding
+  # coeff_noise_std: 0.0     # train-time Gaussian noise on the coefficient part
+  # coeff_loss_weight: 1.0   # weight of the coefficient term in the loss
+  # monomial_separators: ["+", "||"]   # defaults to those present in the vocab
+```
+
+It is a drop-in over the existing seq2seq data path (no IOPipeline / collator change): `forward()` folds the standard flat `input_ids` / `labels` batch into a `(batch, monomials, width)` grid internally, and `generate()` returns flat token ids (`[BOS, C.., E.., +, ..., EOS]`), so decoding, metrics, and the exact-match generation evaluation work unchanged. The coefficient/exponent/separator token groups are derived from the tokenizer's vocabulary (`C<int>` — or `C<int>_<label>` for multi-field vocabularies — and `E<int>` tokens); `num_variables` is required because shared `E<k>` tokens carry no variable identity. If the data is not monomial-aligned (wrong `num_variables`, or data not in expanded form), the model raises a `ValueError` up front instead of training on a corrupted view.
 
 ## Custom embeddings (input and positional)
 
@@ -80,7 +107,7 @@ model:
 
 **Factory contract.** An input-embedding factory receives at least `vocab_size` and `d_model` (extra config keys are forwarded as kwargs) and returns an `nn.Module` mapping `input_ids` of shape `(batch, seq)` to `(batch, seq, d_model)`. A positional-embedding factory receives at least `d_model` and `max_len` and returns an `nn.Module` mapping `(batch, seq, d_model)` to `(batch, seq, d_model)` (or `None` for "no positional embedding"). An unknown type raises `ValueError` listing the supported names.
 
-These hooks apply to the `generic` and `encoder_classifier` models (not `bart`, which is HuggingFace's own model). The public helpers are exported from `calt.models`: `register_input_embedding`, `register_positional_embedding`, `get_input_embedding`, `get_positional_embedding`.
+These hooks apply to the `generic` and `encoder_classifier` models (not `bart`, which is HuggingFace's own model). The `monomial` model honors `use_positional_embedding` but not `input_embedding_type`: its input embedding *is* the monomial embedding. The public helpers are exported from `calt.models`: `register_input_embedding`, `register_positional_embedding`, `get_input_embedding`, `get_positional_embedding`.
 
 ## ModelRegistry
 
