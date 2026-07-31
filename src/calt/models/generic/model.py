@@ -45,6 +45,7 @@ class TransformerConfig(PretrainedConfig):
         bos_token_id: int = 2,
         use_positional_embedding: str = "learned",
         input_embedding_type: str = "token",
+        embedding_layer_norm: bool = True,
         init_std: float = 0.02,
         tie_word_embeddings: bool = False,
         seed: int = 42,
@@ -70,6 +71,14 @@ class TransformerConfig(PretrainedConfig):
             eos_token_id (int, optional): End-of-sequence token id.
             bos_token_id (int, optional): Beginning-of-sequence token id.
             use_positional_embedding (str, optional): Positional embedding strategy.
+            embedding_layer_norm (bool, optional): LayerNorm the token+position sum
+                before the encoder/decoder stack, as BART's ``layernorm_embedding``
+                does. Defaults to True: without it the residual stream starts about
+                35x smaller than the values the layers add to it, and the model
+                learns only coarse structural patterns while precise value
+                computation (e.g. coefficients in a finite field) never leaves
+                chance level. Checkpoints trained before this default changed must
+                pass ``embedding_layer_norm=False`` to load.
             init_std (float, optional): Standard deviation for weight init.
             tie_word_embeddings (bool, optional): Whether to share embed/lm_head.
             seed (int, optional): Seed used for deterministic initialization.
@@ -97,6 +106,7 @@ class TransformerConfig(PretrainedConfig):
         self.max_input_len = max_input_len
         self.use_positional_embedding = use_positional_embedding
         self.input_embedding_type = input_embedding_type
+        self.embedding_layer_norm = embedding_layer_norm
         self.init_std = init_std
         self.tie_word_embeddings = tie_word_embeddings
         self.seed = seed
@@ -126,6 +136,16 @@ class Transformer(PreTrainedModel):
             pe_type=config.use_positional_embedding,
             d_model=config.d_model,
             max_len=config.max_input_len * 2,
+        )
+        # BART normalizes token+position before the stack; without it the
+        # residual stream starts ~35x smaller than the values the layers add.
+        # Ablation on a 2000-sample memorization probe (GF7 cumulative products,
+        # test set a subset of train): coefficient accuracy at epoch 36 went
+        # 0.225 -> 0.688 and exact match 0.000 -> 0.220 by turning this on.
+        self.embedding_layer_norm = (
+            nn.LayerNorm(config.d_model, eps=config.layer_norm_eps)
+            if getattr(config, "embedding_layer_norm", True)
+            else None
         )
 
         self.transformer = nn.Transformer(
@@ -174,6 +194,9 @@ class Transformer(PreTrainedModel):
         if self.positional_embedding is not None:
             # Apply positional embedding (position_ids can be None, will be auto-generated from embeddings)
             embeddings = self.positional_embedding(embeddings)
+
+        if self.embedding_layer_norm is not None:
+            embeddings = self.embedding_layer_norm(embeddings)
 
         return embeddings
 
@@ -280,6 +303,11 @@ class Transformer(PreTrainedModel):
             tgt=decoder_embeddings,
             src_key_padding_mask=encoder_key_padding_mask,
             tgt_key_padding_mask=decoder_key_padding_mask,
+            # Without this, decoder cross-attention attends to the encoder's PAD
+            # positions as if they were real tokens. With padding="longest" that is
+            # ~40% of the memory on a typical batch, which drowns out the precise
+            # value retrieval the decoder needs (structure still survives).
+            memory_key_padding_mask=encoder_key_padding_mask,
             tgt_mask=tgt_mask,
         )
 
@@ -367,6 +395,10 @@ class Transformer(PreTrainedModel):
                 decoder_embeddings,
                 memory=encoder_output,
                 tgt_mask=tgt_mask,
+                # Same as in forward(): the encoder's PAD positions must stay
+                # invisible to cross-attention, or generation sees a different
+                # memory than training did.
+                memory_key_padding_mask=encoder_key_padding_mask,
             )
 
             next_token_logits = self.lm_head(decoder_output[:, -1, :])
