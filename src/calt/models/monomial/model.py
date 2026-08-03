@@ -1,5 +1,5 @@
 """
-Encoder-decoder Transformer with a monomial-structured embedding (HATSolver-style).
+Encoder-decoder Transformer with a monomial-structured embedding.
 
 Why this model exists
 ---------------------
@@ -8,7 +8,7 @@ Polynomials in the C/E expanded form (see
 tokens per term: one coefficient token (``C<coeff>``) and one exponent token per
 variable (``E<e1> E<e2> ...``), with ``+`` between terms and ``||`` between
 polynomials. A flat Transformer must learn that these tokens form one semantic
-unit. The *monomial embedding* (Kera et al., HATSolver appendix) builds that
+unit. The *monomial embedding* (Kera et al., arXiv 2505.23696) builds that
 structure in: each monomial — coefficient, exponents, and the following
 separator — is compressed into a single sequence position, and the decoder
 predicts the parts of the next monomial with separate classification heads
