@@ -171,6 +171,13 @@ class StandardTrainerLoader(TrainerLoader):
             ),
             "per_device_train_batch_size": train_batch_size,
             "per_device_eval_batch_size": test_batch_size,
+            # Lets a long-sequence run keep its effective batch size on a
+            # smaller per-device batch instead of failing with CUDA OOM.
+            "gradient_accumulation_steps": getattr(
+                self.calt_config,
+                "gradient_accumulation_steps",
+                _DEFAULT_TRAINING_ARGS.gradient_accumulation_steps,
+            ),
             "lr_scheduler_type": lr_scheduler_type,
             "max_grad_norm": getattr(
                 self.calt_config, "max_grad_norm", _DEFAULT_TRAINING_ARGS.max_grad_norm
