@@ -1,0 +1,119 @@
+[
+  {
+    "config_path": "configs/data_GF7.yaml",
+    "field": "GF7",
+    "symbols": "x,y",
+    "num_polynomials": 2,
+    "algorithm": "libsingular:slimgb",
+    "max_degree": 8,
+    "num_variables": 2,
+    "repeats": 5,
+    "num_samples": 200,
+    "timed_out": 0,
+    "timeout_s": 120.0,
+    "root_seed": 42,
+    "degrevlex": {
+      "n": 200,
+      "total_s": 0.01519781444221735,
+      "mean_s": 7.598907221108675e-05,
+      "median_s": 6.972113624215126e-05,
+      "p90_s": 9.69709362834692e-05,
+      "max_s": 0.00019080215133726597
+    },
+    "lex": {
+      "n": 200,
+      "total_s": 0.022098057437688112,
+      "mean_s": 0.00011049028718844056,
+      "median_s": 7.98800028860569e-05,
+      "p90_s": 0.0001403610222041607,
+      "max_s": 0.0016604699194431305
+    },
+    "ratio_of_totals": 1.4540286382430672,
+    "ratio_of_means": 1.454028638243067,
+    "ratio_median": 1.1682454594868141,
+    "ratio_p90": 1.4969104495896117,
+    "ratio_max": 17.62706569184302,
+    "mean_basis_size": {
+      "degrevlex": 2.595,
+      "lex": 2.07
+    }
+  },
+  {
+    "config_path": "configs/data_GF7.yaml",
+    "field": "GF7",
+    "symbols": "x,y",
+    "num_polynomials": 2,
+    "algorithm": "libsingular:slimgb",
+    "max_degree": 16,
+    "num_variables": 2,
+    "repeats": 5,
+    "num_samples": 200,
+    "timed_out": 0,
+    "timeout_s": 120.0,
+    "root_seed": 42,
+    "degrevlex": {
+      "n": 200,
+      "total_s": 0.020835668314248323,
+      "mean_s": 0.00010417834157124162,
+      "median_s": 7.826089859008789e-05,
+      "p90_s": 0.00015657092444598675,
+      "max_s": 0.000769744860008359
+    },
+    "lex": {
+      "n": 200,
+      "total_s": 0.09853170509450138,
+      "mean_s": 0.0004926585254725069,
+      "median_s": 9.136111475527287e-05,
+      "p90_s": 0.0006616541650146246,
+      "max_s": 0.02075533103197813
+    },
+    "ratio_of_totals": 4.7289918234646295,
+    "ratio_of_means": 4.728991823464629,
+    "ratio_median": 1.1601523238341023,
+    "ratio_p90": 5.623874199249169,
+    "ratio_max": 102.67281925046676,
+    "mean_basis_size": {
+      "degrevlex": 3.225,
+      "lex": 2.335
+    }
+  },
+  {
+    "config_path": "configs/data_GF7.yaml",
+    "field": "GF7",
+    "symbols": "x,y",
+    "num_polynomials": 2,
+    "algorithm": "libsingular:slimgb",
+    "max_degree": 32,
+    "num_variables": 2,
+    "repeats": 5,
+    "num_samples": 200,
+    "timed_out": 0,
+    "timeout_s": 120.0,
+    "root_seed": 42,
+    "degrevlex": {
+      "n": 200,
+      "total_s": 0.06251499941572547,
+      "mean_s": 0.0003125749970786273,
+      "median_s": 0.00010069110430777073,
+      "p90_s": 0.000548472860828042,
+      "max_s": 0.015213256003335118
+    },
+    "lex": {
+      "n": 200,
+      "total_s": 28.01093465415761,
+      "mean_s": 0.14005467327078805,
+      "median_s": 0.00018537091091275215,
+      "p90_s": 0.23369689588434994,
+      "max_s": 5.13151695812121
+    },
+    "ratio_of_totals": 448.0674224738381,
+    "ratio_of_means": 448.0674224738382,
+    "ratio_median": 1.5545558972310018,
+    "ratio_p90": 933.0165569524631,
+    "ratio_max": 23148.023278751178,
+    "mean_basis_size": {
+      "degrevlex": 4.405,
+      "lex": 2.555
+    }
+  }
+]

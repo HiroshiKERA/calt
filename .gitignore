@@ -193,3 +193,11 @@ __pycache__
 # custom: ignore all files and folders starting with _ but keep __init__.py
 **/_*
 !**/__init__.py
+# Experiment run logs and launcher bookkeeping.
+# gb_timing*.json is deliberately NOT ignored: it is a few kilobytes and it is
+# the measurement itself, not a rerunnable byproduct like a checkpoint.
+issac2026_experiments/**/logs/
+issac2026_experiments/**/results_decoder*/
+issac2026_experiments/**/logs_launch.txt
+issac2026_experiments/.notify_state/
+issac2026_experiments/*.log
