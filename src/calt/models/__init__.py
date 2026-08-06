@@ -1,4 +1,5 @@
 from .base import ModelRegistry, get_model, get_model_from_config
+from .decoder_only.model import DecoderOnlyConfig, DecoderOnlyTransformer
 from .generic.model import Transformer, TransformerConfig
 from .input_embeddings import get_input_embedding, register_input_embedding
 from .loader import ModelLoader
@@ -28,6 +29,8 @@ __all__ = [
     "TransformerConfig",
     "MonomialTransformer",
     "MonomialTransformerConfig",
+    "DecoderOnlyTransformer",
+    "DecoderOnlyConfig",
     # Pluggable embeddings (custom input + positional)
     "get_input_embedding",
     "register_input_embedding",

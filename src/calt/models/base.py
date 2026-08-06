@@ -44,6 +44,8 @@ class ModelRegistry:
         from transformers import BartConfig, BartForConditionalGeneration
 
         from .bart.config_mapping import create_bart_config
+        from .decoder_only.config_mapping import create_decoder_only_config
+        from .decoder_only.model import DecoderOnlyConfig, DecoderOnlyTransformer
         from .encoder_classifier.config_mapping import (
             create_encoder_classifier_config,
         )
@@ -67,6 +69,14 @@ class ModelRegistry:
         # Register BART model
         self.register("bart", BartForConditionalGeneration, BartConfig)
         self.register_config_mapping("bart", create_bart_config)
+
+        # Register decoder-only causal model (aliases: decoder_only, decoder).
+        # One causal stack over [problem, solution], as used in the arithmetic
+        # reasoning literature.
+        self.register("decoder_only", DecoderOnlyTransformer, DecoderOnlyConfig)
+        self.register("decoder", DecoderOnlyTransformer, DecoderOnlyConfig)
+        self.register_config_mapping("decoder_only", create_decoder_only_config)
+        self.register_config_mapping("decoder", create_decoder_only_config)
 
         # Register encoder-only classification model (aliases: encoder_classifier,
         # encoder_only). Single-token classification for tasks like parity.

@@ -25,6 +25,7 @@ Models are created via an internal `ModelRegistry`. The following types are regi
 | `bart` | HuggingFace BART for conditional generation. |
 | `encoder_classifier`, `encoder_only` | Encoder-only single-token classification model (see below). |
 | `monomial`, `monomial_transformer` | Encoder–decoder with monomial-structured embedding for C/E expanded-form data (see below). |
+| `decoder_only`, `decoder` | Decoder-only causal Transformer over `[problem, solution]` (see below). |
 
 Set `model_type` in the `model` block of `train.yaml` (e.g. `model_type: generic`). Other keys in the `model` block (e.g. `num_encoder_layers`, `d_model`, `max_sequence_length`) are documented under [Configuration — `model`](configuration.md#trainyaml--model-and-training-modelpipeline-trainerpipeline).
 
@@ -70,6 +71,34 @@ model:
 ```
 
 It is a drop-in over the existing seq2seq data path (no IOPipeline / collator change): `forward()` folds the standard flat `input_ids` / `labels` batch into a `(batch, monomials, width)` grid internally, and `generate()` returns flat token ids (`[BOS, C.., E.., +, ..., EOS]`), so decoding, metrics, and the exact-match generation evaluation work unchanged. The coefficient/exponent/separator token groups are derived from the tokenizer's vocabulary (`C<int>` — or `C<int>_<label>` for multi-field vocabularies — and `E<int>` tokens); `num_variables` is required because shared `E<k>` tokens carry no variable identity. If the data is not monomial-aligned (wrong `num_variables`, or data not in expanded form), the model raises a `ValueError` up front instead of training on a corrupted view.
+
+## Decoder-only model
+
+The arithmetic-reasoning literature generally trains decoder-only models rather than encoder–decoders. `model_type: decoder_only` (alias `decoder`) is the generic model with the encoder removed: a single causal self-attention stack running over the concatenation of the problem and its solution.
+
+The one subtlety is where prediction starts. The problem is written into the sequence as context and carries **no loss** — next-token prediction begins at the first solution token, since a model asked to reproduce the problem from `<bos>` alone could not:
+
+```
+ids     <bos> 1 3 + 0 8 <eos> <bos> 2 1 <eos>
+        |------- problem -------|--- solution ---|
+loss                                 ^^^^^^^^^^^^
+```
+
+A decoder-only model has one stack, so it takes `num_layers`, `num_heads` and `ffn_dim`. The decoder-side keys of a seq2seq block are read as a fallback, which lets an existing config run by changing `model_type` alone — at half the depth of its 6+6 counterpart.
+
+```yaml
+model:
+  model_type: decoder_only   # alias: decoder
+  num_layers: 6
+  num_heads: 8
+  d_model: 512
+  ffn_dim: 2048
+  max_sequence_length: 256
+```
+
+Like the monomial model, it is a drop-in over the existing seq2seq data path: it consumes the standard collated batch (`input_ids` / `attention_mask` / `decoder_input_ids` / `labels`), packs the two halves per example so the independent padding of the two sides never lands between them, and returns predictions and generations aligned with `labels`. `generate()` returns the completion only, not the prompt, so exact-match evaluation compares it against the labels unchanged. The `<bos>` that opens `decoder_input_ids` doubles as the marker for where the answer begins.
+
+Note that the problem and the solution now share one sequence: `max_sequence_length` has to cover both, since the positional table is sized from it.
 
 ## Custom embeddings (input and positional)
 
