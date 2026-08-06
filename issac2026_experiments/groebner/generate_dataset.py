@@ -11,6 +11,7 @@
 """
 
 import click
+
 # Initialize Sage's polynomial ring stack first to avoid
 # ImportError: PolynomialRing_generic on the deep imports below.
 import sage.all  # noqa: F401

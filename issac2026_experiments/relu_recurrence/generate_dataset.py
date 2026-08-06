@@ -5,10 +5,11 @@ Input: x_1,...,x_L. Target: y_1,...,y_L.
 """
 
 import click
-from omegaconf import OmegaConf
+
 # Initialize Sage's polynomial ring stack first to avoid
 # ImportError: PolynomialRing_generic on the deep imports below.
 import sage.all  # noqa: F401
+from omegaconf import OmegaConf
 from sage.misc.prandom import randint
 from sage.misc.randstate import set_random_seed
 
