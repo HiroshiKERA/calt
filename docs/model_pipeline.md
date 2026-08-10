@@ -48,7 +48,7 @@ It is a drop-in over the existing seq2seq data path (no IOPipeline / collator ch
 
 ## Monomial-embedding model
 
-For polynomial data in **C/E expanded form** (`C<coeff> E<e1> .. E<en>` per term, terms joined by `+`, polynomials by `||` — see [Load preprocessors](io_load_preprocessors.md), `ExpandedFormLoadPreprocessor`), each monomial occupies a fixed number of tokens. `model_type: monomial` (alias `monomial_transformer`) exploits that structure, following the monomial embedding of the HATSolver paper:
+For polynomial data in **C/E expanded form** (`C<coeff> E<e1> .. E<en>` per term, terms joined by `+`, polynomials by `||` — see [Load preprocessors](io_load_preprocessors.md), `ExpandedFormLoadPreprocessor`), each monomial occupies a fixed number of tokens. `model_type: monomial` (alias `monomial_transformer`) exploits that structure, following the monomial embedding of the border-basis Transformer work of Kera et al. (arXiv 2505.23696):
 
 - **Input:** the coefficient token, the `n_vars` exponent tokens, and the following separator are embedded together as **one sequence position** (mean of the slot embeddings, with a configurable `coeff_scale` on the coefficient part). Sequences become `n_vars + 2` times shorter than in the flat model.
 - **Output:** instead of one softmax over the whole vocabulary, the decoder predicts each part of the next monomial with **separate heads** — one per coefficient field, one per variable, and one "follow" head choosing between `+`, `||`, and end-of-sequence.

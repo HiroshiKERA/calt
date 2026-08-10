@@ -1,5 +1,5 @@
 """
-Encoder-decoder Transformer with a monomial-structured embedding (HATSolver-style).
+Encoder-decoder Transformer with a monomial-structured embedding.
 
 Why this model exists
 ---------------------
@@ -8,7 +8,7 @@ Polynomials in the C/E expanded form (see
 tokens per term: one coefficient token (``C<coeff>``) and one exponent token per
 variable (``E<e1> E<e2> ...``), with ``+`` between terms and ``||`` between
 polynomials. A flat Transformer must learn that these tokens form one semantic
-unit. The *monomial embedding* (Kera et al., HATSolver appendix) builds that
+unit. The *monomial embedding* (Kera et al., arXiv 2505.23696) builds that
 structure in: each monomial — coefficient, exponents, and the following
 separator — is compressed into a single sequence position, and the decoder
 predicts the parts of the next monomial with separate classification heads
@@ -90,6 +90,7 @@ class MonomialTransformerConfig(PretrainedConfig):
         eos_token_id: int = 1,
         bos_token_id: int = 2,
         use_positional_embedding: str = "generic",
+        embedding_layer_norm: bool = True,
         coeff_token_ids: Optional[list] = None,
         exp_token_ids: Optional[list] = None,
         separator_token_ids: Optional[list] = None,
@@ -120,6 +121,7 @@ class MonomialTransformerConfig(PretrainedConfig):
         self.vocab_size = vocab_size
         self.max_input_len = max_input_len
         self.use_positional_embedding = use_positional_embedding
+        self.embedding_layer_norm = embedding_layer_norm
         self.coeff_token_ids = coeff_token_ids or [[]]
         self.exp_token_ids = exp_token_ids or [[]]
         self.separator_token_ids = separator_token_ids or []
@@ -151,9 +153,17 @@ class MonomialTransformerConfig(PretrainedConfig):
 class MonomialEmbedding(nn.Module):
     """Embed a ``(batch, monomials, width)`` id grid into ``(batch, monomials, d)``.
 
-    A single table is shared by all token types; the monomial vector is
+    Each slot of the monomial owns a private block of the table, so the vector is
 
-        coeff_scale * mean_j(emb[coeff_j]) + mean(emb[exp_1..n_vars], emb[follow])
+        coeff_scale * mean_j(emb[coeff_j @ slot j]) + mean(emb[exp_v @ slot k+v], emb[follow])
+
+    The per-slot offset is what makes the sum order-aware. Sharing one block
+    across all slots makes the embedding *symmetric in the variables*: with a
+    single table, emb[E3] + emb[E2] == emb[E2] + emb[E3], so x^3*y^2 and
+    x^2*y^3 collapse to the same vector and the model can only ever recover the
+    exponent multiset, not which variable carries which exponent. The reference
+    implementation avoids this by shifting the exponent index by variable
+    (``ExponentEmbedding.shift``); this is the same device, applied to every slot.
 
     ``coeff_noise_std`` optionally adds Gaussian noise to the coefficient part
     during training (ablation knob from the reference implementation).
@@ -173,18 +183,35 @@ class MonomialEmbedding(nn.Module):
         self.num_variables = num_variables
         self.coeff_scale = coeff_scale
         self.coeff_noise_std = coeff_noise_std
-        self.emb = nn.Embedding(vocab_size, d_model)
+        self.vocab_size = vocab_size
+        # coefficient fields + exponents (one per variable) + follow slot
+        self.width = num_coeff_fields + num_variables + 1
+        self.emb = nn.Embedding(self.width * vocab_size, d_model)
+        self.register_buffer(
+            "slot_shift",
+            torch.arange(self.width, dtype=torch.long) * vocab_size,
+            persistent=False,
+        )
+
+    def _slot(self, ids: torch.Tensor, slot: int) -> torch.Tensor:
+        """Embed column ``slot`` of the grid out of that slot's private block."""
+        return self.emb(ids[..., slot] + self.slot_shift[slot])
 
     def forward(self, ids: torch.Tensor) -> torch.Tensor:
         k, n_vars = self.num_coeff_fields, self.num_variables
-        coeff_part = sum(self.emb(ids[..., j]) for j in range(k)) / k
+        if ids.shape[-1] != self.width:
+            raise ValueError(
+                f"monomial grid width {ids.shape[-1]} does not match the embedding "
+                f"width {self.width} (= {k} coeff + {n_vars} exp + 1 follow)"
+            )
+        coeff_part = sum(self._slot(ids, j) for j in range(k)) / k
         if self.coeff_noise_std > 0.0 and self.training:
             coeff_part = (
                 coeff_part + torch.randn_like(coeff_part) * self.coeff_noise_std
             )
         exp_part = (
-            sum(self.emb(ids[..., k + v]) for v in range(n_vars))
-            + self.emb(ids[..., -1])
+            sum(self._slot(ids, k + v) for v in range(n_vars))
+            + self._slot(ids, self.width - 1)
         ) / (n_vars + 1)
         return self.coeff_scale * coeff_part + exp_part
 
@@ -279,6 +306,11 @@ class MonomialTransformer(PreTrainedModel):
             pe_type=config.use_positional_embedding,
             d_model=d,
             max_len=config.max_input_len * 2,
+        )
+        self.emb_norm = (
+            nn.LayerNorm(d, eps=config.layer_norm_eps)
+            if getattr(config, "embedding_layer_norm", True)
+            else None
         )
 
         self.transformer = nn.Transformer(
@@ -395,6 +427,11 @@ class MonomialTransformer(PreTrainedModel):
     def _apply_positions(self, embeddings: torch.Tensor) -> torch.Tensor:
         if self.positional_embedding is not None:
             embeddings = self.positional_embedding(embeddings)
+        # Same normalization BART applies before its stack, and the same defect
+        # the generic model had: without it the residual stream enters the
+        # transformer ~35x smaller than what the layers add to it.
+        if self.emb_norm is not None:
+            embeddings = self.emb_norm(embeddings)
         return embeddings
 
     def _encode(self, src_grid: torch.Tensor, src_mask: torch.Tensor) -> torch.Tensor:

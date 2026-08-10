@@ -65,6 +65,10 @@ def create_transformer_config(
             model_config, "use_positional_embedding", "generic"
         ),
         input_embedding_type=getattr(model_config, "input_embedding_type", "token"),
+        # Default must match TransformerConfig's own default (True). Defaulting to
+        # False here would silently disable the embedding LayerNorm for every
+        # config that does not mention the key — i.e. for essentially every user.
+        embedding_layer_norm=getattr(model_config, "embedding_layer_norm", True),
         # Optional parameters with defaults
         dropout=getattr(model_config, "dropout", 0.1),
         activation=getattr(model_config, "activation", "relu"),

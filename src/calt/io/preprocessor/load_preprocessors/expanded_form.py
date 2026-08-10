@@ -11,6 +11,21 @@ from typing import Any
 from ..load_preprocessor import _get_answer_from_source
 
 
+def _exponents(exp: Any) -> tuple[int, ...]:
+    """Normalise one exponent entry to a tuple of ints.
+
+    Handles the three shapes a backend can hand back: a plain tuple (SymPy), a
+    bare int (SageMath univariate), and an ETuple (SageMath multivariate, which
+    is iterable but is NOT a tuple subclass, so it must be converted explicitly
+    rather than fed to int()).
+    """
+    if isinstance(exp, tuple):
+        return exp
+    if hasattr(exp, "__iter__"):
+        return tuple(int(e) for e in exp)
+    return (int(exp),)
+
+
 def _poly_terms(poly: Any) -> list[tuple[tuple[int, ...], Any]]:
     """Return list of (exponent_tuple, coefficient) for SymPy or SageMath polynomial."""
     # SymPy PolyElement: .terms() returns ((monom, coeff), ...)
@@ -23,7 +38,7 @@ def _poly_terms(poly: Any) -> list[tuple[tuple[int, ...], Any]]:
         pass
     # SageMath polynomial: .dict() -> {exponent_tuple: coefficient}
     if hasattr(poly, "dict"):
-        return [(exp, c) for exp, c in poly.dict().items() if c != 0]
+        return [(_exponents(exp), c) for exp, c in poly.dict().items() if c != 0]
     raise TypeError(
         f"Expected SymPy PolyElement or SageMath polynomial, got {type(poly).__name__}"
     )
