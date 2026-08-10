@@ -1,5 +1,9 @@
 import click
 import numpy as np
+
+# Initialize Sage's polynomial ring stack first to avoid
+# ImportError: PolynomialRing_generic on the deep imports below.
+import sage.all  # noqa: F401
 import sage.misc.randstate as randstate
 from omegaconf import OmegaConf
 from sage.all import prime_range

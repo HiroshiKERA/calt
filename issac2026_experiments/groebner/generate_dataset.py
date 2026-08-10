@@ -1,17 +1,20 @@
 """Generate dataset for Groebner task (2-variable, F=[f1,f2] -> G=Groebner basis).
 
-参考: /home/kera/workspace/Transformer-GB/src/dataset/groebner.sage,
-      /home/kera/workspace/Transformer-GB/src/dataset/build_dataset.sage.py
+参考: Transformer-GB の src/dataset/groebner.sage, src/dataset/build_dataset.sage.py
 
 ここでは簡易版として:
   - 2変数多項式リング R (symbols, field_str, order は config から取得)
   - F = [f1, f2] を PolynomialSampler でサンプル
-  - I = (F) の Groebner 基底 G を SageMath で計算 (libsingular:stdfglm)
+  - I = (F) の Groebner 基底 G を SageMath で計算 (デフォルトのアルゴリズム)
   - テキスト形式: input = \"f1 | f2\", target = \"g1 | g2 | ...\"
 将来的に monomial order 変換や C/E 形式などは load 時の preprocessor で調整する想定。
 """
 
 import click
+
+# Initialize Sage's polynomial ring stack first to avoid
+# ImportError: PolynomialRing_generic on the deep imports below.
+import sage.all  # noqa: F401
 import sage.misc.randstate as randstate  # type: ignore
 from omegaconf import OmegaConf
 from sage.rings.rational_field import QQ  # type: ignore

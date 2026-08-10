@@ -6,6 +6,10 @@ L=10: 5 digits for a, 5 for b; target 10 digits.
 """
 
 import click
+
+# Initialize Sage's polynomial ring stack first to avoid
+# ImportError: PolynomialRing_generic on the deep imports below.
+import sage.all  # noqa: F401
 from omegaconf import OmegaConf
 from sage.misc.prandom import randint
 from sage.misc.randstate import set_random_seed
