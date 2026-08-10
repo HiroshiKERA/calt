@@ -142,7 +142,7 @@ train:
 ??? "`model` — Passed to ModelPipeline.from_io_dict"
     | Name | Description |
     |--------|-------------|
-    | `model_type` | Model architecture: `generic`, `bart`, or `encoder_classifier` (encoder-only single-token classification; alias `encoder_only`). See [Model pipeline](model_pipeline.md). |
+    | `model_type` | Model architecture: `generic`, `bart`, `encoder_classifier` (encoder-only single-token classification; alias `encoder_only`), `monomial`, or `decoder_only` (causal, one stack; alias `decoder`). See [Model pipeline](model_pipeline.md). |
     | `num_encoder_layers`, `num_encoder_heads` | Encoder depth and attention heads. |
     | `num_decoder_layers`, `num_decoder_heads` | Decoder depth and attention heads (ignored by `encoder_classifier`). |
     | `d_model` | Hidden size (embedding dimension). |
