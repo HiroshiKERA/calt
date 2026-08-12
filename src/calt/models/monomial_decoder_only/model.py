@@ -350,12 +350,8 @@ class MonomialDecoderOnlyTransformer(PreTrainedModel):
         src_index = positions.clamp(max=L_src - 1).expand(B, total)
         tgt_index = (positions - start - 1).clamp(0, L_tgt - 1)
 
-        gathered_src = src_grid.gather(
-            1, src_index.unsqueeze(-1).expand(-1, -1, w)
-        )
-        gathered_tgt = tgt_grid.gather(
-            1, tgt_index.unsqueeze(-1).expand(-1, -1, w)
-        )
+        gathered_src = src_grid.gather(1, src_index.unsqueeze(-1).expand(-1, -1, w))
+        gathered_tgt = tgt_grid.gather(1, tgt_index.unsqueeze(-1).expand(-1, -1, w))
 
         packed = torch.where(from_src.unsqueeze(-1), gathered_src, gathered_tgt)
         packed = torch.where(
@@ -608,9 +604,7 @@ class MonomialDecoderOnlyTransformer(PreTrainedModel):
             follow_class = logits["follow"][:, 0].argmax(-1)
             finished = finished | (follow_class == eos_class)
 
-            buffer.scatter_(
-                1, cursor.view(B, 1, 1).expand(-1, -1, w), row
-            )
+            buffer.scatter_(1, cursor.view(B, 1, 1).expand(-1, -1, w), row)
             cursor = cursor + 1
             generated += 1
 
