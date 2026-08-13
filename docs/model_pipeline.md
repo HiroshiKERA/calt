@@ -26,6 +26,7 @@ Models are created via an internal `ModelRegistry`. The following types are regi
 | `encoder_classifier`, `encoder_only` | Encoder-only single-token classification model (see below). |
 | `monomial`, `monomial_transformer` | Encoder–decoder with monomial-structured embedding for C/E expanded-form data (see below). |
 | `decoder_only`, `decoder` | Decoder-only causal Transformer over `[problem, solution]` (see below). |
+| `monomial_decoder_only`, `monomial_decoder` | Decoder-only causal Transformer over monomial positions (see below). |
 
 Set `model_type` in the `model` block of `train.yaml` (e.g. `model_type: generic`). Other keys in the `model` block (e.g. `num_encoder_layers`, `d_model`, `max_sequence_length`) are documented under [Configuration — `model`](configuration.md#trainyaml--model-and-training-modelpipeline-trainerpipeline).
 
@@ -99,6 +100,34 @@ model:
 Like the monomial model, it is a drop-in over the existing seq2seq data path: it consumes the standard collated batch (`input_ids` / `attention_mask` / `decoder_input_ids` / `labels`), packs the two halves per example so the independent padding of the two sides never lands between them, and returns predictions and generations aligned with `labels`. `generate()` returns the completion only, not the prompt, so exact-match evaluation compares it against the labels unchanged. The `<bos>` that opens `decoder_input_ids` doubles as the marker for where the answer begins.
 
 Note that the problem and the solution now share one sequence: `max_sequence_length` has to cover both, since the positional table is sized from it.
+
+## Monomial decoder-only model
+
+`model_type: monomial_decoder_only` (alias `monomial_decoder`) combines the two models above: one causal stack, and one sequence position per monomial. It is the model to use when a polynomial task should be trained decoder-only, or when the two architectures have to be compared on the same input representation.
+
+```
+positions   [C1 E1 E0 +] [C2 E0 E1 <] | ans | [C3 E1 E1 +] [C1 E0 E0 <]
+            |----------- problem -----------|  |------- solution -------|
+loss                                              ^^^^^^^^^^^^^^^^^^^^^^
+```
+
+The learnable **answer marker** between the two halves plays the role the `<bos>` plays in the flat decoder-only model: it is the position whose output predicts the first solution monomial. As there, the problem carries no loss.
+
+```yaml
+model:
+  model_type: monomial_decoder_only   # alias: monomial_decoder
+  num_variables: 2                    # REQUIRED, as for `monomial`
+  num_layers: 6
+  num_heads: 8
+  d_model: 512
+  ffn_dim: 2048
+  max_sequence_length: 512
+  # monomial_separators: ["+", "||"]  # set this if your separator is not "||"
+```
+
+The configuration surface is that of `monomial` for the vocabulary keys and that of `decoder_only` for the architecture keys, so the same config trains either architecture by changing `model_type` alone. Unlike the encoder–decoder monomial model, which keeps independent source and target embedding tables, one stack sees one stream, so problem and solution share a single table.
+
+The data requirements are those of `monomial`: C/E expanded form, and `num_variables` matching the data.
 
 ## Custom embeddings (input and positional)
 

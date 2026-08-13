@@ -57,6 +57,13 @@ class ModelRegistry:
         from .generic.model import Transformer, TransformerConfig
         from .monomial.config_mapping import create_monomial_config
         from .monomial.model import MonomialTransformer, MonomialTransformerConfig
+        from .monomial_decoder_only.config_mapping import (
+            create_monomial_decoder_only_config,
+        )
+        from .monomial_decoder_only.model import (
+            MonomialDecoderOnlyConfig,
+            MonomialDecoderOnlyTransformer,
+        )
 
         # Register generic transformer model (aliases: transformer, calt, generic)
         self.register("transformer", Transformer, TransformerConfig)
@@ -96,6 +103,27 @@ class ModelRegistry:
         )
         self.register_config_mapping("monomial", create_monomial_config)
         self.register_config_mapping("monomial_transformer", create_monomial_config)
+
+        # Register the monomial decoder-only model (aliases:
+        # monomial_decoder_only, monomial_decoder). The same monomial positions
+        # and factored heads as above, under one causal stack over
+        # [problem, answer marker, solution].
+        self.register(
+            "monomial_decoder_only",
+            MonomialDecoderOnlyTransformer,
+            MonomialDecoderOnlyConfig,
+        )
+        self.register(
+            "monomial_decoder",
+            MonomialDecoderOnlyTransformer,
+            MonomialDecoderOnlyConfig,
+        )
+        self.register_config_mapping(
+            "monomial_decoder_only", create_monomial_decoder_only_config
+        )
+        self.register_config_mapping(
+            "monomial_decoder", create_monomial_decoder_only_config
+        )
 
     def register(
         self,
