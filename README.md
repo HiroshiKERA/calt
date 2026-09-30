@@ -116,9 +116,7 @@ If you do not have a local GPU, you can still try CALT in two ways:
 2. **Use remote jobs on Kaggle**
 
    Submit and monitor training jobs from your local terminal using
-   `calt remote ...`.
-
-   See the remote job documentation:
+   `calt remote ...`. See the remote job documentation:
 
    <https://hiroshikera.github.io/calt/remote/>
 
