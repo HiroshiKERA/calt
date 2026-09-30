@@ -1,15 +1,22 @@
 # CALT: Computer ALgebra with Transformer
 
 [![Documentation](https://img.shields.io/badge/docs-latest-brightgreen.svg)](https://hiroshikera.github.io/calt/)
-[![GitHub Pages](https://img.shields.io/badge/GitHub%20Pages-View%20Documentation-blue.svg)](https://hiroshikera.github.io/calt/)
 
-> 📖 **📚 [View Full Documentation](https://hiroshikera.github.io/calt/)**
+- [Documentation](https://hiroshikera.github.io/calt/)
+- [Practical Codebase (calt-codebase)](https://github.com/HiroshiKERA/calt-codebase)
+
+CALT is available as the Python package `calt-x`. For practical examples and
+project templates built with CALT, see
+[calt-codebase](https://github.com/HiroshiKERA/calt-codebase).
 
 ## Overview
 
-CALT is a simple Python library for learning arithmetic and symbolic computation with a Transformer model (a deep neural model to realize sequence-to-sequence functions). 
+CALT is a simple Python library for learning arithmetic and symbolic computation
+with a Transformer model (a deep neural model to realize sequence-to-sequence
+functions).
 
-It offers a basic Transformer model and training pipeline, and non-experts of deep learning can focus on constructing datasets to train and evaluate the model. 
+It offers a basic Transformer model and training pipeline, and non-experts in
+deep learning can focus on constructing datasets to train and evaluate the model.
 
 ## Quick Start
 
@@ -25,7 +32,8 @@ conda install -c conda-forge calt-x
 
 CALT currently supports Python `>=3.11,<3.13`.
 
-If you use features that depend on SageMath, install SageMath in the same conda environment:
+If you use features that depend on SageMath, install SageMath in the same conda
+environment:
 
 ```bash
 conda install -c conda-forge sage
@@ -37,10 +45,13 @@ You can check the available versions with:
 conda search calt-x --channel conda-forge
 ```
 
-The conda-forge feedstock is available here: [conda-forge/calt-x-feedstock](https://github.com/conda-forge/calt-x-feedstock).
+The conda-forge feedstock is available here:
+[conda-forge/calt-x-feedstock](https://github.com/conda-forge/calt-x-feedstock).
 
 ### Instance Generation
-For minimal usage, users only need to implement an instance generator for their own task. For example:
+
+For minimal usage, users only need to implement an instance generator for their
+own task. For example:
 
 ```python
 def int_sum_generator(seed, N=5, lb=-10, ub=10):
@@ -53,7 +64,10 @@ def int_sum_generator(seed, N=5, lb=-10, ub=10):
     return problem, answer
 ```
 
-Feeding the generator to `DataPipeline` generates training and evaluation sets. The `data.yaml` gives a full control over the generation process. 
+Feeding the generator to `DatasetPipeline` generates training and evaluation
+sets. The `data.yaml` configuration file provides full control over the
+generation process.
+
 ```python
 cfg = OmegaConf.load("configs/data.yaml")
 pipeline = DatasetPipeline.from_config(
@@ -64,9 +78,14 @@ pipeline.run()
 ```
 
 ### Training Script
-Then, a short script implement the training and evalutation through `IOPipeline`, `ModelPipeline`, and `TrainerPipeline`. The config file `train.yaml` (and associated `lexer.yaml`) gives full control over the training setup. 
+
+Then, a short script handles training and evaluation through `IOPipeline`,
+`ModelPipeline`, and `TrainerPipeline`. The `train.yaml` configuration file and
+the associated `lexer.yaml` file provide control over the training setup.
+
 ```python
 cfg = OmegaConf.load("configs/train.yaml")
+
 io_pipeline = IOPipeline.from_config(cfg.data)
 io_dict = io_pipeline.build()
 
@@ -79,21 +98,29 @@ trainer_pipeline.evaluate_and_save_generation()
 ```
 
 ### Examples
-See `examples/` directory. 
+
+See `examples/` for minimal examples. For practical experiments and project
+templates built with CALT, see
+[calt-codebase](https://github.com/HiroshiKERA/calt-codebase).
 
 ### For users without a local GPU
 
 If you do not have a local GPU, you can still try CALT in two ways:
 
-1. **Run the demo on Google Colab**  
+1. **Run the demo on Google Colab**
+
    Use the demo notebook from your browser:
-   <https://colab.research.google.com/github/HiroshiKERA/calt/blob/dev/examples/demos/minimal_demo.ipynb>
 
-2. **Use remote jobs on Kaggle**  
-   Submit and monitor training jobs from your local terminal using `calt remote ...`.
+   <https://colab.research.google.com/github/HiroshiKERA/calt/blob/main/examples/demos/minimal_demo.ipynb>
+
+2. **Use remote jobs on Kaggle**
+
+   Submit and monitor training jobs from your local terminal using
+   `calt remote ...`.
+
    See the remote job documentation:
-   <https://hiroshikera.github.io/calt/remote/>
 
+   <https://hiroshikera.github.io/calt/remote/>
 
 ## Citation
 
@@ -102,11 +129,12 @@ If you use CALT in your project, please cite our paper:
 ```bibtex
 @misc{kera2025calt,
   title={CALT: A Library for Computer Algebra with Transformer},
-  author={Hiroshi Kera and Shun Arawaka and Yuta Sato},
+  author={Hiroshi Kera and Shun Arakawa and Yuta Sato},
   year={2025},
   archivePrefix={arXiv},
   eprint={2506.08600}
 }
 ```
-> Note: The current arXiv preprint is based on the previous version of CALT. The update will come soon. 
 
+> Note: The current arXiv preprint is based on the previous version of CALT.
+> The update will come soon.
