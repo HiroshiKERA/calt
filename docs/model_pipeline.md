@@ -28,7 +28,7 @@ Models are created via an internal `ModelRegistry`. The following types are regi
 | `decoder_only`, `decoder` | Decoder-only causal Transformer over `[problem, solution]` (see below). |
 | `monomial_decoder_only`, `monomial_decoder` | Decoder-only causal Transformer over monomial positions (see below). |
 
-Set `model_type` in the `model` block of `train.yaml` (e.g. `model_type: generic`). Other keys in the `model` block (e.g. `num_encoder_layers`, `d_model`, `max_sequence_length`) are documented under [Configuration — `model`](configuration.md#trainyaml--model-and-training-modelpipeline-trainerpipeline).
+Set `model_type` in the `model` block of `train.yaml` (e.g. `model_type: generic`). Other keys in the `model` block (e.g. `num_encoder_layers`, `d_model`, `max_sequence_length`) are documented under [Configuration — `model`](configuration.md#trainyaml-model-and-training-modelpipeline-trainerpipeline).
 
 ## Encoder-only classification model
 

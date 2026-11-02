@@ -196,7 +196,7 @@ class Trainer(HTrainer):
 
     def evaluate_and_save_generation(
         self, max_length: int = 512, step: int | None = None
-    ):
+    ) -> float:
         """Run greedy/beam-search generation on the evaluation set.
 
         The helper decodes the model outputs into strings, stores the results in

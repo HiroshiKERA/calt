@@ -17,7 +17,7 @@ under `calt/examples/*` and customise only the dataset generator and configurati
 ## Documentation map
 
 - **Dataset pipeline** – dataset generation backends and `DatasetPipeline`.
-    - [Overview](dataset_generator.md) (includes [DatasetWriter](dataset_generator.md#datasetwriter)), [SageMath backend](dataset_sagemath.md), [SymPy backend](dataset_sympy.md)
+    - [Overview](dataset_generator.md) (includes [DatasetWriter](dataset_generator.md#calt.dataset.utils.dataset_writer.DatasetWriter)), [SageMath backend](dataset_sagemath.md), [SymPy backend](dataset_sympy.md)
 - **IO pipeline** – tokenisation and `lexer.yaml` configuration.
     - [Overview](io_pipeline.md), [Lexer and vocabulary](io_lexer.md), [Load preprocessors](io_load_preprocessors.md), [Visualization](io_visualization.md)
 - **Trainer pipeline** – model and high-level training flow.
