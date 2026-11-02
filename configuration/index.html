@@ -1117,7 +1117,7 @@ through <a href="../dataset_generator/#calt.dataset.pipeline.DatasetPipeline">Da
 </tbody>
 </table>
 </details>
-<p>Under the hood, <a href="../dataset_generator/#calt.dataset.pipeline.DatasetPipeline">DatasetPipeline</a> resolves the appropriate <code>DatasetGenerator</code> for the chosen <code>backend</code> and uses the common <a href="../dataset_generator/#datasetwriter">DatasetWriter</a>; both are configured from the same options.</p>
+<p>Under the hood, <a href="../dataset_generator/#calt.dataset.pipeline.DatasetPipeline">DatasetPipeline</a> resolves the appropriate <code>DatasetGenerator</code> for the chosen <code>backend</code> and uses the common <a href="../dataset_generator/#calt.dataset.utils.dataset_writer.DatasetWriter">DatasetWriter</a>; both are configured from the same options.</p>
 <h2 id="trainyaml-model-and-training-modelpipeline-trainerpipeline"><code>train.yaml</code> – model and training (<code>ModelPipeline</code>, <code>TrainerPipeline</code>)<a class="headerlink" href="#trainyaml-model-and-training-modelpipeline-trainerpipeline" title="Permanent link">&para;</a></h2>
 <p>Example tasks under <code>calt/examples/*</code> use <code>configs/train.yaml</code> as the main control file for experiments. It is loaded with <code>OmegaConf.load</code> and passed to <a href="../io_pipeline/">IOPipeline</a>, <a href="../model_pipeline/">ModelPipeline</a>, and <a href="../trainer/">TrainerPipeline</a>. Typical usage:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">omegaconf</span><span class="w"> </span><span class="kn">import</span> <span class="n">OmegaConf</span>

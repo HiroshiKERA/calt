@@ -1607,7 +1607,7 @@ at least the <code>"tokenizer"</code> entry.</p>
 </tr>
 </tbody>
 </table>
-<p>Set <code>model_type</code> in the <code>model</code> block of <code>train.yaml</code> (e.g. <code>model_type: generic</code>). Other keys in the <code>model</code> block (e.g. <code>num_encoder_layers</code>, <code>d_model</code>, <code>max_sequence_length</code>) are documented under <a href="../configuration/#trainyaml--model-and-training-modelpipeline-trainerpipeline">Configuration — <code>model</code></a>.</p>
+<p>Set <code>model_type</code> in the <code>model</code> block of <code>train.yaml</code> (e.g. <code>model_type: generic</code>). Other keys in the <code>model</code> block (e.g. <code>num_encoder_layers</code>, <code>d_model</code>, <code>max_sequence_length</code>) are documented under <a href="../configuration/#trainyaml-model-and-training-modelpipeline-trainerpipeline">Configuration — <code>model</code></a>.</p>
 <h2 id="encoder-only-classification-model">Encoder-only classification model<a class="headerlink" href="#encoder-only-classification-model" title="Permanent link">&para;</a></h2>
 <p>For tasks whose answer is a <strong>single token</strong> (e.g. permutation parity, whose target is <code>+1</code> / <code>-1</code>), a full encoder–decoder is unnecessary. <code>model_type: encoder_classifier</code> (alias <code>encoder_only</code>) is an encoder-only alternative that encodes the input, mean-pools the encoder output, and classifies it over the vocabulary.</p>
 <div class="highlight"><pre><span></span><code><span class="nt">model</span><span class="p">:</span>

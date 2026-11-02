@@ -1061,9 +1061,9 @@
 
 <h1 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h1>
 <p>A unified interface with SageMath and SymPy backends for large-scale dataset generation. It produces paired problems and answers, supports batch writing, and computes incremental statistics.</p>
-<p><a href="#calt.dataset.pipeline.DatasetPipeline">DatasetPipeline</a> and <a href="#datasetwriter">DatasetWriter</a> are shared regardless of backend (<code>sagemath</code> or <code>sympy</code>). For details on each component, see:</p>
+<p><a href="#calt.dataset.pipeline.DatasetPipeline">DatasetPipeline</a> and <a href="#calt.dataset.utils.dataset_writer.DatasetWriter">DatasetWriter</a> are shared regardless of backend (<code>sagemath</code> or <code>sympy</code>). For details on each component, see:</p>
 <ul>
-<li><a href="#datasetwriter">DatasetWriter</a> — writing samples to disk</li>
+<li><a href="#calt.dataset.utils.dataset_writer.DatasetWriter">DatasetWriter</a> — writing samples to disk</li>
 <li><a href="../dataset_sagemath/">SageMath backend</a> — <code>DatasetGenerator</code> and <code>PolynomialSampler</code> for SageMath</li>
 <li><a href="../dataset_sympy/">SymPy backend</a> — <code>DatasetGenerator</code> and <code>PolynomialSampler</code> for SymPy</li>
 </ul>
@@ -1079,8 +1079,8 @@
 
 <a href="#calt.dataset.pipeline.DatasetPipeline" class="headerlink" title="Permanent link">&para;</a></h2>
 <div class="doc-signature highlight"><pre><span></span><code><span class="nf">DatasetPipeline</span><span class="p">(</span>
-    <span class="n">instance_generator</span><span class="p">,</span>
-    <span class="n">statistics_calculator</span><span class="p">,</span>
+    <span class="n">instance_generator</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">statistics_calculator</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">save_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">save_text</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
     <span class="n">save_json</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
@@ -1133,6 +1133,7 @@ Typically constructed via from_config() with a DictConfig (e.g. from YAML).</p>
                 <code>instance_generator</code>
             </td>
             <td>
+                  <code><span title="typing.Callable">Callable</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -1149,6 +1150,7 @@ returns (problem, answer). Used to generate each sample.</p>
                 <code>statistics_calculator</code>
             </td>
             <td>
+                  <code><span title="typing.Callable">Callable</span> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -1332,9 +1334,7 @@ Pass None to skip statistics.</p>
 
                   <details class="quote">
                     <summary>Source code in <code>src/calt/dataset/pipeline.py</code></summary>
-                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">27</span>
-<span class="normal">28</span>
-<span class="normal">29</span>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">29</span>
 <span class="normal">30</span>
 <span class="normal">31</span>
 <span class="normal">32</span>
@@ -1377,10 +1377,12 @@ Pass None to skip statistics.</p>
 <span class="normal">69</span>
 <span class="normal">70</span>
 <span class="normal">71</span>
-<span class="normal">72</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+<span class="normal">72</span>
+<span class="normal">73</span>
+<span class="normal">74</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
-    <span class="n">instance_generator</span><span class="p">,</span>
-    <span class="n">statistics_calculator</span><span class="p">,</span>
+    <span class="n">instance_generator</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">statistics_calculator</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span>
     <span class="n">save_dir</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
     <span class="n">save_text</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
     <span class="n">save_json</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
@@ -1451,7 +1453,9 @@ Pass None to skip statistics.</p>
 
 <a href="#calt.dataset.pipeline.DatasetPipeline.from_config" class="headerlink" title="Permanent link">&para;</a></h3>
 <div class="doc-signature highlight"><pre><span></span><code><span class="nf">from_config</span><span class="p">(</span>
-    <span class="n">config</span><span class="p">:</span> <span class="n">DictConfig</span><span class="p">,</span> <span class="n">instance_generator</span><span class="p">,</span> <span class="n">statistics_calculator</span><span class="o">=</span><span class="kc">None</span>
+    <span class="n">config</span><span class="p">:</span> <span class="n">DictConfig</span><span class="p">,</span>
+    <span class="n">instance_generator</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">statistics_calculator</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;DatasetPipeline&quot;</span>
 </code></pre></div>
 
@@ -1496,6 +1500,7 @@ Missing required keys will raise when building the pipeline.</p>
                 <code>instance_generator</code>
             </td>
             <td>
+                  <code><span title="typing.Callable">Callable</span></code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -1511,6 +1516,7 @@ Missing required keys will raise when building the pipeline.</p>
                 <code>statistics_calculator</code>
             </td>
             <td>
+                  <code><span title="typing.Callable">Callable</span> | None</code>
             </td>
             <td>
               <div class="doc-md-description">
@@ -1551,9 +1557,7 @@ Defaults to None (no per-sample statistics).</p>
 
             <details class="quote">
               <summary>Source code in <code>src/calt/dataset/pipeline.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 74</span>
-<span class="normal"> 75</span>
-<span class="normal"> 76</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 76</span>
 <span class="normal"> 77</span>
 <span class="normal"> 78</span>
 <span class="normal"> 79</span>
@@ -1586,12 +1590,14 @@ Defaults to None (no per-sample statistics).</p>
 <span class="normal">106</span>
 <span class="normal">107</span>
 <span class="normal">108</span>
-<span class="normal">109</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="nd">@classmethod</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">from_config</span><span class="p">(</span>
     <span class="bp">cls</span><span class="p">,</span>
     <span class="n">config</span><span class="p">:</span> <span class="n">DictConfig</span><span class="p">,</span>
-    <span class="n">instance_generator</span><span class="p">,</span>
-    <span class="n">statistics_calculator</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="n">instance_generator</span><span class="p">:</span> <span class="n">Callable</span><span class="p">,</span>
+    <span class="n">statistics_calculator</span><span class="p">:</span> <span class="n">Callable</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;DatasetPipeline&quot;</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Build a DatasetPipeline from a DictConfig.</span>
 
@@ -1649,9 +1655,7 @@ and writes outputs according to save_text and save_json.</p>
 
             <details class="quote">
               <summary>Source code in <code>src/calt/dataset/pipeline.py</code></summary>
-              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">111</span>
-<span class="normal">112</span>
-<span class="normal">113</span>
+              <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">113</span>
 <span class="normal">114</span>
 <span class="normal">115</span>
 <span class="normal">116</span>
@@ -1683,7 +1687,9 @@ and writes outputs according to save_text and save_json.</p>
 <span class="normal">142</span>
 <span class="normal">143</span>
 <span class="normal">144</span>
-<span class="normal">145</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+<span class="normal">145</span>
+<span class="normal">146</span>
+<span class="normal">147</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
 <span class="w">    </span><span class="sd">&quot;&quot;&quot;Run the pipeline: generate train/test data and write to save_dir.</span>
 
 <span class="sd">    Loads the backend (DatasetGenerator and DatasetWriter), then runs</span>

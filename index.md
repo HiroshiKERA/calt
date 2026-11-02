@@ -13,7 +13,7 @@ For most users, the recommended entry point is to start from one of the example 
 ## Documentation map
 
 - **Dataset pipeline** – dataset generation backends and `DatasetPipeline`.
-  - [Overview](dataset_generator/) (includes [DatasetWriter](dataset_generator/#datasetwriter)), [SageMath backend](dataset_sagemath/), [SymPy backend](dataset_sympy/)
+  - [Overview](dataset_generator/) (includes [DatasetWriter](dataset_generator/#calt.dataset.utils.dataset_writer.DatasetWriter)), [SageMath backend](dataset_sagemath/), [SymPy backend](dataset_sympy/)
 - **IO pipeline** – tokenisation and `lexer.yaml` configuration.
   - [Overview](io_pipeline/), [Lexer and vocabulary](io_lexer/), [Load preprocessors](io_load_preprocessors/), [Visualization](io_visualization/)
 - **Trainer pipeline** – model and high-level training flow.
@@ -31,7 +31,7 @@ CALT can be installed via `pip`:
 pip install calt-x
 ```
 
-CALT supports Python `>=3.11` (tested in CI on 3.11–3.14).
+CALT supports Python `>=3.11` (tested in CI on 3.11–3.15).
 
 We highly recommend using the [CALT codebase](https://github.com/HiroshiKERA/calt-codebase) – a comprehensive template repository to build your own projects using CALT. The quickstart guide can be found in the [CALT codebase documentation](https://hiroshikera.github.io/calt-codebase/).
 

@@ -93,7 +93,9 @@ def evaluate(
 ### evaluate_and_save_generation
 
 ```
-evaluate_and_save_generation(max_length: int = 512, step: int | None = None)
+evaluate_and_save_generation(
+    max_length: int = 512, step: int | None = None
+) -> float
 ```
 
 Run greedy/beam-search generation on the evaluation set.
@@ -106,14 +108,14 @@ Parameters:
 
 Returns:
 
-| Name | Type | Description | | --- | --- | --- | | `float` | | Exact-match accuracy in the [0, 1] interval. |
+| Name | Type | Description | | --- | --- | --- | | `float` | `float` | Exact-match accuracy in the [0, 1] interval. |
 
 Source code in `src/calt/trainer/trainer.py`
 
 ```
 def evaluate_and_save_generation(
     self, max_length: int = 512, step: int | None = None
-):
+) -> float:
     """Run greedy/beam-search generation on the evaluation set.
 
     The helper decodes the model outputs into strings, stores the results in

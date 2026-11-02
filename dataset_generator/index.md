@@ -2,9 +2,9 @@
 
 A unified interface with SageMath and SymPy backends for large-scale dataset generation. It produces paired problems and answers, supports batch writing, and computes incremental statistics.
 
-[DatasetPipeline](#calt.dataset.pipeline.DatasetPipeline) and [DatasetWriter](#datasetwriter) are shared regardless of backend (`sagemath` or `sympy`). For details on each component, see:
+[DatasetPipeline](#calt.dataset.pipeline.DatasetPipeline) and [DatasetWriter](#calt.dataset.utils.dataset_writer.DatasetWriter) are shared regardless of backend (`sagemath` or `sympy`). For details on each component, see:
 
-- [DatasetWriter](#datasetwriter) — writing samples to disk
+- [DatasetWriter](#calt.dataset.utils.dataset_writer.DatasetWriter) — writing samples to disk
 - [SageMath backend](../dataset_sagemath/) — `DatasetGenerator` and `PolynomialSampler` for SageMath
 - [SymPy backend](../dataset_sympy/) — `DatasetGenerator` and `PolynomialSampler` for SymPy
 
@@ -12,8 +12,8 @@ A unified interface with SageMath and SymPy backends for large-scale dataset gen
 
 ```
 DatasetPipeline(
-    instance_generator,
-    statistics_calculator,
+    instance_generator: Callable,
+    statistics_calculator: Callable | None,
     save_dir: str,
     save_text: bool,
     save_json: bool,
@@ -47,15 +47,15 @@ Examples:
 
 Parameters:
 
-| Name | Type | Description | Default | | --- | --- | --- | --- | | `instance_generator` | | Callable that takes a single integer seed and returns (problem, answer). Used to generate each sample. | *required* | | `statistics_calculator` | | Optional callable(problem, answer) returning a dict of per-sample statistics (e.g. {"problem": {...}, "answer": {...}}). Pass None to skip statistics. | *required* | | `save_dir` | `str` | Directory path to write dataset files. | *required* | | `save_text` | `bool` | Whether to save samples as text files. | *required* | | `save_json` | `bool` | Whether to save metadata (e.g. statistics) as JSON. | *required* | | `num_train_samples` | `int` | Number of training samples to generate. | *required* | | `num_test_samples` | `int` | Number of test samples to generate. | *required* | | `batch_size` | `int` | Number of samples per batch during generation. | *required* | | `n_jobs` | `int` | Number of parallel jobs for the backend generator. | *required* | | `root_seed` | `int` | Base seed for reproducibility; job seeds are derived from this. | *required* | | `verbose` | `bool` | Whether to print progress. | *required* | | `backend` | `str` | Backend name for generation and writing ("sagemath" or "sympy"). | `'sagemath'` |
+| Name | Type | Description | Default | | --- | --- | --- | --- | | `instance_generator` | `Callable` | Callable that takes a single integer seed and returns (problem, answer). Used to generate each sample. | *required* | | `statistics_calculator` | `Callable | None` | Optional callable(problem, answer) returning a dict of per-sample statistics (e.g. {"problem": {...}, "answer": {...}}). Pass None to skip statistics. | *required* | | `save_dir` | `str` | Directory path to write dataset files. | *required* | | `save_text` | `bool` | Whether to save samples as text files. | *required* | | `save_json` | `bool` | Whether to save metadata (e.g. statistics) as JSON. | *required* | | `num_train_samples` | `int` | Number of training samples to generate. | *required* | | `num_test_samples` | `int` | Number of test samples to generate. | *required* | | `batch_size` | `int` | Number of samples per batch during generation. | *required* | | `n_jobs` | `int` | Number of parallel jobs for the backend generator. | *required* | | `root_seed` | `int` | Base seed for reproducibility; job seeds are derived from this. | *required* | | `verbose` | `bool` | Whether to print progress. | *required* | | `backend` | `str` | Backend name for generation and writing ("sagemath" or "sympy"). | `'sagemath'` |
 
 Source code in `src/calt/dataset/pipeline.py`
 
 ```
 def __init__(
     self,
-    instance_generator,
-    statistics_calculator,
+    instance_generator: Callable,
+    statistics_calculator: Callable | None,
     save_dir: str,
     save_text: bool,
     save_json: bool,
@@ -104,7 +104,9 @@ def __init__(
 
 ```
 from_config(
-    config: DictConfig, instance_generator, statistics_calculator=None
+    config: DictConfig,
+    instance_generator: Callable,
+    statistics_calculator: Callable | None = None,
 ) -> "DatasetPipeline"
 ```
 
@@ -112,7 +114,7 @@ Build a DatasetPipeline from a DictConfig.
 
 Parameters:
 
-| Name | Type | Description | Default | | --- | --- | --- | --- | | `config` | `DictConfig` | DictConfig for the dataset. Expected keys: save_dir, num_train_samples, num_test_samples, batch_size, n_jobs, root_seed. Optional (with defaults): save_text=True, save_json=True, verbose=True, backend="sagemath". Missing required keys will raise when building the pipeline. | *required* | | `instance_generator` | | Callable(seed) -> (problem, answer). Required. | *required* | | `statistics_calculator` | | Optional callable(problem, answer) -> dict. Defaults to None (no per-sample statistics). | `None` |
+| Name | Type | Description | Default | | --- | --- | --- | --- | | `config` | `DictConfig` | DictConfig for the dataset. Expected keys: save_dir, num_train_samples, num_test_samples, batch_size, n_jobs, root_seed. Optional (with defaults): save_text=True, save_json=True, verbose=True, backend="sagemath". Missing required keys will raise when building the pipeline. | *required* | | `instance_generator` | `Callable` | Callable(seed) -> (problem, answer). Required. | *required* | | `statistics_calculator` | `Callable | None` | Optional callable(problem, answer) -> dict. Defaults to None (no per-sample statistics). | `None` |
 
 Returns:
 
@@ -125,8 +127,8 @@ Source code in `src/calt/dataset/pipeline.py`
 def from_config(
     cls,
     config: DictConfig,
-    instance_generator,
-    statistics_calculator=None,
+    instance_generator: Callable,
+    statistics_calculator: Callable | None = None,
 ) -> "DatasetPipeline":
     """Build a DatasetPipeline from a DictConfig.
 
