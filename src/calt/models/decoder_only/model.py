@@ -165,8 +165,7 @@ class DecoderOnlyTransformer(PreTrainedModel):
 
         self.lm_head = nn.Linear(config.d_model, config.vocab_size, bias=False)
 
-        self.apply(self._init_weights)
-        self.tie_weights()
+        self.post_init()
         self.seed = config.seed
         torch.manual_seed(self.seed)
         if torch.cuda.is_available():
@@ -175,14 +174,14 @@ class DecoderOnlyTransformer(PreTrainedModel):
     def _init_weights(self, module):
         """Apply CALT-specific initialization to supported modules."""
         if isinstance(module, nn.Linear):
-            module.weight.data.normal_(mean=0.0, std=self.config.init_std)
+            nn.init.normal_(module.weight, mean=0.0, std=self.config.init_std)
             if module.bias is not None:
-                module.bias.data.zero_()
+                nn.init.zeros_(module.bias)
         elif isinstance(module, nn.Embedding):
-            module.weight.data.normal_(mean=0.0, std=self.config.init_std)
+            nn.init.normal_(module.weight, mean=0.0, std=self.config.init_std)
         elif isinstance(module, nn.LayerNorm):
-            module.bias.data.zero_()
-            module.weight.data.fill_(1.0)
+            nn.init.zeros_(module.bias)
+            nn.init.ones_(module.weight)
 
     def _compute_embeddings(self, input_ids: torch.LongTensor) -> torch.Tensor:
         """Compute token embeddings combined with positional embeddings."""

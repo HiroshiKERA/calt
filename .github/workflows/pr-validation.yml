@@ -38,6 +38,12 @@ jobs:
 
   test-transformers-v5:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 5.0.0 catches bugs that later 5.x releases happen to mask (e.g.
+        # from_pretrained re-initializing loaded weights before 5.14).
+        transformers-spec: ["transformers==5.0.0", "transformers>=5.0.0"]
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
@@ -58,7 +64,7 @@ jobs:
           uv sync --python 3.12 --frozen --dev
 
       - name: Install transformers v5
-        run: uv pip install "transformers>=5.0.0" --python .venv/bin/python
+        run: uv pip install "${{ matrix.transformers-spec }}" --python .venv/bin/python
 
       - name: Run pytest
         run: uv run --python 3.12 --no-sync pytest

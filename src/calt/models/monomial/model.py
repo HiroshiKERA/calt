@@ -187,15 +187,13 @@ class MonomialEmbedding(nn.Module):
         # coefficient fields + exponents (one per variable) + follow slot
         self.width = num_coeff_fields + num_variables + 1
         self.emb = nn.Embedding(self.width * vocab_size, d_model)
-        self.register_buffer(
-            "slot_shift",
-            torch.arange(self.width, dtype=torch.long) * vocab_size,
-            persistent=False,
-        )
 
     def _slot(self, ids: torch.Tensor, slot: int) -> torch.Tensor:
         """Embed column ``slot`` of the grid out of that slot's private block."""
-        return self.emb(ids[..., slot] + self.slot_shift[slot])
+        # Computed inline rather than kept in a non-persistent buffer:
+        # transformers v5 builds models on the meta device in from_pretrained,
+        # so such a buffer would come back uninitialized.
+        return self.emb(ids[..., slot] + slot * self.vocab_size)
 
     def forward(self, ids: torch.Tensor) -> torch.Tensor:
         k, n_vars = self.num_coeff_fields, self.num_variables
@@ -358,7 +356,7 @@ class MonomialTransformer(PreTrainedModel):
             "follow_local_map", _build_local_map([follow_ids], config.vocab_size)[0]
         )
 
-        self.apply(self._init_weights)
+        self.post_init()
         nn.init.normal_(self.bos_emb, std=config.init_std)
         self.seed = config.seed
         torch.manual_seed(self.seed)
@@ -367,14 +365,14 @@ class MonomialTransformer(PreTrainedModel):
 
     def _init_weights(self, module):
         if isinstance(module, nn.Linear):
-            module.weight.data.normal_(mean=0.0, std=self.config.init_std)
+            nn.init.normal_(module.weight, mean=0.0, std=self.config.init_std)
             if module.bias is not None:
-                module.bias.data.zero_()
+                nn.init.zeros_(module.bias)
         elif isinstance(module, nn.Embedding):
-            module.weight.data.normal_(mean=0.0, std=self.config.init_std)
+            nn.init.normal_(module.weight, mean=0.0, std=self.config.init_std)
         elif isinstance(module, nn.LayerNorm):
-            module.bias.data.zero_()
-            module.weight.data.fill_(1.0)
+            nn.init.zeros_(module.bias)
+            nn.init.ones_(module.weight)
 
     # ------------------------------------------------------------------ #
     # Flat sequence <-> monomial grid                                     #

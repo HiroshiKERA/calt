@@ -6,9 +6,11 @@ and creates Trainer instances.
 """
 
 import inspect
+import math
 from abc import ABC, abstractmethod
 from typing import Any, Optional
 
+import transformers
 from omegaconf import DictConfig
 from torch.utils.data import Dataset
 from transformers import (
@@ -166,9 +168,6 @@ class StandardTrainerLoader(TrainerLoader):
             "weight_decay": getattr(
                 self.calt_config, "weight_decay", _DEFAULT_TRAINING_ARGS.weight_decay
             ),
-            "warmup_ratio": getattr(
-                self.calt_config, "warmup_ratio", _DEFAULT_TRAINING_ARGS.warmup_ratio
-            ),
             "per_device_train_batch_size": train_batch_size,
             "per_device_eval_batch_size": test_batch_size,
             # Lets a long-sequence run keep its effective batch size on a
@@ -209,6 +208,19 @@ class StandardTrainerLoader(TrainerLoader):
             "seed": getattr(self.calt_config, "seed", _DEFAULT_TRAINING_ARGS.seed),
             "disable_tqdm": getattr(self.calt_config, "disable_tqdm", True),
         }
+        # transformers v5 dropped warmup_ratio; a float warmup_steps in [0, 1)
+        # is read as a ratio instead (v4 rejects a float warmup_steps). Branch
+        # on the major version, not the signature: 5.0/5.1 still accept a
+        # deprecated warmup_ratio but turn 1.0 into a single warmup step.
+        warmup_ratio = float(getattr(self.calt_config, "warmup_ratio", 0.0))
+        if not 0.0 <= warmup_ratio <= 1.0:
+            raise ValueError(f"warmup_ratio must lie in [0, 1], got {warmup_ratio}")
+        if int(transformers.__version__.split(".")[0]) < 5:
+            kwargs["warmup_ratio"] = warmup_ratio
+        else:
+            # v5 reads warmup_steps >= 1 as a step count, so keep a ratio of
+            # 1.0 (warm up for the whole run) just below 1.
+            kwargs["warmup_steps"] = min(warmup_ratio, math.nextafter(1.0, 0.0))
         if "save_safetensors" in supported:
             kwargs["save_safetensors"] = getattr(
                 self.calt_config, "save_safetensors", False

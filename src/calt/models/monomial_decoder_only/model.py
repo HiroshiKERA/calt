@@ -267,7 +267,7 @@ class MonomialDecoderOnlyTransformer(PreTrainedModel):
             "follow_local_map", _build_local_map([follow_ids], config.vocab_size)[0]
         )
 
-        self.apply(self._init_weights)
+        self.post_init()
         nn.init.normal_(self.answer_emb, std=config.init_std)
         self.seed = config.seed
         torch.manual_seed(self.seed)
@@ -276,14 +276,14 @@ class MonomialDecoderOnlyTransformer(PreTrainedModel):
 
     def _init_weights(self, module):
         if isinstance(module, nn.Linear):
-            module.weight.data.normal_(mean=0.0, std=self.config.init_std)
+            nn.init.normal_(module.weight, mean=0.0, std=self.config.init_std)
             if module.bias is not None:
-                module.bias.data.zero_()
+                nn.init.zeros_(module.bias)
         elif isinstance(module, nn.Embedding):
-            module.weight.data.normal_(mean=0.0, std=self.config.init_std)
+            nn.init.normal_(module.weight, mean=0.0, std=self.config.init_std)
         elif isinstance(module, nn.LayerNorm):
-            module.bias.data.zero_()
-            module.weight.data.fill_(1.0)
+            nn.init.zeros_(module.bias)
+            nn.init.ones_(module.weight)
 
     # ------------------------------------------------------------------ #
     # Folding and alignment                                               #
