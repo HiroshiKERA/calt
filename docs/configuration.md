@@ -60,7 +60,7 @@ dataset:
     | `save_text` | Whether to write human-readable `.txt` files (`text_raw.txt`, etc.). |
     | `save_json` | Whether to write `.jsonl` files preserving the nested Python structure. |
 
-Under the hood, [DatasetPipeline](dataset_generator.md#calt.dataset.pipeline.DatasetPipeline) resolves the appropriate `DatasetGenerator` for the chosen `backend` and uses the common [DatasetWriter](dataset_generator.md#datasetwriter); both are configured from the same options.
+Under the hood, [DatasetPipeline](dataset_generator.md#calt.dataset.pipeline.DatasetPipeline) resolves the appropriate `DatasetGenerator` for the chosen `backend` and uses the common [DatasetWriter](dataset_generator.md#calt.dataset.utils.dataset_writer.DatasetWriter); both are configured from the same options.
 
 ## `train.yaml` – model and training (`ModelPipeline`, `TrainerPipeline`)
 
