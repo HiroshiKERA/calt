@@ -12,7 +12,8 @@ jobs:
       name: pypi
     permissions:
       id-token: write
-      contents: read
+      # Needed to create the GitHub Release after publishing.
+      contents: write
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
@@ -41,3 +42,17 @@ jobs:
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+
+      # Tag and release the same commit that was published, so GitHub
+      # Releases stay in step with PyPI. Edit the generated notes afterwards
+      # if a hand-written summary is wanted.
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          gh release create "v${version}" \
+            --target "${GITHUB_SHA}" \
+            --title "CALT v${version}" \
+            --generate-notes \
+            --latest
