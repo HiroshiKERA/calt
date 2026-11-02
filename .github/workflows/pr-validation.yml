@@ -12,50 +12,60 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.11", "3.12"]
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
 
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python-version }}
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v10.3.3
+        with:
+          prune-cache: true
 
       - name: Install dependencies
         run: |
-          uv venv
-          uv sync --frozen --dev
+          uv venv --python ${{ matrix.python-version }}
+          uv sync --python ${{ matrix.python-version }} --frozen --dev
 
       - name: Run pytest
-        run: uv run pytest
+        run: uv run --python ${{ matrix.python-version }} pytest
 
   test-transformers-v5:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # 5.0.0 catches bugs that later 5.x releases happen to mask (e.g.
+        # from_pretrained re-initializing loaded weights before 5.14).
+        transformers-spec: ["transformers==5.0.0", "transformers>=5.0.0"]
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v5
+        uses: astral-sh/setup-uv@v10.3.3
+        with:
+          prune-cache: true
 
       - name: Install dependencies
         run: |
-          uv venv
-          uv sync --frozen --dev
+          uv venv --python 3.12
+          uv sync --python 3.12 --frozen --dev
 
       - name: Install transformers v5
-        run: uv pip install "transformers>=5.0.0"
+        run: uv pip install "${{ matrix.transformers-spec }}" --python .venv/bin/python
 
       - name: Run pytest
-        run: uv run pytest
+        run: uv run --python 3.12 --no-sync pytest
 

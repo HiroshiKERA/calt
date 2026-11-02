@@ -1,7 +1,9 @@
 import hashlib
 import logging
 import math
+import multiprocessing
 import re
+import sys
 from time import perf_counter
 from typing import Any, Callable
 
@@ -77,6 +79,24 @@ def setup_logging():
 # closure for each sample; see issue #37 (up to ~469x slowdown).
 _WORKER_INSTANCE_GENERATOR = None
 _WORKER_STATISTICS_CALCULATOR = None
+
+# Python 3.14 changed multiprocessing's default start method on Linux from
+# "fork" to "forkserver". The fork-inheritance path above relies on worker
+# processes sharing the parent's memory directly, which "forkserver" does not
+# guarantee for arbitrary (possibly unpicklable) generator/calculator state.
+# Pin "fork" explicitly on Linux so behavior doesn't change across interpreter
+# versions. Excluded on macOS/Windows: "fork" is technically listed by
+# get_all_start_methods() on macOS, but CPython has defaulted to "spawn"
+# there since 3.8 specifically because fork is unsafe with system frameworks
+# (e.g. Objective-C runtime) and can crash; Windows never supports fork.
+try:
+    _FORK_CONTEXT = (
+        multiprocessing.get_context("fork")
+        if sys.platform == "linux" and "fork" in multiprocessing.get_all_start_methods()
+        else None
+    )
+except ValueError:
+    _FORK_CONTEXT = None
 
 
 def _worker_init(instance_generator=None, statistics_calculator=None):
@@ -291,15 +311,25 @@ class DatasetGenerator:
             # once per worker through the initializer (see issue #37).
             _worker_init(instance_generator, statistics_calculator)
 
-            # Generate samples for current batch in parallel using joblib
+            # Generate samples for current batch in parallel using joblib.
+            # joblib's Parallel.__init__ unconditionally overwrites a
+            # `context=` keyword argument with its own default (see
+            # joblib.parallel.Parallel.__init__), so pinning the start
+            # method requires passing the context object itself as `backend`
+            # instead (joblib special-cases objects with Pool/Lock attrs).
+            backend_param: Any = self.backend
+            if self.backend == "multiprocessing" and _FORK_CONTEXT is not None:
+                backend_param = _FORK_CONTEXT
+            parallel_kwargs: dict[str, Any] = {
+                "n_jobs": self.n_jobs,
+                "backend": backend_param,
+                "verbose": self.verbose,
+                "initializer": _worker_init,
+                "initargs": (instance_generator, statistics_calculator),
+            }
+
             try:
-                results = Parallel(
-                    n_jobs=self.n_jobs,
-                    backend=self.backend,
-                    verbose=self.verbose,
-                    initializer=_worker_init,
-                    initargs=(instance_generator, statistics_calculator),
-                )(
+                results = Parallel(**parallel_kwargs)(
                     delayed(self._generate_sample)(batch_start + i, tag)
                     for i in range(current_batch_size)
                 )

@@ -4,6 +4,10 @@ from .generic.model import Transformer, TransformerConfig
 from .input_embeddings import get_input_embedding, register_input_embedding
 from .loader import ModelLoader
 from .monomial.model import MonomialTransformer, MonomialTransformerConfig
+from .monomial_decoder_only.model import (
+    MonomialDecoderOnlyConfig,
+    MonomialDecoderOnlyTransformer,
+)
 from .pipeline import ModelPipeline
 from .positional_embeddings import (
     get_positional_embedding,
@@ -29,6 +33,8 @@ __all__ = [
     "TransformerConfig",
     "MonomialTransformer",
     "MonomialTransformerConfig",
+    "MonomialDecoderOnlyTransformer",
+    "MonomialDecoderOnlyConfig",
     "DecoderOnlyTransformer",
     "DecoderOnlyConfig",
     # Pluggable embeddings (custom input + positional)
