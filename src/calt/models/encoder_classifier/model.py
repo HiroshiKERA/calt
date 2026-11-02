@@ -130,7 +130,7 @@ class EncoderClassifier(PreTrainedModel):
         # class is a token id (decodes straight back to the answer string).
         self.classifier = nn.Linear(config.d_model, config.vocab_size, bias=True)
 
-        self.apply(self._init_weights)
+        self.post_init()
         self.seed = config.seed
         torch.manual_seed(self.seed)
         if torch.cuda.is_available():
@@ -138,14 +138,14 @@ class EncoderClassifier(PreTrainedModel):
 
     def _init_weights(self, module):
         if isinstance(module, nn.Linear):
-            module.weight.data.normal_(mean=0.0, std=self.config.init_std)
+            nn.init.normal_(module.weight, mean=0.0, std=self.config.init_std)
             if module.bias is not None:
-                module.bias.data.zero_()
+                nn.init.zeros_(module.bias)
         elif isinstance(module, nn.Embedding):
-            module.weight.data.normal_(mean=0.0, std=self.config.init_std)
+            nn.init.normal_(module.weight, mean=0.0, std=self.config.init_std)
         elif isinstance(module, nn.LayerNorm):
-            module.bias.data.zero_()
-            module.weight.data.fill_(1.0)
+            nn.init.zeros_(module.bias)
+            nn.init.ones_(module.weight)
 
     def _key_padding_mask(self, attention_mask):
         """Boolean mask where True marks a padded position (PyTorch convention)."""
