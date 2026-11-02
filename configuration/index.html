@@ -1248,7 +1248,7 @@ through <a href="../dataset_generator/#calt.dataset.pipeline.DatasetPipeline">Da
 <tbody>
 <tr>
 <td><code>model_type</code></td>
-<td>Model architecture (e.g. <code>generic</code>, <code>bart</code>).</td>
+<td>Model architecture: <code>generic</code>, <code>bart</code>, <code>encoder_classifier</code> (encoder-only single-token classification; alias <code>encoder_only</code>), <code>monomial</code> (alias <code>monomial_transformer</code>), <code>decoder_only</code> (causal, one stack; alias <code>decoder</code>), or <code>monomial_decoder_only</code> (causal, one position per monomial; alias <code>monomial_decoder</code>). See <a href="../model_pipeline/">Model pipeline</a>.</td>
 </tr>
 <tr>
 <td><code>num_encoder_layers</code>, <code>num_encoder_heads</code></td>
@@ -1256,7 +1256,7 @@ through <a href="../dataset_generator/#calt.dataset.pipeline.DatasetPipeline">Da
 </tr>
 <tr>
 <td><code>num_decoder_layers</code>, <code>num_decoder_heads</code></td>
-<td>Decoder depth and attention heads.</td>
+<td>Decoder depth and attention heads (ignored by <code>encoder_classifier</code>).</td>
 </tr>
 <tr>
 <td><code>d_model</code></td>
@@ -1269,6 +1269,14 @@ through <a href="../dataset_generator/#calt.dataset.pipeline.DatasetPipeline">Da
 <tr>
 <td><code>max_sequence_length</code></td>
 <td>Maximum sequence length.</td>
+</tr>
+<tr>
+<td><code>input_embedding_type</code></td>
+<td>Input (token) embedding to use (default <code>token</code>). Built-in: <code>token</code>. Register custom ones with <code>register_input_embedding</code>; see <a href="../model_pipeline/#custom-embeddings-input-and-positional">Custom embeddings</a>.</td>
+</tr>
+<tr>
+<td><code>use_positional_embedding</code></td>
+<td>Positional embedding to use (default <code>generic</code>). Built-in: <code>generic</code>/<code>learned</code>, <code>sinusoidal</code>, <code>rope</code>, <code>none</code>. Register custom ones with <code>register_positional_embedding</code>.</td>
 </tr>
 </tbody>
 </table>

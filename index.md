@@ -31,6 +31,8 @@ CALT can be installed via `pip`:
 pip install calt-x
 ```
 
+CALT supports Python `>=3.11` (tested in CI on 3.11–3.14).
+
 We highly recommend using the [CALT codebase](https://github.com/HiroshiKERA/calt-codebase) – a comprehensive template repository to build your own projects using CALT. The quickstart guide can be found in the [CALT codebase documentation](https://hiroshikera.github.io/calt-codebase/).
 
 ## Citation
