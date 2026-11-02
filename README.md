@@ -30,13 +30,16 @@ conda activate calt-env
 conda install -c conda-forge calt-x
 ```
 
-CALT currently supports Python `>=3.11`. Note: Python 3.15 users may need
-to install `torch` from PyTorch's official index
-(https://download.pytorch.org/whl) until a 3.15 wheel is published to
-PyPI.
+Alternatively, install it from PyPI with pip:
 
-If you use features that depend on SageMath, install SageMath in the same conda
-environment:
+```bash
+pip install calt-x
+```
+
+CALT supports Python `>=3.11` (tested in CI on 3.11–3.14).
+
+**Optional:** If you use features that depend on SageMath, install SageMath in
+the same conda environment:
 
 ```bash
 conda install -c conda-forge sage
