@@ -13,14 +13,26 @@ jobs:
     permissions:
       id-token: write
       contents: read
+    outputs:
+      version: ${{ steps.version.outputs.version }}
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
+        with:
+          # No later step needs git auth; keep the token out of .git/config
+          # while third-party build dependencies run.
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@v7
         with:
           python-version: "3.12"
+
+      - name: Read package version
+        id: version
+        run: |
+          version=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
 
       - name: Install uv
         uses: astral-sh/setup-uv@v10.3.3
@@ -41,3 +53,30 @@ jobs:
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
+
+  # A separate job, so that only it holds contents: write and it installs
+  # nothing, and so that "Re-run failed jobs" can retry it without
+  # re-uploading to PyPI.
+  release:
+    needs: publish
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      TAG: v${{ needs.publish.outputs.version }}
+    steps:
+      # Tag and release the same commit that was published, so GitHub
+      # Releases stay in step with PyPI. Edit the generated notes afterwards
+      # if a hand-written summary is wanted.
+      - name: Create GitHub Release
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists; skipping."
+            exit 0
+          fi
+          gh release create "$TAG" \
+            --target "$GITHUB_SHA" \
+            --title "CALT $TAG" \
+            --generate-notes
