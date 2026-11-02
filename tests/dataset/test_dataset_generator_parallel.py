@@ -16,7 +16,19 @@ does). A plain module-level generator function would not catch this
 regression, since it's trivially picklable either way.
 """
 
+import sys
+
+import pytest
+
 from calt.dataset.sympy.dataset_generator import DatasetGenerator
+
+# macOS and Windows never use "fork" (it is unsafe on macOS), so closure
+# generators cannot reach the workers there. That is a platform limitation,
+# not a regression.
+pytestmark = pytest.mark.skipif(
+    sys.platform != "linux",
+    reason="closure generators need the fork start method (Linux only)",
+)
 
 
 def _make_instance_generator(multiplier: int):
