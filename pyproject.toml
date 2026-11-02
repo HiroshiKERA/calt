@@ -52,6 +52,25 @@ dev = [
     "pre-commit>=3.0.0",
 ]
 
+[tool.uv]
+# Applies to `uv lock`/`uv sync` and to `uv pip install` run inside this
+# project; it never reaches the published package metadata.
+# torch 2.15 and numpy 2.5.2 are the first releases with cp315 wheels, but
+# torch 2.15's PyPI wheels need CUDA 13 (NVIDIA driver >= 580). Developers'
+# machines run different drivers, so Python < 3.15 keeps the CUDA 12 build
+# of torch 2.9, which also runs on newer drivers.
+# This freezes dev torch at 2.9.x on every `uv lock --upgrade`. Drop the
+# `torch<2.10` line only once every developer who uses a GPU with this lock
+# has driver >= 580 (check with `nvidia-smi`), then run
+# `uv lock --upgrade-package torch`. The two `>= '3.15'` lines only force a
+# separate 3.15 resolution, and can go once a single torch and numpy version
+# covers every supported Python.
+constraint-dependencies = [
+    "torch<2.10; python_version < '3.15'",
+    "torch>=2.15; python_version >= '3.15'",
+    "numpy>=2.5.2; python_version >= '3.15'",
+]
+
 [tool.ruff]
 lint.extend-select = ["I"]
 lint.per-file-ignores = {"src/calt/__init__.py" = ["F401"], "src/calt/data_loader/__init__.py" = ["F401"],"src/calt/generate/__init__.py" = ["F401"],"src/calt/generate_by_sage/__init__.py" = ["F401"],"src/calt/trainer/__init__.py" = ["F401"],"src/calt/data_loader/utils/__init__.py" = ["F401"],"src/calt/generator/__init__.py" = ["F401"],"src/calt/generator/sagemath/__init__.py" = ["F401"],"src/calt/generator/sympy/__init__.py" = ["F401"]}

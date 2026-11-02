@@ -35,7 +35,7 @@ CALT can be installed via `pip`:
 pip install calt-x
 ```
 
-CALT supports Python `>=3.11` (tested in CI on 3.11–3.14).
+CALT supports Python `>=3.11` (tested in CI on 3.11–3.15).
 
 We highly recommend using the
 [CALT codebase](https://github.com/HiroshiKERA/calt-codebase) – a comprehensive template
