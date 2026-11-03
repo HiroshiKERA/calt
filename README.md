@@ -25,9 +25,8 @@ deep learning can focus on constructing datasets to train and evaluate the model
 We recommend installing CALT in a dedicated conda environment.
 
 ```bash
-conda create -n calt-env python=3.11
+conda create -n calt-env -c conda-forge "calt-x>=1.5"
 conda activate calt-env
-conda install -c conda-forge calt-x
 ```
 
 Alternatively, install it from PyPI with pip:
