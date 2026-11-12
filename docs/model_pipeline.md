@@ -165,7 +165,7 @@ model:
 
 **Factory contract.** An input-embedding factory receives at least `vocab_size` and `d_model` (extra config keys are forwarded as kwargs) and returns an `nn.Module` mapping `input_ids` of shape `(batch, seq)` to `(batch, seq, d_model)`. A positional-embedding factory receives at least `d_model` and `max_len` and returns an `nn.Module` mapping `(batch, seq, d_model)` to `(batch, seq, d_model)` (or `None` for "no positional embedding"). An unknown type raises `ValueError` listing the supported names.
 
-These hooks apply to the `generic` and `encoder_classifier` models (not `bart`, which is HuggingFace's own model). The `monomial` model honors `use_positional_embedding` but not `input_embedding_type`: its input embedding *is* the monomial embedding. The public helpers are exported from `calt.models`: `register_input_embedding`, `register_positional_embedding`, `get_input_embedding`, `get_positional_embedding`.
+These hooks apply to the `generic`, `decoder_only` and `encoder_classifier` models (not `bart`, which is HuggingFace's own model). The `monomial` model honors `use_positional_embedding` but not `input_embedding_type`: its input embedding *is* the monomial embedding. The public helpers are exported from `calt.models`: `register_input_embedding`, `register_positional_embedding`, `get_input_embedding`, `get_positional_embedding`.
 
 ## ModelRegistry
 
