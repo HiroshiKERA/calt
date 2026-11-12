@@ -44,6 +44,16 @@ def _poly_terms(poly: Any) -> list[tuple[tuple[int, ...], Any]]:
     )
 
 
+def _num_variables(poly: Any) -> int:
+    """Number of variables of the ring a SymPy or SageMath polynomial lives in."""
+    # SymPy PolyElement: .ring.ngens is an int
+    ring = getattr(poly, "ring", None)
+    if ring is not None and isinstance(getattr(ring, "ngens", None), int):
+        return ring.ngens
+    # SageMath polynomial: .parent().ngens() is a method
+    return int(poly.parent().ngens())
+
+
 def _coeff_to_int_or_str(c: Any) -> str:
     """Format coefficient for C token (integer or integer-like)."""
     try:
@@ -56,11 +66,15 @@ def _coeff_to_int_or_str(c: Any) -> str:
 def poly_to_expanded_form(poly: Any) -> str:
     """Convert a single polynomial to expanded form: C<coeff> E<e1> E<e2> ... + ...
 
-    Supports SymPy PolyElement and SageMath polynomial.
+    Supports SymPy PolyElement and SageMath polynomial. The zero polynomial is
+    written as "C0 E0 ... E0", with one E0 per variable.
     """
     terms_list = _poly_terms(poly)
     if not terms_list:
-        return "C0"
+        # The zero polynomial is one term like any other: C0 followed by one E0
+        # per variable. A bare "C0" has no exponent slots, which breaks the
+        # fixed monomial width the monomial embedding relies on.
+        return " ".join(["C0"] + ["E0"] * _num_variables(poly))
 
     parts = []
     for exp_tuple, coeff in terms_list:
