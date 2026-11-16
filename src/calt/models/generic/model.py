@@ -11,7 +11,7 @@ from transformers.modeling_outputs import Seq2SeqLMOutput
 from transformers.utils import logging
 
 from ..input_embeddings import get_input_embedding
-from ..positional_embeddings import get_positional_embedding
+from ..positional_embeddings import get_positional_embedding, position_capacity
 
 logger = logging.get_logger(__name__)
 
@@ -333,6 +333,17 @@ class Transformer(PreTrainedModel):
             encoder_attentions=None,
         )
 
+    def generation_length_limit(self) -> Optional[int]:
+        """Largest ``max_length`` :meth:`generate` honours (None: no limit).
+
+        The decoder input grows to ``max_length`` tokens (BOS plus every
+        generated token but the last), which must fit in the positional
+        embedding.
+        """
+        return position_capacity(
+            self.positional_embedding, self.config.max_input_len * 2
+        )
+
     def generate(
         self,
         input_ids: torch.LongTensor,
@@ -360,11 +371,15 @@ class Transformer(PreTrainedModel):
 
         Returns:
             torch.LongTensor: Completed decoder sequences including BOS/EOS.
+            ``max_length`` is capped at :meth:`generation_length_limit`.
         """
         if pad_token_id is None:
             pad_token_id = self.config.pad_token_id
         if eos_token_id is None:
             eos_token_id = self.config.eos_token_id
+        limit = self.generation_length_limit()
+        if limit is not None:
+            max_length = min(max_length, limit)
 
         batch_size = input_ids.shape[0]
         device = input_ids.device

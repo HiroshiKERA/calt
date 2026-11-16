@@ -19,6 +19,8 @@ from transformers import Trainer as HTrainer
 
 logger = logging.getLogger(__name__)
 
+_DEFAULT_GENERATION_MAX_LENGTH = 512
+
 
 class Trainer(HTrainer):
     """Extension of *HuggingFace* :class:`~transformers.Trainer`.
@@ -186,16 +188,48 @@ class Trainer(HTrainer):
                 f"Successfully saved generation results (step={step}, success_rate={success_rate:.4f})"
             )
         except Exception as e:
-            # Log error but don't fail the evaluation
-            logger.warning(
-                f"Failed to save generation results during evaluation: {e}",
-                exc_info=True,
-            )
+            # Log error but don't fail the evaluation; this runs at every eval
+            # step, so keep the traceback out of the default log level.
+            logger.warning(f"Failed to save generation results during evaluation: {e}")
+            logger.debug("Generation traceback:", exc_info=True)
 
         return metrics
 
+    def _generation_max_length(self, max_length: int | None) -> int:
+        """Resolve ``max_length`` against the model's positional capacity."""
+        limit_fn = getattr(self.model, "generation_length_limit", None)
+        if callable(limit_fn):
+            limit = limit_fn()
+        elif getattr(self.model.config, "model_type", None) == "bart":
+            # HF counts the decoder start token in max_length and never feeds
+            # back the last token, so BART fits max_position_embeddings + 1.
+            limit = self.model.config.max_position_embeddings + 1
+        else:
+            limit = None
+
+        if max_length is None:
+            if limit is None:
+                return _DEFAULT_GENERATION_MAX_LENGTH
+            return min(_DEFAULT_GENERATION_MAX_LENGTH, limit)
+        if limit is not None and max_length > limit:
+            logger.warning(
+                f"max_length={max_length} exceeds what the model's positional "
+                f"embedding allows; capping it at {limit}."
+            )
+            return limit
+        return max_length
+
+    def _generate_kwargs(self) -> dict:
+        """Return extra keyword arguments for ``self.model.generate``."""
+        if getattr(self.model.config, "model_type", None) == "bart":
+            # BART forces BartConfig's default forced_eos_token_id=2 at
+            # max_length, but 2 is a value token in CALT vocabularies (saved
+            # checkpoints carry it too), so force the real EOS instead.
+            return {"forced_eos_token_id": self.model.config.eos_token_id}
+        return {}
+
     def evaluate_and_save_generation(
-        self, max_length: int = 512, step: int | None = None
+        self, max_length: int | None = None, step: int | None = None
     ) -> float:
         """Run greedy/beam-search generation on the evaluation set.
 
@@ -204,7 +238,9 @@ class Trainer(HTrainer):
         exact-match accuracy between the generated and reference sequences.
 
         Args:
-            max_length (int, optional): Maximum generation length. Defaults to 512.
+            max_length (int, optional): Maximum generation length. Defaults to
+                512, or less when the model's positional embedding is shorter;
+                larger values are capped there too.
             step (int, optional): Current training step number. If None, tries to get from self.state.
 
         Returns:
@@ -219,6 +255,8 @@ class Trainer(HTrainer):
             )
             return 0.0
 
+        max_length = self._generation_max_length(max_length)
+        generate_kwargs = self._generate_kwargs()
         all_generated_texts = []
         all_reference_texts = []
 
@@ -245,8 +283,7 @@ class Trainer(HTrainer):
                     input_ids=input_ids,
                     attention_mask=attention_mask,
                     max_length=max_length,
-                    # Optional: specify ``pad_token_id`` / ``eos_token_id`` as
-                    # keyword arguments if the model configuration requires.
+                    **generate_kwargs,
                 )
 
             # generated_ids shape (batch_size, sequence_length)

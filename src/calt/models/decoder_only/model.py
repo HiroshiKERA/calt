@@ -27,7 +27,7 @@ from transformers.modeling_outputs import CausalLMOutput
 from transformers.utils import logging
 
 from ..input_embeddings import get_input_embedding
-from ..positional_embeddings import get_positional_embedding
+from ..positional_embeddings import get_positional_embedding, position_capacity
 
 logger = logging.get_logger(__name__)
 
@@ -355,6 +355,16 @@ class DecoderOnlyTransformer(PreTrainedModel):
             attentions=None,
         )
 
+    def generation_length_limit(self) -> Optional[int]:
+        """Upper bound on the ``max_length`` :meth:`generate` honours (None: no limit).
+
+        Problem and answer share the positional embedding, so generate()
+        also subtracts the batch's longest problem from this, for every row.
+        """
+        return position_capacity(
+            self.positional_embedding, self.config.max_input_len * 2
+        )
+
     def generate(
         self,
         input_ids: torch.LongTensor,
@@ -395,6 +405,20 @@ class DecoderOnlyTransformer(PreTrainedModel):
         device = input_ids.device
         batch, in_width = input_ids.shape
         in_len = self._lengths(attention_mask, in_width, device).expand(batch)
+
+        # The stack grows to the problem plus max_length tokens (BOS and every
+        # generated token but the last), which must fit in the positional
+        # embedding.
+        limit = self.generation_length_limit()
+        if limit is not None:
+            room = limit - int(in_len.max().item())
+            if room < 1:
+                raise ValueError(
+                    f"A problem of {limit - room} tokens leaves no room to generate "
+                    f"within the positional embedding ({limit} positions); "
+                    "increase model.max_sequence_length."
+                )
+            max_length = min(max_length, room)
 
         # The answer opens with BOS, so the buffer holds the problem, that BOS,
         # and room for max_length generated tokens.
