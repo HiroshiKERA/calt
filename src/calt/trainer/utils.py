@@ -17,7 +17,8 @@ def apply_dryrun_settings(cfg: DictConfig) -> None:
     - Sets training epochs to 1
     - Reduces batch sizes to 8 (if larger)
     - Disables multiprocessing (num_workers = 0)
-    - Marks wandb run name/group with "_dryrun" suffix (keeps wandb enabled)
+    - Disables wandb logging (sets ``no_wandb: True``) and prefixes the wandb
+      run name/group with "dryrun-"
     - Limits dataset size (1000 train samples, 100 test samples)
 
     Args:
@@ -46,39 +47,25 @@ def apply_dryrun_settings(cfg: DictConfig) -> None:
     if not hasattr(cfg.train, "save_strategy"):
         cfg.train.save_strategy = "steps"
 
-    # Configure wandb for dryrun
-    # wandb config can be in cfg.wandb or cfg.train.wandb
-    wandb_cfg = None
-    if hasattr(cfg, "wandb"):
-        wandb_cfg = cfg.wandb
-    elif hasattr(cfg.train, "wandb"):
-        wandb_cfg = cfg.train.wandb
-
-    if wandb_cfg is not None:
-        # Keep existing project/group but mark as dryrun
-        original_name = getattr(wandb_cfg, "name", "dryrun")
-        original_group = getattr(wandb_cfg, "group", "dryrun")
-        # Add "dryrun-" prefix to name if not already present
-        if not original_name.startswith("dryrun-"):
-            wandb_cfg.name = f"dryrun-{original_name}"
-        else:
-            wandb_cfg.name = original_name
-        # Add "dryrun-" prefix to group if not already present
-        if not original_group.startswith("dryrun-"):
-            wandb_cfg.group = f"dryrun-{original_group}"
-        else:
-            wandb_cfg.group = original_group
-        # Keep wandb enabled but mark run name/group as dryrun
-        if hasattr(wandb_cfg, "no_wandb"):
-            wandb_cfg.no_wandb = False
-    else:
-        # Create wandb config if it doesn't exist
-        if not hasattr(cfg.train, "wandb"):
-            cfg.train.wandb = OmegaConf.create({})
-        cfg.train.wandb.project = "calt"
-        cfg.train.wandb.group = "dryrun"
-        cfg.train.wandb.name = "dryrun"
-        cfg.train.wandb.no_wandb = False
+    # Never log a dryrun to wandb. The wandb block can be cfg.wandb or
+    # cfg.train.wandb, so disable both. Always make sure cfg.train.wandb
+    # exists: TrainerPipeline.from_io_dict reads only that one, and without
+    # it report_to would fall back to "wandb".
+    if cfg.train.get("wandb") is None:
+        cfg.train.wandb = OmegaConf.create({})
+    wandb_cfgs = [
+        block for block in (cfg.get("wandb"), cfg.train.wandb) if block is not None
+    ]
+    for wandb_cfg in wandb_cfgs:
+        # The run name also becomes the default TrainingArguments.run_name,
+        # so the prefix still marks dryrun outputs.
+        for key in ("name", "group"):
+            value = wandb_cfg.get(key)
+            if value is None:
+                wandb_cfg[key] = "dryrun"
+            elif not str(value).startswith("dryrun-"):
+                wandb_cfg[key] = f"dryrun-{value}"
+        wandb_cfg.no_wandb = True
 
     # Limit dataset size for quick testing
     # IOPipeline uses -1 to load all samples, so set specific limits for dryrun

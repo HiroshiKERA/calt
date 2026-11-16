@@ -5,15 +5,91 @@ This module provides a class-based interface similar to IOPipeline for creating
 trainer instances from configuration files.
 """
 
+import logging
 import os
+import re
+from pathlib import Path
 from typing import Optional
 
+import torch
 from omegaconf import DictConfig
 from torch.utils.data import Dataset
 from transformers import PreTrainedModel, PreTrainedTokenizerFast
 
 from ..io.base import StandardDataCollator
 from .trainer import Trainer
+
+logger = logging.getLogger(__name__)
+
+# Present on Linux whenever the NVIDIA kernel driver is loaded
+_NVIDIA_DRIVER_FILE = Path("/proc/driver/nvidia/version")
+
+
+def _check_training_device(device: torch.device) -> None:
+    """Log the training device, and warn if an NVIDIA GPU sits unused.
+
+    torch only emits a one-time UserWarning when it cannot use the driver,
+    and the HF Trainer then quietly trains on the CPU. The usual cause is a
+    torch build for a newer CUDA than the driver supports: on Linux, PyPI's
+    torch 2.11 and later is built for CUDA 13, which needs driver >= 580.
+    (WSL2 has no /proc/driver/nvidia, so this check stays silent there.)
+    """
+    logger.info("Training device: %s", device)
+    # With CUDA available, the CPU was chosen on purpose (e.g. use_cpu)
+    if device.type != "cpu" or torch.cuda.is_available():
+        return
+    # GPUs hidden on purpose: "", "-1", SLURM's "NoDevFiles", ...
+    visible = os.environ.get("CUDA_VISIBLE_DEVICES")
+    if visible is not None and (
+        visible.strip() == "-1" or not re.search(r"\d|GPU-|MIG-", visible)
+    ):
+        return
+    # A ROCm build is not meant to use the NVIDIA driver
+    if getattr(torch.version, "hip", None):
+        return
+    try:
+        driver_info = _NVIDIA_DRIVER_FILE.read_text()
+    except OSError:
+        return
+    # e.g. "NVRM version: NVIDIA UNIX x86_64 Kernel Module  555.42.06  ..."
+    # or "... Open Kernel Module for x86_64  570.86.15  ..."
+    lines = driver_info.splitlines()
+    match = re.search(r"\b(\d{3,}\.\d+(?:\.\d+)?)\b", lines[0] if lines else "")
+    driver = match.group(1) if match else "unknown version"
+
+    if torch.version.cuda is None:
+        logger.warning(
+            "An NVIDIA GPU is present (driver %s), but torch %s is a CPU-only "
+            "build, so training runs on the CPU. Install a CUDA build of torch "
+            "(see https://pytorch.org/get-started/locally/).",
+            driver,
+            torch.__version__,
+        )
+        return
+    driver_major = int(driver.split(".")[0]) if match else None
+    cuda_major = int(torch.version.cuda.split(".")[0])
+    if cuda_major >= 13 and driver_major is not None and driver_major < 580:
+        logger.warning(
+            "An NVIDIA GPU is present (driver %s), but torch %s is built for "
+            "CUDA %s, which needs NVIDIA driver >= 580, so training runs on the "
+            "CPU. On Linux, PyPI's torch 2.11 and later is built for CUDA 13. "
+            "Upgrade the driver, or install a CUDA 12 build of torch: "
+            '`pip install "torch<2.11"` (Python 3.11-3.14) or '
+            "`pip install torch==2.14.1 --index-url "
+            "https://download.pytorch.org/whl/cu126` (any Python, including 3.15).",
+            driver,
+            torch.__version__,
+            torch.version.cuda,
+        )
+        return
+    logger.warning(
+        "An NVIDIA GPU is present (driver %s), but torch %s (built for CUDA %s) "
+        "cannot use it, so training runs on the CPU. Check that `nvidia-smi` "
+        "works, and in a container, that the GPU is passed through.",
+        driver,
+        torch.__version__,
+        torch.version.cuda,
+    )
 
 
 class TrainerPipeline:
@@ -92,10 +168,16 @@ class TrainerPipeline:
         no_wandb = getattr(wb, "no_wandb", False)
 
         if no_wandb:
+            # Import here to avoid circular import
+            from .loader import report_to_without_wandb
+
+            # report_to is what keeps the WandbCallback away (transformers v5
+            # ignores WANDB_DISABLED); the variable still stops a callback
+            # added by hand on v4.
             os.environ["WANDB_DISABLED"] = "true"
-            # "none" works in both HF v4 and v5 for no reporting
-            if not hasattr(self.config, "report_to"):
-                setattr(self.config, "report_to", "none")
+            self.config.report_to = report_to_without_wandb(
+                self.config.get("report_to")
+            )
             return
 
         os.environ.pop("WANDB_DISABLED", None)
@@ -138,6 +220,7 @@ class TrainerPipeline:
 
         # Load the trainer
         self.trainer = self._loader.load()
+        _check_training_device(self.trainer.args.device)
         return self
 
     def train(self, resume_from_checkpoint: str | bool | None = None) -> None:
@@ -172,8 +255,12 @@ class TrainerPipeline:
         if self.tokenizer is not None:
             self.tokenizer.save_pretrained(output_dir)
 
-    def evaluate_and_save_generation(self, max_length: int = 512) -> float:
-        """Evaluate and save generation results."""
+    def evaluate_and_save_generation(self, max_length: int | None = None) -> float:
+        """Evaluate and save generation results.
+
+        ``max_length`` defaults to 512, capped at the model's positional
+        capacity (see ``Trainer.evaluate_and_save_generation``).
+        """
         if self.trainer is None:
             raise ValueError("Trainer not built. Call build() first.")
         return self.trainer.evaluate_and_save_generation(max_length=max_length)

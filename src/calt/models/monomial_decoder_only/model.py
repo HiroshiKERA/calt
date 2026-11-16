@@ -47,7 +47,7 @@ from ..monomial.model import (
     _build_gid_map,
     _build_local_map,
 )
-from ..positional_embeddings import get_positional_embedding
+from ..positional_embeddings import get_positional_embedding, position_capacity
 
 
 def fold_to_grid(
@@ -538,6 +538,19 @@ class MonomialDecoderOnlyTransformer(PreTrainedModel):
 
         return CausalLMOutput(loss=loss, logits=pred_flat)
 
+    def generation_length_limit(self) -> Optional[int]:
+        """Upper bound on the ``max_length`` :meth:`generate` honours (None: no limit).
+
+        Problem and answer rows share the positional embedding, so generate()
+        also subtracts the batch's longest problem from this, for every row.
+        """
+        capacity = position_capacity(
+            self.positional_embedding, self.config.max_input_len * 2
+        )
+        if capacity is None:
+            return None
+        return (capacity + 1) * self.config.monomial_width
+
     @torch.no_grad()
     def generate(
         self,
@@ -569,6 +582,18 @@ class MonomialDecoderOnlyTransformer(PreTrainedModel):
         max_monomials = max(1, (max_length - 1) // w)
 
         src_len = src_mask.sum(dim=1)  # (B,), also the marker position
+        # The stack grows to the problem rows plus max_monomials rows (the
+        # marker and every monomial but the last).
+        capacity = position_capacity(self.positional_embedding, cfg.max_input_len * 2)
+        if capacity is not None:
+            room = capacity - int(src_len.max().item())
+            if room < 1:
+                raise ValueError(
+                    f"A problem of {capacity - room} monomial rows leaves no room "
+                    f"to generate within the positional embedding ({capacity} "
+                    "positions); increase model.max_sequence_length."
+                )
+            max_monomials = min(max_monomials, room)
 
         # The buffer holds the problem, the answer marker, and room for the
         # generated monomials. Each row writes at its own cursor, since problems

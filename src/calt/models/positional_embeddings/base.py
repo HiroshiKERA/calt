@@ -101,3 +101,20 @@ register_positional_embedding("learned", _make_generic)  # backward-compat alias
 register_positional_embedding("sinusoidal", _make_sinusoidal)
 register_positional_embedding("rope", _make_rope)
 register_positional_embedding("none", _make_none)
+
+
+def position_capacity(
+    positional_embedding: Optional[nn.Module], max_len: int
+) -> Optional[int]:
+    """Return how many positions a positional embedding covers (None: no limit).
+
+    ``max_len`` is the value the model passed to the factory. The built-in
+    embeddings record it as ``max_len``: "generic" and "sinusoidal" raise
+    past it, and "rope" extrapolates past it with angles never seen in
+    training, so generation stays within it as well. A custom embedding
+    without the attribute is assumed to honour the ``max_len`` it was given.
+    No embedding ("none") has no limit.
+    """
+    if positional_embedding is None:
+        return None
+    return getattr(positional_embedding, "max_len", max_len)

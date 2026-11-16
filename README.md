@@ -4,6 +4,8 @@
 
 - [Documentation](https://hiroshikera.github.io/calt/)
 - [Practical Codebase (calt-codebase)](https://github.com/HiroshiKERA/calt-codebase)
+- [Demo Notebook (Google Colab)](https://colab.research.google.com/github/HiroshiKERA/calt/blob/main/examples/demos/minimal_demo.ipynb)
+- [Task Builder (web app)](https://calt.mai2.org/)
 
 CALT is available as the Python package `calt-x`. For practical examples and
 project templates built with CALT, see
@@ -25,9 +27,8 @@ deep learning can focus on constructing datasets to train and evaluate the model
 We recommend installing CALT in a dedicated conda environment.
 
 ```bash
-conda create -n calt-env python=3.11
+conda create -n calt-env -c conda-forge "calt-x>=1.5"
 conda activate calt-env
-conda install -c conda-forge calt-x
 ```
 
 Alternatively, install it from PyPI with pip:
@@ -36,7 +37,14 @@ Alternatively, install it from PyPI with pip:
 pip install calt-x
 ```
 
-CALT supports Python `>=3.11` (tested in CI on 3.11–3.14).
+CALT supports Python `>=3.11` (tested in CI on 3.11–3.15).
+
+**GPU:** On Linux, PyPI's torch 2.11 and later is built for CUDA 13 and needs
+NVIDIA driver 580 or newer. With an older driver, training falls back to the
+CPU and CALT logs a warning. Upgrade the driver, or install a CUDA 12 build of
+torch: `pip install "torch<2.11"` (Python 3.11–3.14) or
+`pip install torch==2.14.1 --index-url https://download.pytorch.org/whl/cu126`
+(any Python, including 3.15).
 
 **Optional:** If you use features that depend on SageMath, install SageMath in
 the same conda environment:
@@ -108,6 +116,9 @@ trainer_pipeline.evaluate_and_save_generation()
 See `examples/` for minimal examples. For practical experiments and project
 templates built with CALT, see
 [calt-codebase](https://github.com/HiroshiKERA/calt-codebase).
+The [CALT Task Builder](https://calt.mai2.org/) lets you pick ready-made
+example tasks or define your own generator in your browser, then download a
+ready-to-run CALT project (data generation and training run on your machine).
 
 ### For users without a local GPU
 

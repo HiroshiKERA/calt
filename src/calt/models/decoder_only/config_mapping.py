@@ -88,6 +88,7 @@ def create_decoder_only_config(
         use_positional_embedding=getattr(
             model_config, "use_positional_embedding", "generic"
         ),
+        input_embedding_type=getattr(model_config, "input_embedding_type", "token"),
         embedding_layer_norm=getattr(model_config, "embedding_layer_norm", True),
         dropout=getattr(model_config, "dropout", 0.1),
         activation=getattr(model_config, "activation", "relu"),

@@ -60,7 +60,7 @@ dataset:
     | `save_text` | Whether to write human-readable `.txt` files (`text_raw.txt`, etc.). |
     | `save_json` | Whether to write `.jsonl` files preserving the nested Python structure. |
 
-Under the hood, [DatasetPipeline](dataset_generator.md#calt.dataset.pipeline.DatasetPipeline) resolves the appropriate `DatasetGenerator` for the chosen `backend` and uses the common [DatasetWriter](dataset_generator.md#datasetwriter); both are configured from the same options.
+Under the hood, [DatasetPipeline](dataset_generator.md#calt.dataset.pipeline.DatasetPipeline) resolves the appropriate `DatasetGenerator` for the chosen `backend` and uses the common [DatasetWriter](dataset_generator.md#calt.dataset.utils.dataset_writer.DatasetWriter); both are configured from the same options.
 
 ## `train.yaml` – model and training (`ModelPipeline`, `TrainerPipeline`)
 
@@ -142,7 +142,7 @@ train:
 ??? "`model` — Passed to ModelPipeline.from_io_dict"
     | Name | Description |
     |--------|-------------|
-    | `model_type` | Model architecture: `generic`, `bart`, `encoder_classifier` (encoder-only single-token classification; alias `encoder_only`), `monomial`, or `decoder_only` (causal, one stack; alias `decoder`). See [Model pipeline](model_pipeline.md). |
+    | `model_type` | Model architecture: `generic`, `bart`, `encoder_classifier` (encoder-only single-token classification; alias `encoder_only`), `monomial` (alias `monomial_transformer`), `decoder_only` (causal, one stack; alias `decoder`), or `monomial_decoder_only` (causal, one position per monomial; alias `monomial_decoder`). See [Model pipeline](model_pipeline.md). |
     | `num_encoder_layers`, `num_encoder_heads` | Encoder depth and attention heads. |
     | `num_decoder_layers`, `num_decoder_heads` | Decoder depth and attention heads (ignored by `encoder_classifier`). |
     | `d_model` | Hidden size (embedding dimension). |
@@ -162,7 +162,8 @@ train:
     | `warmup_ratio` | Fraction of training steps used for a linear warmup from 0 to `learning_rate` (0 to 1). |
     | `batch_size` | Per-device training batch size. With multiple GPUs, this is divided by the number of devices and passed as `per_device_train_batch_size`. |
     | `test_batch_size` | Per-device evaluation batch size. Similarly passed as `per_device_eval_batch_size`. |
-    | `lr_scheduler_type` | Learning rate schedule. Use `"linear"` or `"constant"`. Defaults to `"linear"` if not set. |
+    | `lr_scheduler_type` | Learning rate schedule, passed to HuggingFace `TrainingArguments.lr_scheduler_type` (e.g. `"linear"`, `"cosine"`, `"constant"`). Any name of the installed transformers' `SchedulerType` works; an unknown name raises an error. Defaults to `"linear"` if not set (or null). `constant`, `reduce_lr_on_plateau` and `greedy` ignore `warmup_ratio`. |
+    | `lr_scheduler_kwargs` | Extra arguments for the scheduler, passed to `TrainingArguments.lr_scheduler_kwargs`. Some schedulers require them: e.g. `cosine_with_min_lr` requires `min_lr` or `min_lr_rate`, and `warmup_stable_decay` requires `num_decay_steps`. Missing arguments raise an error when the trainer is built. |
     | `max_grad_norm` | Maximum gradient norm for clipping. |
     | `optimizer` | Optimizer name (passed to HuggingFace `optim`). |
     | `num_workers` | Number of DataLoader worker processes (`dataloader_num_workers`). |
@@ -187,9 +188,9 @@ train:
     | `group` | Logical experiment group (e.g. task name). |
     | `name` | Run identifier shown in the UI. |
     | `tags` | Optional list of tags. |
-    | `no_wandb` | If true, disable WandB logging. |
+    | `no_wandb` | If true, disable WandB logging: `wandb` is removed from `report_to`, and other loggers such as tensorboard are kept. |
 
-The trainer pipeline sets the corresponding environment variables and ensures `TrainingArguments.report_to` includes `"wandb"` when WandB is configured.
+The trainer pipeline sets the corresponding environment variables and reports to `"wandb"` by default when WandB is enabled. `apply_dryrun_settings` (the `--dryrun` flag of the example scripts) always sets `no_wandb: true`, so a dryrun never logs to WandB.
 
 ## `lexer.yaml` – IO and vocabulary (`IOPipeline`)
 

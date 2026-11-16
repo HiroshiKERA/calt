@@ -49,7 +49,7 @@ import torch.nn as nn
 from transformers import PretrainedConfig, PreTrainedModel
 from transformers.modeling_outputs import Seq2SeqLMOutput
 
-from ..positional_embeddings import get_positional_embedding
+from ..positional_embeddings import get_positional_embedding, position_capacity
 
 
 class MonomialTransformerConfig(PretrainedConfig):
@@ -581,6 +581,20 @@ class MonomialTransformer(PreTrainedModel):
 
         return Seq2SeqLMOutput(loss=loss, logits=pred_flat)
 
+    def generation_length_limit(self) -> Optional[int]:
+        """Largest ``max_length`` :meth:`generate` honours (None: no limit).
+
+        generate() emits ``(max_length - 1) // monomial_width`` monomials, and
+        the decoder input (BOS plus every monomial but the last) must fit in
+        the positional embedding, which counts monomial rows.
+        """
+        capacity = position_capacity(
+            self.positional_embedding, self.config.max_input_len * 2
+        )
+        if capacity is None:
+            return None
+        return (capacity + 1) * self.config.monomial_width
+
     @torch.no_grad()
     def generate(
         self,
@@ -612,6 +626,9 @@ class MonomialTransformer(PreTrainedModel):
         w = cfg.monomial_width
         eos_class = cfg.num_follow_classes - 1
         max_monomials = max(1, (max_length - 1) // w)
+        capacity = position_capacity(self.positional_embedding, cfg.max_input_len * 2)
+        if capacity is not None:
+            max_monomials = min(max_monomials, capacity)
 
         finished = torch.zeros(B, dtype=torch.bool, device=device)
         gen_grid: Optional[torch.Tensor] = None

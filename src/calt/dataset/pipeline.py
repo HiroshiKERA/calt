@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Callable
+
 from omegaconf import DictConfig
 
 from .backends import get_backend_classes
@@ -26,8 +28,8 @@ class DatasetPipeline:
 
     def __init__(
         self,
-        instance_generator,
-        statistics_calculator,
+        instance_generator: Callable,
+        statistics_calculator: Callable | None,
         save_dir: str,
         save_text: bool,
         save_json: bool,
@@ -75,8 +77,8 @@ class DatasetPipeline:
     def from_config(
         cls,
         config: DictConfig,
-        instance_generator,
-        statistics_calculator=None,
+        instance_generator: Callable,
+        statistics_calculator: Callable | None = None,
     ) -> "DatasetPipeline":
         """Build a DatasetPipeline from a DictConfig.
 

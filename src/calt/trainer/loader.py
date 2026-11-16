@@ -10,17 +10,20 @@ import math
 from abc import ABC, abstractmethod
 from typing import Any, Optional
 
+import torch
 import transformers
-from omegaconf import DictConfig
+from omegaconf import DictConfig, ListConfig, OmegaConf
 from torch.utils.data import Dataset
 from transformers import (
     PreTrainedModel,
     PreTrainedTokenizerFast,
     TrainingArguments,
+    get_scheduler,
 )
 from transformers import (
     Trainer as HfTrainer,
 )
+from transformers.integrations import get_available_reporting_integrations
 
 from ..io.base import StandardDataCollator
 from .trainer import Trainer
@@ -28,6 +31,46 @@ from .utils import count_cuda_devices
 
 # Default TrainingArguments for reference
 _DEFAULT_TRAINING_ARGS = TrainingArguments(output_dir="./tmp")
+
+
+def _check_lr_scheduler(args: TrainingArguments) -> None:
+    """Build the scheduler once on a dummy optimizer to fail before training.
+
+    Missing scheduler arguments (e.g. min_lr for cosine_with_min_lr) would
+    otherwise only raise inside trainer.train(), after data and model are built.
+    """
+    optimizer = torch.optim.SGD([torch.nn.Parameter(torch.zeros(1))], lr=1.0)
+    try:
+        get_scheduler(
+            args.lr_scheduler_type,
+            optimizer,
+            num_warmup_steps=0,
+            num_training_steps=1,
+            scheduler_specific_kwargs=args.lr_scheduler_kwargs,
+        )
+    except (TypeError, ValueError) as e:
+        raise ValueError(
+            f"train.lr_scheduler_type={args.lr_scheduler_type.value!r} cannot be "
+            f"built with train.lr_scheduler_kwargs={args.lr_scheduler_kwargs}: {e}"
+        ) from e
+
+
+def report_to_without_wandb(report_to: Any) -> str | list[str]:
+    """Return ``report_to`` with wandb removed, or ``"none"`` if nothing is left.
+
+    ``"all"`` is expanded to the installed integrations, so other loggers such
+    as tensorboard keep working. HF treats ``"none"`` and ``[]`` alike;
+    ``"none"`` is the documented spelling in both v4 and v5.
+    """
+    if report_to is None:
+        return "none"
+    if isinstance(report_to, ListConfig):
+        report_to = OmegaConf.to_container(report_to, resolve=True)
+    names = [report_to] if isinstance(report_to, str) else list(report_to)
+    if "all" in names:
+        names += get_available_reporting_integrations()
+    names = [n for n in dict.fromkeys(names) if n not in ("all", "none", "wandb")]
+    return names or "none"
 
 
 class TrainerLoader(ABC):
@@ -130,23 +173,37 @@ class StandardTrainerLoader(TrainerLoader):
             train_batch_size = self.calt_config.batch_size
             test_batch_size = self.calt_config.test_batch_size
 
-        # Determine lr_scheduler_type
+        # Pass the scheduler name through: TrainingArguments checks it against
+        # the SchedulerType names of the installed transformers version.
         lr_scheduler_type = (
-            "constant"
-            if getattr(self.calt_config, "lr_scheduler_type", "linear") == "constant"
-            else "linear"
+            getattr(self.calt_config, "lr_scheduler_type", None) or "linear"
         )
+        # Some schedulers need extra arguments, e.g. cosine_with_min_lr
+        # requires min_lr or min_lr_rate.
+        lr_scheduler_kwargs = getattr(self.calt_config, "lr_scheduler_kwargs", None)
+        if isinstance(lr_scheduler_kwargs, DictConfig):
+            lr_scheduler_kwargs = OmegaConf.to_container(
+                lr_scheduler_kwargs, resolve=True
+            )
+        elif lr_scheduler_kwargs is not None and not isinstance(
+            lr_scheduler_kwargs, (dict, str)
+        ):
+            raise TypeError(
+                "train.lr_scheduler_kwargs must be a mapping, got "
+                f"{type(lr_scheduler_kwargs).__name__}"
+            )
 
         # Determine report_to (wandb or no reporting)
         report_to = getattr(self.calt_config, "report_to", "wandb")
+        if isinstance(report_to, ListConfig):
+            # TrainingArguments checks isinstance(report_to, list)
+            report_to = OmegaConf.to_container(report_to, resolve=True)
         if hasattr(self.calt_config, "wandb") and getattr(
             self.calt_config.wandb, "no_wandb", False
         ):
-            # Use "none" so both v4 (accepts str "none") and v5 (accepts None/"none") work.
-            # Do not use []: in some v4 builds it can end up as [[]] and raise.
-            report_to = getattr(self.calt_config, "report_to", "none")
-            if report_to is None or report_to == []:
-                report_to = "none"
+            report_to = report_to_without_wandb(
+                getattr(self.calt_config, "report_to", None)
+            )
 
         # Determine run_name from wandb config or explicit run_name
         run_name = getattr(self.calt_config, "run_name", None)
@@ -178,6 +235,7 @@ class StandardTrainerLoader(TrainerLoader):
                 _DEFAULT_TRAINING_ARGS.gradient_accumulation_steps,
             ),
             "lr_scheduler_type": lr_scheduler_type,
+            "lr_scheduler_kwargs": lr_scheduler_kwargs or {},
             "max_grad_norm": getattr(
                 self.calt_config, "max_grad_norm", _DEFAULT_TRAINING_ARGS.max_grad_norm
             ),
@@ -227,6 +285,7 @@ class StandardTrainerLoader(TrainerLoader):
             )
 
         self.training_args = TrainingArguments(**kwargs)
+        _check_lr_scheduler(self.training_args)
         return self.training_args
 
     def build_trainer(self) -> Trainer:

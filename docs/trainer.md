@@ -15,7 +15,7 @@ saving.
 
 ## TrainerPipeline
 
-The main entry point for building a trainer from config is `TrainerPipeline`. Use `TrainerPipeline.from_io_dict(cfg.train, model, io_dict)` then `.build()` to obtain a pipeline; call `.train()` to run training and `.evaluate_and_save_generation()` for evaluation.
+The main entry point for building a trainer from config is `TrainerPipeline`. Use `TrainerPipeline.from_io_dict(cfg.train, model, io_dict)` then `.build()` to obtain a pipeline; call `.train()` to run training and `.evaluate_and_save_generation()` for evaluation. Generation runs up to `max_length` tokens (default 512), capped at what the model's positional embedding allows.
 
 ::: calt.trainer.pipeline.TrainerPipeline
     options:
