@@ -4,6 +4,7 @@
 
 - [Documentation](https://hiroshikera.github.io/calt/)
 - [Practical Codebase (calt-codebase)](https://github.com/HiroshiKERA/calt-codebase)
+- [Demo Notebook (Google Colab)](https://colab.research.google.com/github/HiroshiKERA/calt/blob/main/examples/demos/minimal_demo.ipynb)
 
 CALT is available as the Python package `calt-x`. For practical examples and
 project templates built with CALT, see
