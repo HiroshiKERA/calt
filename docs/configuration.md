@@ -187,9 +187,9 @@ train:
     | `group` | Logical experiment group (e.g. task name). |
     | `name` | Run identifier shown in the UI. |
     | `tags` | Optional list of tags. |
-    | `no_wandb` | If true, disable WandB logging. |
+    | `no_wandb` | If true, disable WandB logging: `wandb` is removed from `report_to`, and other loggers such as tensorboard are kept. |
 
-The trainer pipeline sets the corresponding environment variables and ensures `TrainingArguments.report_to` includes `"wandb"` when WandB is configured.
+The trainer pipeline sets the corresponding environment variables and reports to `"wandb"` by default when WandB is enabled. `apply_dryrun_settings` (the `--dryrun` flag of the example scripts) always sets `no_wandb: true`, so a dryrun never logs to WandB.
 
 ## `lexer.yaml` – IO and vocabulary (`IOPipeline`)
 

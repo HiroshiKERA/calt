@@ -11,7 +11,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Optional
 
 import transformers
-from omegaconf import DictConfig
+from omegaconf import DictConfig, ListConfig, OmegaConf
 from torch.utils.data import Dataset
 from transformers import (
     PreTrainedModel,
@@ -21,6 +21,7 @@ from transformers import (
 from transformers import (
     Trainer as HfTrainer,
 )
+from transformers.integrations import get_available_reporting_integrations
 
 from ..io.base import StandardDataCollator
 from .trainer import Trainer
@@ -28,6 +29,24 @@ from .utils import count_cuda_devices
 
 # Default TrainingArguments for reference
 _DEFAULT_TRAINING_ARGS = TrainingArguments(output_dir="./tmp")
+
+
+def report_to_without_wandb(report_to: Any) -> str | list[str]:
+    """Return ``report_to`` with wandb removed, or ``"none"`` if nothing is left.
+
+    ``"all"`` is expanded to the installed integrations, so other loggers such
+    as tensorboard keep working. HF treats ``"none"`` and ``[]`` alike;
+    ``"none"`` is the documented spelling in both v4 and v5.
+    """
+    if report_to is None:
+        return "none"
+    if isinstance(report_to, ListConfig):
+        report_to = OmegaConf.to_container(report_to, resolve=True)
+    names = [report_to] if isinstance(report_to, str) else list(report_to)
+    if "all" in names:
+        names += get_available_reporting_integrations()
+    names = [n for n in dict.fromkeys(names) if n not in ("all", "none", "wandb")]
+    return names or "none"
 
 
 class TrainerLoader(ABC):
@@ -139,14 +158,15 @@ class StandardTrainerLoader(TrainerLoader):
 
         # Determine report_to (wandb or no reporting)
         report_to = getattr(self.calt_config, "report_to", "wandb")
+        if isinstance(report_to, ListConfig):
+            # TrainingArguments checks isinstance(report_to, list)
+            report_to = OmegaConf.to_container(report_to, resolve=True)
         if hasattr(self.calt_config, "wandb") and getattr(
             self.calt_config.wandb, "no_wandb", False
         ):
-            # Use "none" so both v4 (accepts str "none") and v5 (accepts None/"none") work.
-            # Do not use []: in some v4 builds it can end up as [[]] and raise.
-            report_to = getattr(self.calt_config, "report_to", "none")
-            if report_to is None or report_to == []:
-                report_to = "none"
+            report_to = report_to_without_wandb(
+                getattr(self.calt_config, "report_to", None)
+            )
 
         # Determine run_name from wandb config or explicit run_name
         run_name = getattr(self.calt_config, "run_name", None)
