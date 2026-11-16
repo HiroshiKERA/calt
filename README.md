@@ -4,6 +4,8 @@
 
 - [Documentation](https://hiroshikera.github.io/calt/)
 - [Practical Codebase (calt-codebase)](https://github.com/HiroshiKERA/calt-codebase)
+- [Demo Notebook (Google Colab)](https://colab.research.google.com/github/HiroshiKERA/calt/blob/main/examples/demos/minimal_demo.ipynb)
+- [Task Builder (web app)](https://calt.mai2.org/)
 
 CALT is available as the Python package `calt-x`. For practical examples and
 project templates built with CALT, see
@@ -107,6 +109,9 @@ trainer_pipeline.evaluate_and_save_generation()
 See `examples/` for minimal examples. For practical experiments and project
 templates built with CALT, see
 [calt-codebase](https://github.com/HiroshiKERA/calt-codebase).
+The [CALT Task Builder](https://calt.mai2.org/) lets you pick ready-made
+example tasks or define your own generator in your browser, then download a
+ready-to-run CALT project (data generation and training run on your machine).
 
 ### For users without a local GPU
 
