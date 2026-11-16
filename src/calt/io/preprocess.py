@@ -66,8 +66,10 @@ from omegaconf import DictConfig, OmegaConf
 # invalidated (mismatched hash → regen).
 PREPROCESS_VERSION = "v1"
 
-# Bump independently for the pre-tokenized (input_ids) on-disk format.
-PRETOK_VERSION = "v1"
+# Bump independently for the pre-tokenized (input_ids) on-disk format, or
+# when the lexer changes how the same text is tokenized.
+# v2: digit_group splits numbers regardless of attach_sign.
+PRETOK_VERSION = "v2"
 
 
 # --------------------------------------------------------------------------- #
