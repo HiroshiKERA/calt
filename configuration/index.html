@@ -1325,7 +1325,11 @@ through <a href="../dataset_generator/#calt.dataset.pipeline.DatasetPipeline">Da
 </tr>
 <tr>
 <td><code>lr_scheduler_type</code></td>
-<td>Learning rate schedule. Use <code>"linear"</code> or <code>"constant"</code>. Defaults to <code>"linear"</code> if not set.</td>
+<td>Learning rate schedule, passed to HuggingFace <code>TrainingArguments.lr_scheduler_type</code> (e.g. <code>"linear"</code>, <code>"cosine"</code>, <code>"constant"</code>). Any name of the installed transformers' <code>SchedulerType</code> works; an unknown name raises an error. Defaults to <code>"linear"</code> if not set (or null). <code>constant</code>, <code>reduce_lr_on_plateau</code> and <code>greedy</code> ignore <code>warmup_ratio</code>.</td>
+</tr>
+<tr>
+<td><code>lr_scheduler_kwargs</code></td>
+<td>Extra arguments for the scheduler, passed to <code>TrainingArguments.lr_scheduler_kwargs</code>. Some schedulers require them: e.g. <code>cosine_with_min_lr</code> requires <code>min_lr</code> or <code>min_lr_rate</code>, and <code>warmup_stable_decay</code> requires <code>num_decay_steps</code>. Missing arguments raise an error when the trainer is built.</td>
 </tr>
 <tr>
 <td><code>max_grad_norm</code></td>
@@ -1422,12 +1426,12 @@ through <a href="../dataset_generator/#calt.dataset.pipeline.DatasetPipeline">Da
 </tr>
 <tr>
 <td><code>no_wandb</code></td>
-<td>If true, disable WandB logging.</td>
+<td>If true, disable WandB logging: <code>wandb</code> is removed from <code>report_to</code>, and other loggers such as tensorboard are kept.</td>
 </tr>
 </tbody>
 </table>
 </details>
-<p>The trainer pipeline sets the corresponding environment variables and ensures <code>TrainingArguments.report_to</code> includes <code>"wandb"</code> when WandB is configured.</p>
+<p>The trainer pipeline sets the corresponding environment variables and reports to <code>"wandb"</code> by default when WandB is enabled. <code>apply_dryrun_settings</code> (the <code>--dryrun</code> flag of the example scripts) always sets <code>no_wandb: true</code>, so a dryrun never logs to WandB.</p>
 <h2 id="lexeryaml-io-and-vocabulary-iopipeline"><code>lexer.yaml</code> – IO and vocabulary (<code>IOPipeline</code>)<a class="headerlink" href="#lexeryaml-io-and-vocabulary-iopipeline" title="Permanent link">&para;</a></h2>
 <p>The <code>data</code> block in <code>train.yaml</code> points to <code>lexer.yaml</code> via <code>data.lexer_config</code>. That file controls tokenisation and vocabulary and is loaded by <a href="../io_pipeline/">IOPipeline.from_config</a>. Typical usage:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">omegaconf</span><span class="w"> </span><span class="kn">import</span> <span class="n">OmegaConf</span>

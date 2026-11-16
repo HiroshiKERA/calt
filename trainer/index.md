@@ -81,11 +81,10 @@ def evaluate(
             f"Successfully saved generation results (step={step}, success_rate={success_rate:.4f})"
         )
     except Exception as e:
-        # Log error but don't fail the evaluation
-        logger.warning(
-            f"Failed to save generation results during evaluation: {e}",
-            exc_info=True,
-        )
+        # Log error but don't fail the evaluation; this runs at every eval
+        # step, so keep the traceback out of the default log level.
+        logger.warning(f"Failed to save generation results during evaluation: {e}")
+        logger.debug("Generation traceback:", exc_info=True)
 
     return metrics
 ```
@@ -94,7 +93,7 @@ def evaluate(
 
 ```
 evaluate_and_save_generation(
-    max_length: int = 512, step: int | None = None
+    max_length: int | None = None, step: int | None = None
 ) -> float
 ```
 
@@ -104,7 +103,7 @@ The helper decodes the model outputs into strings, stores the results in `eval_r
 
 Parameters:
 
-| Name | Type | Description | Default | | --- | --- | --- | --- | | `max_length` | `int` | Maximum generation length. Defaults to 512. | `512` | | `step` | `int` | Current training step number. If None, tries to get from self.state. | `None` |
+| Name | Type | Description | Default | | --- | --- | --- | --- | | `max_length` | `int` | Maximum generation length. Defaults to 512, or less when the model's positional embedding is shorter; larger values are capped there too. | `None` | | `step` | `int` | Current training step number. If None, tries to get from self.state. | `None` |
 
 Returns:
 
@@ -114,7 +113,7 @@ Source code in `src/calt/trainer/trainer.py`
 
 ```
 def evaluate_and_save_generation(
-    self, max_length: int = 512, step: int | None = None
+    self, max_length: int | None = None, step: int | None = None
 ) -> float:
     """Run greedy/beam-search generation on the evaluation set.
 
@@ -123,7 +122,9 @@ def evaluate_and_save_generation(
     exact-match accuracy between the generated and reference sequences.
 
     Args:
-        max_length (int, optional): Maximum generation length. Defaults to 512.
+        max_length (int, optional): Maximum generation length. Defaults to
+            512, or less when the model's positional embedding is shorter;
+            larger values are capped there too.
         step (int, optional): Current training step number. If None, tries to get from self.state.
 
     Returns:
@@ -138,6 +139,8 @@ def evaluate_and_save_generation(
         )
         return 0.0
 
+    max_length = self._generation_max_length(max_length)
+    generate_kwargs = self._generate_kwargs()
     all_generated_texts = []
     all_reference_texts = []
 
@@ -164,8 +167,7 @@ def evaluate_and_save_generation(
                 input_ids=input_ids,
                 attention_mask=attention_mask,
                 max_length=max_length,
-                # Optional: specify ``pad_token_id`` / ``eos_token_id`` as
-                # keyword arguments if the model configuration requires.
+                **generate_kwargs,
             )
 
         # generated_ids shape (batch_size, sequence_length)
@@ -239,7 +241,7 @@ def evaluate_and_save_generation(
 
 ## TrainerPipeline
 
-The main entry point for building a trainer from config is `TrainerPipeline`. Use `TrainerPipeline.from_io_dict(cfg.train, model, io_dict)` then `.build()` to obtain a pipeline; call `.train()` to run training and `.evaluate_and_save_generation()` for evaluation.
+The main entry point for building a trainer from config is `TrainerPipeline`. Use `TrainerPipeline.from_io_dict(cfg.train, model, io_dict)` then `.build()` to obtain a pipeline; call `.train()` to run training and `.evaluate_and_save_generation()` for evaluation. Generation runs up to `max_length` tokens (default 512), capped at what the model's positional embedding allows.
 
 Pipeline for creating trainers from configuration.
 
@@ -354,6 +356,7 @@ def build(self) -> "TrainerPipeline":
 
     # Load the trainer
     self.trainer = self._loader.load()
+    _check_training_device(self.trainer.args.device)
     return self
 ```
 
@@ -426,16 +429,22 @@ def save_model(self, output_dir: str | None = None) -> None:
 ### evaluate_and_save_generation
 
 ```
-evaluate_and_save_generation(max_length: int = 512) -> float
+evaluate_and_save_generation(max_length: int | None = None) -> float
 ```
 
 Evaluate and save generation results.
 
+`max_length` defaults to 512, capped at the model's positional capacity (see `Trainer.evaluate_and_save_generation`).
+
 Source code in `src/calt/trainer/pipeline.py`
 
 ```
-def evaluate_and_save_generation(self, max_length: int = 512) -> float:
-    """Evaluate and save generation results."""
+def evaluate_and_save_generation(self, max_length: int | None = None) -> float:
+    """Evaluate and save generation results.
+
+    ``max_length`` defaults to 512, capped at the model's positional
+    capacity (see ``Trainer.evaluate_and_save_generation``).
+    """
     if self.trainer is None:
         raise ValueError("Trainer not built. Call build() first.")
     return self.trainer.evaluate_and_save_generation(max_length=max_length)
