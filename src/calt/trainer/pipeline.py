@@ -92,10 +92,16 @@ class TrainerPipeline:
         no_wandb = getattr(wb, "no_wandb", False)
 
         if no_wandb:
+            # Import here to avoid circular import
+            from .loader import report_to_without_wandb
+
+            # report_to is what keeps the WandbCallback away (transformers v5
+            # ignores WANDB_DISABLED); the variable still stops a callback
+            # added by hand on v4.
             os.environ["WANDB_DISABLED"] = "true"
-            # "none" works in both HF v4 and v5 for no reporting
-            if not hasattr(self.config, "report_to"):
-                setattr(self.config, "report_to", "none")
+            self.config.report_to = report_to_without_wandb(
+                self.config.get("report_to")
+            )
             return
 
         os.environ.pop("WANDB_DISABLED", None)
