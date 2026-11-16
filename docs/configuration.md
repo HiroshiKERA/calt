@@ -162,7 +162,8 @@ train:
     | `warmup_ratio` | Fraction of training steps used for a linear warmup from 0 to `learning_rate` (0 to 1). |
     | `batch_size` | Per-device training batch size. With multiple GPUs, this is divided by the number of devices and passed as `per_device_train_batch_size`. |
     | `test_batch_size` | Per-device evaluation batch size. Similarly passed as `per_device_eval_batch_size`. |
-    | `lr_scheduler_type` | Learning rate schedule. Use `"linear"` or `"constant"`. Defaults to `"linear"` if not set. |
+    | `lr_scheduler_type` | Learning rate schedule, passed to HuggingFace `TrainingArguments.lr_scheduler_type` (e.g. `"linear"`, `"cosine"`, `"constant"`). Any name of the installed transformers' `SchedulerType` works; an unknown name raises an error. Defaults to `"linear"` if not set (or null). `constant`, `reduce_lr_on_plateau` and `greedy` ignore `warmup_ratio`. |
+    | `lr_scheduler_kwargs` | Extra arguments for the scheduler, passed to `TrainingArguments.lr_scheduler_kwargs`. Some schedulers require them: e.g. `cosine_with_min_lr` requires `min_lr` or `min_lr_rate`, and `warmup_stable_decay` requires `num_decay_steps`. Missing arguments raise an error when the trainer is built. |
     | `max_grad_norm` | Maximum gradient norm for clipping. |
     | `optimizer` | Optimizer name (passed to HuggingFace `optim`). |
     | `num_workers` | Number of DataLoader worker processes (`dataloader_num_workers`). |
