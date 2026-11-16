@@ -149,6 +149,7 @@ train:
     | `encoder_ffn_dim`, `decoder_ffn_dim` | Feed-forward dimension in encoder/decoder. |
     | `max_sequence_length` | Maximum sequence length. |
     | `input_embedding_type` | Input (token) embedding to use (default `token`). Built-in: `token`. Register custom ones with `register_input_embedding`; see [Custom embeddings](model_pipeline.md#custom-embeddings-input-and-positional). |
+    | `input_embedding_kwargs` | Mapping of extra keyword arguments for the input-embedding factory (default `{}`). Saved in the model config; values must be JSON-serializable. Not supported by `bart` and the monomial models. |
     | `use_positional_embedding` | Positional embedding to use (default `generic`). Built-in: `generic`/`learned`, `sinusoidal`, `rope`, `none`. Register custom ones with `register_positional_embedding`. |
 
 ??? "`train` — Converted to TrainingArguments by TrainerPipeline"

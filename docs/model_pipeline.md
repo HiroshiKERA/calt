@@ -136,6 +136,7 @@ Both the **input (token) embedding** and the **positional embedding** are chosen
 | config key | default | built-in values |
 |------------|---------|-----------------|
 | `model.input_embedding_type` | `token` | `token` (aliases `default`, `learned`) — a plain `nn.Embedding` |
+| `model.input_embedding_kwargs` | `{}` | extra keyword arguments for the input-embedding factory |
 | `model.use_positional_embedding` | `generic` | `generic`/`learned`, `sinusoidal`, `rope`, `none` |
 
 To plug in your own, register a factory **before building the model** (e.g. at the top of your train script), then select it by name in the config:
@@ -163,9 +164,22 @@ model:
   use_positional_embedding: my_pe
 ```
 
-**Factory contract.** An input-embedding factory receives at least `vocab_size` and `d_model` (extra config keys are forwarded as kwargs) and returns an `nn.Module` mapping `input_ids` of shape `(batch, seq)` to `(batch, seq, d_model)`. A positional-embedding factory receives at least `d_model` and `max_len` and returns an `nn.Module` mapping `(batch, seq, d_model)` to `(batch, seq, d_model)` (or `None` for "no positional embedding"). An unknown type raises `ValueError` listing the supported names.
+**Passing arguments.** The entries of `model.input_embedding_kwargs` are passed to the input-embedding factory as keyword arguments and saved in the model config, so `from_pretrained` rebuilds the same embedding (register the factory before loading). Values must be JSON-serializable, and `vocab_size` / `d_model` cannot be set this way. A value that depends on the tokenizer, such as the token ids of the digits, can be computed after building the IO pipeline:
 
-These hooks apply to the `generic`, `decoder_only` and `encoder_classifier` models (not `bart`, which is HuggingFace's own model). The `monomial` model honors `use_positional_embedding` but not `input_embedding_type`: its input embedding *is* the monomial embedding. The public helpers are exported from `calt.models`: `register_input_embedding`, `register_positional_embedding`, `get_input_embedding`, `get_positional_embedding`.
+```python
+io_dict = IOPipeline.from_config(cfg.data).build()
+tokenizer = io_dict["tokenizer"]
+cfg.model.input_embedding_kwargs = {
+    "digit_ids": [tokenizer.convert_tokens_to_ids(str(d)) for d in range(10)]
+}
+model = ModelPipeline.from_io_dict(cfg.model, io_dict).build()
+```
+
+`convert_tokens_to_ids` returns `None` for a token missing from the vocabulary, so make sure every digit is in it. Set the kwargs before your script saves its config (e.g. `OmegaConf.save(cfg, ".../train.yaml")`), so that `load_from_checkpoint` rebuilds the same embedding.
+
+**Factory contract.** An input-embedding factory receives at least `vocab_size` and `d_model`, plus the entries of `model.input_embedding_kwargs`, and returns an `nn.Module` mapping `input_ids` of shape `(batch, seq)` to `(batch, seq, d_model)`. A positional-embedding factory receives at least `d_model` and `max_len` and returns an `nn.Module` mapping `(batch, seq, d_model)` to `(batch, seq, d_model)` (or `None` for "no positional embedding"). An unknown type raises `ValueError` listing the supported names.
+
+These hooks apply to the `generic`, `decoder_only` and `encoder_classifier` models (not `bart`, which is HuggingFace's own model). The `monomial` model honors `use_positional_embedding` but not `input_embedding_type`: its input embedding *is* the monomial embedding. Setting `input_embedding_kwargs` for `bart` or the monomial models raises an error. The public helpers are exported from `calt.models`: `register_input_embedding`, `register_positional_embedding`, `get_input_embedding`, `get_positional_embedding`.
 
 ## ModelRegistry
 

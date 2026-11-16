@@ -63,6 +63,7 @@ class EncoderClassifierConfig(PretrainedConfig):
         bos_token_id: int = 2,
         use_positional_embedding: str = "generic",
         input_embedding_type: str = "token",
+        input_embedding_kwargs: Optional[dict] = None,
         init_std: float = 0.02,
         seed: int = 42,
         **kwargs,
@@ -87,6 +88,7 @@ class EncoderClassifierConfig(PretrainedConfig):
         self.max_input_len = max_input_len
         self.use_positional_embedding = use_positional_embedding
         self.input_embedding_type = input_embedding_type
+        self.input_embedding_kwargs = dict(input_embedding_kwargs or {})
         self.init_std = init_std
         self.seed = seed
         # Read by the trainer to switch to classification-style metrics.
@@ -103,7 +105,10 @@ class EncoderClassifier(PreTrainedModel):
         self.config = config
 
         self.embedding = get_input_embedding(
-            config.input_embedding_type, config.vocab_size, config.d_model
+            config.input_embedding_type,
+            config.vocab_size,
+            config.d_model,
+            **config.input_embedding_kwargs,
         )
         self.positional_embedding = get_positional_embedding(
             pe_type=config.use_positional_embedding,

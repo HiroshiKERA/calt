@@ -45,6 +45,7 @@ class TransformerConfig(PretrainedConfig):
         bos_token_id: int = 2,
         use_positional_embedding: str = "learned",
         input_embedding_type: str = "token",
+        input_embedding_kwargs: Optional[dict] = None,
         embedding_layer_norm: bool = True,
         init_std: float = 0.02,
         tie_word_embeddings: bool = False,
@@ -71,6 +72,8 @@ class TransformerConfig(PretrainedConfig):
             eos_token_id (int, optional): End-of-sequence token id.
             bos_token_id (int, optional): Beginning-of-sequence token id.
             use_positional_embedding (str, optional): Positional embedding strategy.
+            input_embedding_kwargs (dict | None, optional): Extra keyword arguments
+                for the input-embedding factory (JSON-serializable values).
             embedding_layer_norm (bool, optional): LayerNorm the token+position sum
                 before the encoder/decoder stack, as BART's ``layernorm_embedding``
                 does. Defaults to True: without it the residual stream starts about
@@ -106,6 +109,7 @@ class TransformerConfig(PretrainedConfig):
         self.max_input_len = max_input_len
         self.use_positional_embedding = use_positional_embedding
         self.input_embedding_type = input_embedding_type
+        self.input_embedding_kwargs = dict(input_embedding_kwargs or {})
         self.embedding_layer_norm = embedding_layer_norm
         self.init_std = init_std
         self.tie_word_embeddings = tie_word_embeddings
@@ -128,7 +132,10 @@ class Transformer(PreTrainedModel):
         self.config = config
 
         self.embedding = get_input_embedding(
-            config.input_embedding_type, config.vocab_size, config.d_model
+            config.input_embedding_type,
+            config.vocab_size,
+            config.d_model,
+            **config.input_embedding_kwargs,
         )
 
         # Initialize positional embedding using factory
