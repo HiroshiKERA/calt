@@ -10,6 +10,7 @@ This module provides various positional embedding strategies:
 from .base import (
     POSITIONAL_EMBEDDING_REGISTRY,
     get_positional_embedding,
+    position_capacity,
     register_positional_embedding,
 )
 from .generic import GenericPositionalEmbedding
@@ -25,6 +26,7 @@ __all__ = [
     "LearnedPositionalEmbedding",
     "RotaryPositionalEmbedding",
     "get_positional_embedding",
+    "position_capacity",
     "register_positional_embedding",
     "POSITIONAL_EMBEDDING_REGISTRY",
 ]

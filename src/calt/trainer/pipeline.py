@@ -255,8 +255,12 @@ class TrainerPipeline:
         if self.tokenizer is not None:
             self.tokenizer.save_pretrained(output_dir)
 
-    def evaluate_and_save_generation(self, max_length: int = 512) -> float:
-        """Evaluate and save generation results."""
+    def evaluate_and_save_generation(self, max_length: int | None = None) -> float:
+        """Evaluate and save generation results.
+
+        ``max_length`` defaults to 512, capped at the model's positional
+        capacity (see ``Trainer.evaluate_and_save_generation``).
+        """
         if self.trainer is None:
             raise ValueError("Trainer not built. Call build() first.")
         return self.trainer.evaluate_and_save_generation(max_length=max_length)
