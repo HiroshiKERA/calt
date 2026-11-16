@@ -5,9 +5,11 @@ This module provides a class-based interface similar to IOPipeline for creating
 trainer instances from configuration files.
 """
 
+import importlib.metadata as importlib_metadata
 import logging
 import os
 import re
+import sys
 from pathlib import Path
 from typing import Optional
 
@@ -24,6 +26,28 @@ logger = logging.getLogger(__name__)
 # Present on Linux whenever the NVIDIA kernel driver is loaded
 _NVIDIA_DRIVER_FILE = Path("/proc/driver/nvidia/version")
 
+# Inside a conda environment, PyPI's CUDA build of torch loads the system
+# libstdc++, which can be too old for conda-forge packages (see the README)
+_PYPI_TORCH_NOTE = (
+    "(PyPI's CUDA build of torch can break conda-forge packages such as "
+    "SciPy; see the README)"
+)
+
+
+def _in_conda_env() -> bool:
+    """Return True if this Python runs from a conda environment."""
+    # sys.prefix rather than $CONDA_PREFIX, which may name another env
+    return (Path(sys.prefix) / "conda-meta").is_dir()
+
+
+def _torch_installer() -> Optional[str]:
+    """Return the tool that installed torch ("conda", "pip", "uv", ...)."""
+    try:
+        installer = importlib_metadata.distribution("torch").read_text("INSTALLER")
+    except (importlib_metadata.PackageNotFoundError, OSError):
+        return None
+    return installer.strip().lower() if installer else None
+
 
 def _check_training_device(device: torch.device) -> None:
     """Log the training device, and warn if an NVIDIA GPU sits unused.
@@ -33,6 +57,8 @@ def _check_training_device(device: torch.device) -> None:
     torch build for a newer CUDA than the driver supports: on Linux, PyPI's
     torch 2.11 and later is built for CUDA 13, which needs driver >= 580.
     (WSL2 has no /proc/driver/nvidia, so this check stays silent there.)
+    In a conda environment the advice points at conda-forge's PyTorch,
+    since a pip-installed CUDA torch can break conda-forge packages there.
     """
     logger.info("Training device: %s", device)
     # With CUDA available, the CPU was chosen on purpose (e.g. use_cpu)
@@ -56,30 +82,71 @@ def _check_training_device(device: torch.device) -> None:
     lines = driver_info.splitlines()
     match = re.search(r"\b(\d{3,}\.\d+(?:\.\d+)?)\b", lines[0] if lines else "")
     driver = match.group(1) if match else "unknown version"
+    conda_env = _in_conda_env()
+    # pip and uv always record themselves; anything else (conda, a source
+    # build, no record) is treated as conda's and left to `conda install`
+    pip_torch = conda_env and _torch_installer() in ("pip", "uv")
 
     if torch.version.cuda is None:
+        if not conda_env:
+            advice = (
+                "Install a CUDA build of torch "
+                "(see https://pytorch.org/get-started/locally/)."
+            )
+        elif pip_torch:
+            advice = (
+                "In this conda environment, torch was installed from PyPI; "
+                "replace it with the CUDA build from conda-forge: "
+                "`pip uninstall torch`, then "
+                '`conda install -c conda-forge "pytorch=*=cuda*"` '
+                f"{_PYPI_TORCH_NOTE}."
+            )
+        else:
+            advice = (
+                "In this conda environment, install the CUDA build of PyTorch "
+                'from conda-forge: `conda install -c conda-forge "pytorch=*=cuda*"`.'
+            )
         logger.warning(
             "An NVIDIA GPU is present (driver %s), but torch %s is a CPU-only "
-            "build, so training runs on the CPU. Install a CUDA build of torch "
-            "(see https://pytorch.org/get-started/locally/).",
+            "build, so training runs on the CPU. %s",
             driver,
             torch.__version__,
+            advice,
         )
         return
     driver_major = int(driver.split(".")[0]) if match else None
     cuda_major = int(torch.version.cuda.split(".")[0])
     if cuda_major >= 13 and driver_major is not None and driver_major < 580:
+        if not conda_env:
+            advice = (
+                "On Linux, PyPI's torch 2.11 and later is built for CUDA 13. "
+                "Upgrade the driver, or install a CUDA 12 build of torch: "
+                '`pip install "torch<2.11"` (Python 3.11-3.14) or '
+                "`pip install torch==2.14.1 --index-url "
+                "https://download.pytorch.org/whl/cu126` (any Python, including 3.15)."
+            )
+        elif pip_torch:
+            advice = (
+                "On Linux, PyPI's torch 2.11 and later is built for CUDA 13. "
+                "Upgrade the driver, or replace the PyPI torch with a "
+                "CUDA 12 build from conda-forge: `pip uninstall torch`, then "
+                '`conda install -c conda-forge "pytorch=*=cuda12*"` '
+                f"{_PYPI_TORCH_NOTE}."
+            )
+        else:
+            advice = (
+                "Upgrade the driver, or install a CUDA 12 build of PyTorch from "
+                "conda-forge in this conda environment: "
+                '`conda install -c conda-forge "pytorch=*=cuda12*"`.'
+            )
         logger.warning(
             "An NVIDIA GPU is present (driver %s), but torch %s is built for "
             "CUDA %s, which needs NVIDIA driver >= 580, so training runs on the "
-            "CPU. On Linux, PyPI's torch 2.11 and later is built for CUDA 13. "
-            "Upgrade the driver, or install a CUDA 12 build of torch: "
-            '`pip install "torch<2.11"` (Python 3.11-3.14) or '
-            "`pip install torch==2.14.1 --index-url "
-            "https://download.pytorch.org/whl/cu126` (any Python, including 3.15).",
+            "CPU. %s",
             driver,
             torch.__version__,
             torch.version.cuda,
+            advice,
         )
         return
     logger.warning(
