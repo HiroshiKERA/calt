@@ -55,10 +55,10 @@ dev = [
 [tool.uv]
 # Applies to `uv lock`/`uv sync` and to `uv pip install` run inside this
 # project; it never reaches the published package metadata.
-# torch 2.15 and numpy 2.5.2 are the first releases with cp315 wheels, but
-# torch 2.15's PyPI wheels need CUDA 13 (NVIDIA driver >= 580). Developers'
-# machines run different drivers, so Python < 3.15 keeps the CUDA 12 build
-# of torch 2.9, which also runs on newer drivers.
+# torch 2.15 and numpy 2.5.2 are the first releases with cp315 wheels on PyPI,
+# but torch's Linux wheels on PyPI need CUDA 13 (NVIDIA driver >= 580) from
+# 2.11 on. Developers' machines run different drivers, so Python < 3.15 keeps
+# the CUDA 12 build of torch 2.9, which also runs on newer drivers.
 # This freezes dev torch at 2.9.x on every `uv lock --upgrade`. Drop the
 # `torch<2.10` line only once every developer who uses a GPU with this lock
 # has driver >= 580 (check with `nvidia-smi`), then run

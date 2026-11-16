@@ -39,6 +39,13 @@ pip install calt-x
 
 CALT supports Python `>=3.11` (tested in CI on 3.11–3.15).
 
+**GPU:** On Linux, PyPI's torch 2.11 and later is built for CUDA 13 and needs
+NVIDIA driver 580 or newer. With an older driver, training falls back to the
+CPU and CALT logs a warning. Upgrade the driver, or install a CUDA 12 build of
+torch: `pip install "torch<2.11"` (Python 3.11–3.14) or
+`pip install torch==2.14.1 --index-url https://download.pytorch.org/whl/cu126`
+(any Python, including 3.15).
+
 **Optional:** If you use features that depend on SageMath, install SageMath in
 the same conda environment:
 
