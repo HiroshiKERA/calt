@@ -237,7 +237,7 @@ include_base_vocab: true
     | Name | Description |
     |--------|-------------|
     | `attach_sign` | bool (default true). true = sign is part of the number token; false = sign is a separate token. |
-    | `digit_group` | int (default 0). 0 = no digit grouping; d ≥ 1 = split number into tokens of d digits. |
+    | `digit_group` | int (default 0). 0 = no digit grouping; d ≥ 1 = split number into tokens of d digits, regardless of `attach_sign` and even when the vocabulary has multi-digit numbers. |
     | `allow_float` | bool (default true). Whether to allow decimal numbers (adds `"."` to vocab if needed). |
 
 ??? "`strict`, `include_base_vocab` — Passed to UnifiedLexer"
