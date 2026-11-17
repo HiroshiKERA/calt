@@ -100,7 +100,7 @@ def test_cpu_only_torch_from_conda_gets_conda_advice(
     _check_training_device(torch.device("cpu"))
     (message,) = _warnings(caplog)
     assert "CPU-only build" in message
-    assert 'conda install -c conda-forge "pytorch=*=cuda*"' in message
+    assert 'conda install -c conda-forge "pytorch>=2.6=cuda*"' in message
     assert "pip uninstall" not in message
     assert "pytorch.org" not in message
 
@@ -114,7 +114,7 @@ def test_cpu_only_torch_from_pip_in_conda_env(
     _check_training_device(torch.device("cpu"))
     (message,) = _warnings(caplog)
     assert "`pip uninstall torch`" in message
-    assert 'conda install -c conda-forge "pytorch=*=cuda*"' in message
+    assert 'conda install -c conda-forge "pytorch>=2.6=cuda*"' in message
     assert "SciPy" in message
     assert "pytorch.org" not in message
 
@@ -126,7 +126,7 @@ def test_cuda_13_torch_from_conda_gets_cuda_12_conda_advice(
     _check_training_device(torch.device("cpu"))
     (message,) = _warnings(caplog)
     assert "driver >= 580" in message
-    assert 'conda install -c conda-forge "pytorch=*=cuda12*"' in message
+    assert 'conda install -c conda-forge "pytorch>=2.6=cuda12*"' in message
     assert "pip" not in message
 
 
@@ -136,7 +136,7 @@ def test_cuda_13_torch_from_pip_in_conda_env(unusable_gpu, conda_env, caplog):
     (message,) = _warnings(caplog)
     assert "driver >= 580" in message
     assert "`pip uninstall torch`" in message
-    assert 'conda install -c conda-forge "pytorch=*=cuda12*"' in message
+    assert 'conda install -c conda-forge "pytorch>=2.6=cuda12*"' in message
     assert "torch<2.11" not in message
 
 

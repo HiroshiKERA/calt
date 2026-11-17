@@ -28,23 +28,31 @@ We recommend installing CALT in a dedicated conda environment, with PyTorch
 from conda-forge in the same command:
 
 ```bash
-# With an NVIDIA GPU (the quotes are required)
-conda create -n calt-env -c conda-forge "calt-x>=1.5" "pytorch=*=cuda*"
+# The quotes around the package specs are required
+# With an NVIDIA GPU
+conda create -n calt-env -c conda-forge "calt-x>=1.5" "pytorch>=2.6=cuda*"
 # Without an NVIDIA GPU (including macOS)
-conda create -n calt-env -c conda-forge "calt-x>=1.5" pytorch
+conda create -n calt-env -c conda-forge "calt-x>=1.5" "pytorch>=2.6"
 conda activate calt-env
 # Prints e.g. "12.9 True" with a GPU, "None False" without one
 python -c "import torch; print(torch.version.cuda, torch.cuda.is_available())"
 ```
 
 conda-forge ships CUDA 12 and CUDA 13 builds of PyTorch, and conda picks one
-that your driver supports. If conda cannot see the GPU (e.g. on an HPC login
-node), prefix the command with `CONDA_OVERRIDE_CUDA=12.9`.
+that your driver supports. The GPU command needs NVIDIA driver 525 or newer
+(`nvidia-smi` shows "CUDA Version" 12.0 or higher). With an older driver it
+fails to solve, because conda-forge has no CUDA 11 build of PyTorch `>=2.6`;
+upgrade the driver rather than dropping `>=2.6`, which would bring back the
+problem described below. If conda cannot see the
+GPU (e.g. on an HPC login node), prefix the command with
+`CONDA_OVERRIDE_CUDA=12.9`. Do the same on a Maxwell, Pascal or Volta GPU with
+driver 580 or newer, since the CUDA 13 builds conda would pick do not support
+those GPUs.
 
 **Optional:** If you use features that depend on SageMath, add `sage` to the
 same `conda create` command. In an existing environment, run
-`conda install -c conda-forge sage "pytorch=*=cuda*"` (or `sage pytorch`
-without a GPU).
+`conda install -c conda-forge sage "pytorch>=2.6=cuda*"` (or
+`sage "pytorch>=2.6"` without a GPU).
 
 Do not install torch with pip into a conda environment, and do not run
 `pip install calt-x` there before PyTorch is installed from conda-forge.

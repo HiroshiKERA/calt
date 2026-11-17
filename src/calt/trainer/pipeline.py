@@ -99,13 +99,14 @@ def _check_training_device(device: torch.device) -> None:
                 "In this conda environment, torch was installed from PyPI; "
                 "replace it with the CUDA build from conda-forge: "
                 "`pip uninstall torch`, then "
-                '`conda install -c conda-forge "pytorch=*=cuda*"` '
+                '`conda install -c conda-forge "pytorch>=2.6=cuda*"` '
                 f"{_PYPI_TORCH_NOTE}."
             )
         else:
             advice = (
                 "In this conda environment, install the CUDA build of PyTorch "
-                'from conda-forge: `conda install -c conda-forge "pytorch=*=cuda*"`.'
+                "from conda-forge: "
+                '`conda install -c conda-forge "pytorch>=2.6=cuda*"`.'
             )
         logger.warning(
             "An NVIDIA GPU is present (driver %s), but torch %s is a CPU-only "
@@ -131,14 +132,14 @@ def _check_training_device(device: torch.device) -> None:
                 "On Linux, PyPI's torch 2.11 and later is built for CUDA 13. "
                 "Upgrade the driver, or replace the PyPI torch with a "
                 "CUDA 12 build from conda-forge: `pip uninstall torch`, then "
-                '`conda install -c conda-forge "pytorch=*=cuda12*"` '
+                '`conda install -c conda-forge "pytorch>=2.6=cuda12*"` '
                 f"{_PYPI_TORCH_NOTE}."
             )
         else:
             advice = (
                 "Upgrade the driver, or install a CUDA 12 build of PyTorch from "
                 "conda-forge in this conda environment: "
-                '`conda install -c conda-forge "pytorch=*=cuda12*"`.'
+                '`conda install -c conda-forge "pytorch>=2.6=cuda12*"`.'
             )
         logger.warning(
             "An NVIDIA GPU is present (driver %s), but torch %s is built for "
