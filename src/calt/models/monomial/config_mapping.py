@@ -25,6 +25,7 @@ import re
 
 from omegaconf import DictConfig
 
+from ..config_utils import reject_unsupported_keys
 from .model import MonomialTransformerConfig
 
 _COEFF_RE = re.compile(r"C(-?\d+)(?:_(.+))?$")
@@ -82,6 +83,7 @@ def create_monomial_config(
     tokenizer=None,
 ) -> MonomialTransformerConfig:
     """Create a MonomialTransformerConfig from cfg.model and the tokenizer."""
+    reject_unsupported_keys(model_config, ("input_embedding_kwargs",), "monomial")
     if tokenizer is None:
         raise ValueError(
             "The monomial model requires the tokenizer to derive its "

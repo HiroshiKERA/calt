@@ -55,6 +55,7 @@ class DecoderOnlyConfig(PretrainedConfig):
         bos_token_id: int = 2,
         use_positional_embedding: str = "generic",
         input_embedding_type: str = "token",
+        input_embedding_kwargs: Optional[dict] = None,
         embedding_layer_norm: bool = True,
         init_std: float = 0.02,
         tie_word_embeddings: bool = False,
@@ -84,6 +85,8 @@ class DecoderOnlyConfig(PretrainedConfig):
                 embedding in the registry. The default ``"token"`` is a plain
                 ``nn.Embedding``; other names must be registered with
                 ``register_input_embedding`` before the model is built.
+            input_embedding_kwargs (dict | None, optional): Extra keyword arguments
+                for the input-embedding factory (JSON-serializable values).
             embedding_layer_norm (bool, optional): Normalize token+position before
                 the stack, as BART does.
             init_std (float, optional): Standard deviation for weight init.
@@ -111,6 +114,7 @@ class DecoderOnlyConfig(PretrainedConfig):
         self.max_input_len = max_input_len
         self.use_positional_embedding = use_positional_embedding
         self.input_embedding_type = input_embedding_type
+        self.input_embedding_kwargs = dict(input_embedding_kwargs or {})
         self.embedding_layer_norm = embedding_layer_norm
         self.init_std = init_std
         self.tie_word_embeddings = tie_word_embeddings
@@ -133,7 +137,10 @@ class DecoderOnlyTransformer(PreTrainedModel):
         self.config = config
 
         self.embedding = get_input_embedding(
-            config.input_embedding_type, config.vocab_size, config.d_model
+            config.input_embedding_type,
+            config.vocab_size,
+            config.d_model,
+            **config.input_embedding_kwargs,
         )
 
         self.positional_embedding = get_positional_embedding(
