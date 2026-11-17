@@ -27,6 +27,7 @@ from transformers.modeling_outputs import CausalLMOutput
 from transformers.utils import logging
 
 from ..input_embeddings import get_input_embedding
+from ..losses import attach_loss, compute_loss
 from ..positional_embeddings import get_positional_embedding, position_capacity
 
 logger = logging.get_logger(__name__)
@@ -60,6 +61,8 @@ class DecoderOnlyConfig(PretrainedConfig):
         init_std: float = 0.02,
         tie_word_embeddings: bool = False,
         seed: int = 42,
+        loss_type: str = "cross_entropy",
+        loss_kwargs: Optional[dict] = None,
         **kwargs,
     ):
         """Configure layer sizes, embeddings, and tokenizer metadata.
@@ -92,6 +95,12 @@ class DecoderOnlyConfig(PretrainedConfig):
             init_std (float, optional): Standard deviation for weight init.
             tie_word_embeddings (bool, optional): Whether to share embed/lm_head.
             seed (int, optional): Seed used for deterministic initialization.
+            loss_type (str, optional): Name of the training loss in the registry.
+                The default ``"cross_entropy"`` is token cross-entropy; other
+                names must be registered with ``register_loss`` before the
+                model is built or loaded.
+            loss_kwargs (dict | None, optional): Extra keyword arguments for the
+                loss (JSON-serializable values).
             **kwargs: Extra options passed to `PretrainedConfig`.
         """
         super().__init__(
@@ -119,6 +128,8 @@ class DecoderOnlyConfig(PretrainedConfig):
         self.init_std = init_std
         self.tie_word_embeddings = tie_word_embeddings
         self.seed = seed
+        self.loss_type = loss_type
+        self.loss_kwargs = dict(loss_kwargs or {})
 
 
 class DecoderOnlyTransformer(PreTrainedModel):
@@ -186,6 +197,8 @@ class DecoderOnlyTransformer(PreTrainedModel):
         torch.manual_seed(self.seed)
         if torch.cuda.is_available():
             torch.cuda.manual_seed_all(self.seed)
+        # Last, so that a loss module never changes the initial weights above.
+        attach_loss(self, config)
 
     def _init_weights(self, module):
         """Apply CALT-specific initialization to supported modules."""
@@ -297,6 +310,7 @@ class DecoderOnlyTransformer(PreTrainedModel):
         decoder_attention_mask: Optional[torch.Tensor] = None,
         labels: Optional[torch.LongTensor] = None,
         return_dict: Optional[bool] = None,
+        extra_targets: Optional[Dict[str, torch.Tensor]] = None,
         **kwargs,
     ) -> Dict[str, Any]:
         """Run the causal stack over ``[problem, solution]``.
@@ -310,6 +324,9 @@ class DecoderOnlyTransformer(PreTrainedModel):
             labels (torch.LongTensor | None): Targets aligned with
                 `decoder_input_ids`, padding marked as -100.
             return_dict (bool | None): Whether to return a dataclass output.
+            extra_targets (dict | None): Extra labels from the load preprocessor,
+                passed to the loss by name. (Not named "*label*", which
+                transformers would treat as a label column.)
             **kwargs: Extra arguments kept for HF Trainer compatibility.
 
         Returns:
@@ -347,8 +364,7 @@ class DecoderOnlyTransformer(PreTrainedModel):
 
         loss = None
         if labels is not None:
-            loss_fct = nn.CrossEntropyLoss(ignore_index=-100)
-            loss = loss_fct(logits.reshape(-1, logits.size(-1)), labels.reshape(-1))
+            loss = compute_loss(self, logits, labels, target_hidden, extra_targets)
 
         if not return_dict:
             return (loss, logits) if loss is not None else (logits,)

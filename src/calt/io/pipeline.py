@@ -15,6 +15,7 @@ from .base import (
     StandardDataCollator,
     StandardDataset,
 )
+from .extra_labels import build_spec, check_lengths
 from .preprocessor import (
     AbstractPreProcessor,
     DatasetLoadPreprocessor,
@@ -219,6 +220,33 @@ class IOPipeline:
             logger.error(error_msg)
             raise ValueError(error_msg)
 
+    def _check_extra_labels(
+        self, train_dataset: StandardDataset, test_dataset: StandardDataset
+    ) -> dict | None:
+        """Check the extra labels of both splits before training starts.
+
+        Both splits must return the same names, and every sequence label must
+        match its answer's length. Returns the ``{name: (kind, dtype)}`` spec
+        for the collator, or None when there are no extra labels.
+        """
+        splits = [("train", train_dataset), ("test", test_dataset)]
+        given = [name for name, ds in splits if ds.extra_labels is not None]
+        if not given:
+            return None
+        if len(given) == 1:
+            other = "test" if given[0] == "train" else "train"
+            raise ValueError(
+                f"The {given[0]} data has extra labels but the {other} data does "
+                "not; use the same load preprocessor for both (extra labels are "
+                "not supported with pre-tokenized caches)."
+            )
+        spec = build_spec((name, ds.extra_labels) for name, ds in splits)
+        for name, ds in splits:
+            check_lengths(
+                ds.target_texts, ds.extra_labels, spec, self.preprocessor, name
+            )
+        return spec
+
     def build(self):
         """
         Build the data pipeline by loading the raw text data, applying the preprocessor, and setting the collator.
@@ -417,10 +445,14 @@ class IOPipeline:
         # e.g.,
         # processed data: "C2 E1 E2 + C5 E1 E0 + C-3 E0 E0"
         # tokens: ["C2", "E1", "E2", "C5", "E1", "E0", "C-3", "E0", "E0"]
+        extra_label_spec = self._check_extra_labels(train_dataset, test_dataset)
+
         if self.vocab_config is None:
             raise ValueError("vocab_config must be provided to build the tokenizer")
         tokenizer = get_tokenizer(vocab_config=self.vocab_config)
-        data_collator = StandardDataCollator(tokenizer=tokenizer)
+        data_collator = StandardDataCollator(
+            tokenizer=tokenizer, extra_label_spec=extra_label_spec
+        )
 
         self.train_dataset = train_dataset
         self.test_dataset = test_dataset

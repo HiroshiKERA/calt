@@ -7,7 +7,7 @@ mirroring create_transformer_config but ignoring the decoder-only fields.
 
 from omegaconf import DictConfig
 
-from ..config_utils import input_embedding_kwargs
+from ..config_utils import input_embedding_kwargs, loss_settings
 from .model import EncoderClassifierConfig
 
 
@@ -54,6 +54,7 @@ def create_encoder_classifier_config(
         ),
         input_embedding_type=getattr(model_config, "input_embedding_type", "token"),
         input_embedding_kwargs=input_embedding_kwargs(model_config),
+        **loss_settings(model_config),
         dropout=getattr(model_config, "dropout", 0.1),
         activation=getattr(model_config, "activation", "relu"),
         init_std=getattr(model_config, "init_std", 0.02),
