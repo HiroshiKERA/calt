@@ -98,6 +98,11 @@ def load_from_checkpoint(
     This function loads train.yaml from save_dir, reconstructs IOPipeline, ModelPipeline,
     and TrainerPipeline, and optionally loads the saved model and tokenizer.
 
+    A model trained with a custom ``model.loss_type`` or input embedding needs
+    ``register_loss`` / ``register_input_embedding`` to be called before this.
+    A load preprocessor set in Python (and so its extra labels) is not part of
+    train.yaml and is not restored.
+
     Args:
         save_dir: Directory containing train.yaml, model/, and tokenizer/.
         resume_from_checkpoint: If True, load saved model and tokenizer. If False, create new model.

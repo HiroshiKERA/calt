@@ -54,13 +54,18 @@ class Trainer(HTrainer):
             inputs (dict[str, Any]): Batch dict returned by the data loader.
 
         Returns:
-            dict[str, Any]: The same dictionary with all tensors on the target device.
+            dict[str, Any]: The same dictionary with all tensors on the target
+            device, including those in nested dicts such as ``extra_targets``.
         """
 
-        return {
-            k: (v.to(self.args.device) if isinstance(v, torch.Tensor) else v)
-            for k, v in inputs.items()
-        }
+        def move(value):
+            if isinstance(value, torch.Tensor):
+                return value.to(self.args.device)
+            if isinstance(value, dict):
+                return {k: move(v) for k, v in value.items()}
+            return value
+
+        return {k: move(v) for k, v in inputs.items()}
 
     def _compute_metrics(self, eval_preds, ignore_index=-100):
         """Compute metrics at each prediction step.

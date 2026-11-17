@@ -4,8 +4,9 @@ import torch
 from torch.utils.data import Dataset
 from transformers import PreTrainedTokenizerFast as Tokenizer
 
+from . import extra_labels as extra_labels_module
 from .preprocessor import AbstractPreProcessor
-from .read import load_dataset_texts, read_data_from_file
+from .read import load_dataset_samples, read_data_from_file
 
 # Set up logger for this module
 logger = logging.getLogger(__name__)
@@ -38,8 +39,9 @@ class StandardDataset(Dataset):
         Returns:
             StandardDataset: Loaded dataset instance.
         """
+        extra_labels = None
         if use_jsonl or use_pickle or dataset_load_preprocessor is not None:
-            input_texts, target_texts = load_dataset_texts(
+            input_texts, target_texts, extra_labels = load_dataset_samples(
                 data_path,
                 max_samples=max_samples,
                 use_jsonl=use_jsonl,
@@ -52,6 +54,7 @@ class StandardDataset(Dataset):
             input_texts=input_texts,
             target_texts=target_texts,
             preprocessor=preprocessor,
+            extra_labels=extra_labels,
         )
 
     def __init__(
@@ -59,17 +62,36 @@ class StandardDataset(Dataset):
         input_texts: list[str],
         target_texts: list[str],
         preprocessor: AbstractPreProcessor | None = None,
+        extra_labels: list[dict] | None = None,
         **extra_fields,
     ) -> None:
+        """Hold the samples of one split.
+
+        Args:
+            input_texts: Problem texts (or pre-tokenized id lists).
+            target_texts: Answer texts (or pre-tokenized id lists).
+            preprocessor: Lexer applied in ``__getitem__``; None returns the
+                samples as they are.
+            extra_labels: One dict of extra labels per sample, from a load
+                preprocessor that returns them (see ``calt.io.extra_labels``),
+                or None.
+            **extra_fields: Other per-sample fields, kept for compatibility.
+        """
         self.input_texts = input_texts
         self.target_texts = target_texts
         self.preprocessor = preprocessor
+        self.extra_labels = extra_labels
         self.extra_fields = extra_fields
 
         num_samples = len(self.input_texts)
         if len(self.target_texts) != num_samples:
             raise ValueError(
                 "input_texts and target_texts must have the same number of samples."
+            )
+        if extra_labels is not None and len(extra_labels) != num_samples:
+            raise ValueError(
+                f"extra_labels has {len(extra_labels)} samples, but {num_samples} "
+                "were expected."
             )
 
         for name, data in self.extra_fields.items():
@@ -85,7 +107,9 @@ class StandardDataset(Dataset):
             idx (int): Index of the item to retrieve.
 
         Returns:
-            dict[str, str]: A mapping with keys ``"input"`` and ``"target"``.
+            dict[str, str]: A mapping with keys ``"input"`` and ``"target"``,
+            plus ``"extra_targets"`` (the extra labels) when the dataset has
+            them.
         """
         if self.preprocessor is not None:
             src = self.preprocessor(self.input_texts[idx])
@@ -94,15 +118,29 @@ class StandardDataset(Dataset):
             # If no preprocessor, return text as-is
             src = self.input_texts[idx]
             tgt = self.target_texts[idx]
-        return {"input": src, "target": tgt}
+        item = {"input": src, "target": tgt}
+        if self.extra_labels is not None:
+            item[extra_labels_module.BATCH_KEY] = self.extra_labels[idx]
+        return item
 
     def __len__(self) -> int:
         return len(self.input_texts)
 
 
 class StandardDataCollator:
-    def __init__(self, tokenizer: Tokenizer = None) -> None:
+    def __init__(
+        self, tokenizer: Tokenizer = None, extra_label_spec: dict | None = None
+    ) -> None:
+        """Collate samples into model inputs.
+
+        Args:
+            tokenizer: Tokenizer for ``input`` and ``target``.
+            extra_label_spec: ``{name: (kind, dtype)}`` decided over the whole
+                data by ``IOPipeline.build``, so that every batch gives a label
+                the same dtype. Without it, each batch infers its own.
+        """
         self.tokenizer = tokenizer
+        self.extra_label_spec = extra_label_spec
 
     def _pad_sequences(self, sequences, padding_value=0):
         """Pad a list of sequences and convert them to a tensor.
@@ -159,6 +197,8 @@ class StandardDataCollator:
             return batch_dict
 
         for attribute in attributes:
+            if attribute == extra_labels_module.BATCH_KEY:
+                continue  # needs the labels; batched after this loop
             attribute_batch = [item[attribute] for item in batch]
 
             # Detect pre-tokenized inputs: each sample is already a list[int]
@@ -234,5 +274,15 @@ class StandardDataCollator:
                 batch_dict[attribute_key] = self._pad_sequences(
                     attribute_batch, padding_value=0
                 )
+
+        key = extra_labels_module.BATCH_KEY
+        if key in attributes:
+            if "labels" not in batch_dict:
+                raise ValueError("Extra labels need a target in every sample.")
+            # One dict, so the model can tell the labels from other forward()
+            # keyword arguments such as the Trainer's num_items_in_batch.
+            batch_dict[key] = extra_labels_module.collate(
+                batch, batch_dict["labels"], self.extra_label_spec
+            )
 
         return batch_dict

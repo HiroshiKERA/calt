@@ -150,6 +150,8 @@ train:
     | `max_sequence_length` | Maximum sequence length. |
     | `input_embedding_type` | Input (token) embedding to use (default `token`). Built-in: `token`. Register custom ones with `register_input_embedding`; see [Custom embeddings](model_pipeline.md#custom-embeddings-input-and-positional). |
     | `input_embedding_kwargs` | Mapping of extra keyword arguments for the input-embedding factory (default `{}`). Saved in the model config; values must be JSON-serializable. Not supported by `bart` and the monomial models. |
+    | `loss_type` | Training loss (default `cross_entropy`, the only built-in). Register custom ones with `register_loss`; see [Custom losses](model_pipeline.md#custom-losses-and-auxiliary-tasks). Other values are not supported by `bart` and the monomial models. |
+    | `loss_kwargs` | Mapping of extra keyword arguments for the loss (default `{}`). Saved in the model config; values must be JSON-serializable. Not accepted with `cross_entropy`. |
     | `use_positional_embedding` | Positional embedding to use (default `generic`). Built-in: `generic`/`learned`, `sinusoidal`, `rope`, `none`. Register custom ones with `register_positional_embedding`. |
 
 ??? "`train` — Converted to TrainingArguments by TrainerPipeline"

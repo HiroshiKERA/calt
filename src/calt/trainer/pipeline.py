@@ -19,6 +19,7 @@ from torch.utils.data import Dataset
 from transformers import PreTrainedModel, PreTrainedTokenizerFast
 
 from ..io.base import StandardDataCollator
+from ..models.losses import RESERVED_LOSS_ARGS
 from .trainer import Trainer
 
 logger = logging.getLogger(__name__)
@@ -159,6 +160,34 @@ def _check_training_device(device: torch.device) -> None:
     )
 
 
+def _check_extra_labels_reach_a_loss(model, train_dataset) -> None:
+    """Fail before training when extra labels would be dropped silently."""
+    extra = getattr(train_dataset, "extra_labels", None)
+    if not extra:
+        return
+    names = sorted(extra[0])
+    spec = getattr(model, "calt_loss", None)
+    if spec is None:
+        model_type = getattr(getattr(model, "config", None), "model_type", None)
+        raise ValueError(
+            f"The data has extra labels {names}, but model type {model_type!r} "
+            "does not pass them to a loss; use generic, decoder_only or "
+            "encoder_classifier."
+        )
+    if spec.is_default:
+        logger.warning(
+            "The data has extra labels %s, but model.loss_type is the default "
+            "cross_entropy, which does not use them.",
+            names,
+        )
+    clash = sorted(set(names) & (RESERVED_LOSS_ARGS | set(spec.loss_kwargs)))
+    if clash:
+        raise ValueError(
+            f"Extra labels {clash} clash with the loss arguments or "
+            "model.loss_kwargs; rename them."
+        )
+
+
 class TrainerPipeline:
     """Pipeline for creating trainers from configuration.
 
@@ -271,6 +300,7 @@ class TrainerPipeline:
         """
         # Configure wandb before building TrainingArguments / Trainer
         self._configure_wandb()
+        _check_extra_labels_reach_a_loss(self.model, self.train_dataset)
 
         # Import here to avoid circular import
         from .loader import StandardTrainerLoader

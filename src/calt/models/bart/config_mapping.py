@@ -7,7 +7,7 @@ Converts from unified config format (cfg.model) to BartConfig.
 from omegaconf import DictConfig
 from transformers import BartConfig, PreTrainedTokenizerFast
 
-from ..config_utils import reject_unsupported_keys
+from ..config_utils import EXTENSION_KEYS, reject_unsupported_keys
 
 
 def create_bart_config(
@@ -23,7 +23,7 @@ def create_bart_config(
     Returns:
         BartConfig: BART model configuration.
     """
-    reject_unsupported_keys(model_config, ("input_embedding_kwargs",), "bart")
+    reject_unsupported_keys(model_config, EXTENSION_KEYS, "bart")
     return BartConfig(
         encoder_layers=model_config.num_encoder_layers,
         encoder_attention_heads=model_config.num_encoder_heads,
