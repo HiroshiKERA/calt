@@ -172,6 +172,40 @@ def test_factory_error_names_the_kwargs():
         ModelPipeline(cfg, tokenizer=None).build()
 
 
+class StrictEmbedding(nn.Module):
+    """Takes only the arguments it uses, as the docs recommend."""
+
+    def __init__(self, vocab_size, d_model, scale=1.0):
+        super().__init__()
+        self.table = nn.Embedding(vocab_size, d_model)
+        self.scale = scale
+
+    def forward(self, input_ids):
+        return self.table(input_ids) * self.scale
+
+
+def test_registered_class_rejects_a_misspelled_key():
+    register_input_embedding("strict_kw", StrictEmbedding)
+    cfg = _model_cfg(
+        "generic",
+        input_embedding_type="strict_kw",
+        input_embedding_kwargs={"scael": 2.0},
+    )
+    with pytest.raises(TypeError, match="scael"):
+        ModelPipeline(cfg, tokenizer=None).build()
+
+
+@pytest.mark.parametrize("emb_type", ["token", "default", "learned"])
+def test_token_embedding_rejects_kwargs(emb_type):
+    cfg = _model_cfg(
+        "generic",
+        input_embedding_type=emb_type,
+        input_embedding_kwargs={"scale": 2.0},
+    )
+    with pytest.raises(TypeError, match="model.input_embedding_kwargs"):
+        ModelPipeline(cfg, tokenizer=None).build()
+
+
 @pytest.mark.parametrize(
     "create_config,model_type",
     [

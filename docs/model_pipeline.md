@@ -152,8 +152,7 @@ class MyEmbedding(nn.Module):
     def forward(self, input_ids):          # (B, S) long -> (B, S, d_model)
         return self.emb(input_ids)
 
-register_input_embedding(
-    "my_emb", lambda vocab_size, d_model, **kw: MyEmbedding(vocab_size, d_model))
+register_input_embedding("my_emb", MyEmbedding)
 register_positional_embedding(
     "my_pe", lambda d_model, max_len, **kw: MyPositional(d_model, max_len))
 ```
@@ -164,7 +163,7 @@ model:
   use_positional_embedding: my_pe
 ```
 
-**Passing arguments.** The entries of `model.input_embedding_kwargs` are passed to the input-embedding factory as keyword arguments and saved in the model config, so `from_pretrained` rebuilds the same embedding (register the factory before loading). Values must be JSON-serializable, and `vocab_size` / `d_model` cannot be set this way. A value that depends on the tokenizer, such as the token ids of the digits, can be computed after building the IO pipeline:
+**Passing arguments.** The entries of `model.input_embedding_kwargs` are passed to the input-embedding factory as keyword arguments and saved in the model config, so `from_pretrained` rebuilds the same embedding (register the factory before loading). Values must be JSON-serializable, and `vocab_size` / `d_model` cannot be set this way. Register the class itself and spell out the arguments it takes (e.g. `def __init__(self, vocab_size, d_model, digit_ids=())`): a misspelled key then raises a `TypeError`, while a factory that takes `**kwargs` silently ignores it. The built-in `token` embedding takes no extra arguments. A value that depends on the tokenizer, such as the token ids of the digits, can be computed after building the IO pipeline:
 
 ```python
 io_dict = IOPipeline.from_config(cfg.data).build()

@@ -20,17 +20,18 @@ Call this *before* building the model (e.g. at the top of your train script):
     from calt.models import register_input_embedding
 
     class MyEmbedding(nn.Module):
-        def __init__(self, vocab_size, d_model):
+        def __init__(self, vocab_size, d_model, digit_ids=()):
             super().__init__()
             ...
         def forward(self, input_ids):      # (B, S) long  ->  (B, S, d_model)
             ...
 
-    register_input_embedding(
-        "my_emb", lambda vocab_size, d_model, **kw: MyEmbedding(vocab_size, d_model)
-    )
+    register_input_embedding("my_emb", MyEmbedding)
 
-then set ``model.input_embedding_type: my_emb`` in train.yaml.
+then set ``model.input_embedding_type: my_emb`` in train.yaml. Registering the
+class itself, with the arguments it takes spelled out, makes a misspelled key in
+``model.input_embedding_kwargs`` raise a TypeError; a factory that swallows
+``**kwargs`` would ignore it.
 
 Passing extra arguments
 -----------------------
@@ -91,8 +92,12 @@ def get_input_embedding(
         ) from e
 
 
-def _token_embedding(vocab_size: int, d_model: int, **kwargs) -> nn.Embedding:
-    """Default: a plain learnable token-embedding table (historical behavior)."""
+def _token_embedding(vocab_size: int, d_model: int) -> nn.Embedding:
+    """Default: a plain learnable token-embedding table (historical behavior).
+
+    It takes no extra arguments, so ``model.input_embedding_kwargs`` set with
+    this type raises instead of being ignored.
+    """
     return nn.Embedding(vocab_size, d_model)
 
 
