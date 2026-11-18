@@ -136,6 +136,7 @@ Both the **input (token) embedding** and the **positional embedding** are chosen
 | config key | default | built-in values |
 |------------|---------|-----------------|
 | `model.input_embedding_type` | `token` | `token` (aliases `default`, `learned`) — a plain `nn.Embedding` |
+| `model.input_embedding_kwargs` | `{}` | extra keyword arguments for the input-embedding factory |
 | `model.use_positional_embedding` | `generic` | `generic`/`learned`, `sinusoidal`, `rope`, `none` |
 
 To plug in your own, register a factory **before building the model** (e.g. at the top of your train script), then select it by name in the config:
@@ -151,8 +152,7 @@ class MyEmbedding(nn.Module):
     def forward(self, input_ids):          # (B, S) long -> (B, S, d_model)
         return self.emb(input_ids)
 
-register_input_embedding(
-    "my_emb", lambda vocab_size, d_model, **kw: MyEmbedding(vocab_size, d_model))
+register_input_embedding("my_emb", MyEmbedding)
 register_positional_embedding(
     "my_pe", lambda d_model, max_len, **kw: MyPositional(d_model, max_len))
 ```
@@ -163,9 +163,96 @@ model:
   use_positional_embedding: my_pe
 ```
 
-**Factory contract.** An input-embedding factory receives at least `vocab_size` and `d_model` (extra config keys are forwarded as kwargs) and returns an `nn.Module` mapping `input_ids` of shape `(batch, seq)` to `(batch, seq, d_model)`. A positional-embedding factory receives at least `d_model` and `max_len` and returns an `nn.Module` mapping `(batch, seq, d_model)` to `(batch, seq, d_model)` (or `None` for "no positional embedding"). An unknown type raises `ValueError` listing the supported names.
+**Passing arguments.** The entries of `model.input_embedding_kwargs` are passed to the input-embedding factory as keyword arguments and saved in the model config, so `from_pretrained` rebuilds the same embedding (register the factory before loading). Values must be JSON-serializable, and `vocab_size` / `d_model` cannot be set this way. Register the class itself and spell out the arguments it takes (e.g. `def __init__(self, vocab_size, d_model, digit_ids=())`): a misspelled key then raises a `TypeError`, while a factory that takes `**kwargs` silently ignores it. The built-in `token` embedding takes no extra arguments. A value that depends on the tokenizer, such as the token ids of the digits, can be computed after building the IO pipeline:
 
-These hooks apply to the `generic`, `decoder_only` and `encoder_classifier` models (not `bart`, which is HuggingFace's own model). The `monomial` model honors `use_positional_embedding` but not `input_embedding_type`: its input embedding *is* the monomial embedding. The public helpers are exported from `calt.models`: `register_input_embedding`, `register_positional_embedding`, `get_input_embedding`, `get_positional_embedding`.
+```python
+io_dict = IOPipeline.from_config(cfg.data).build()
+tokenizer = io_dict["tokenizer"]
+cfg.model.input_embedding_kwargs = {
+    "digit_ids": [tokenizer.convert_tokens_to_ids(str(d)) for d in range(10)]
+}
+model = ModelPipeline.from_io_dict(cfg.model, io_dict).build()
+```
+
+`convert_tokens_to_ids` returns `None` for a token missing from the vocabulary, so make sure every digit is in it. Set the kwargs before your script saves its config (e.g. `OmegaConf.save(cfg, ".../train.yaml")`), so that `load_from_checkpoint` rebuilds the same embedding.
+
+**Factory contract.** An input-embedding factory receives at least `vocab_size` and `d_model`, plus the entries of `model.input_embedding_kwargs`, and returns an `nn.Module` mapping `input_ids` of shape `(batch, seq)` to `(batch, seq, d_model)`. A positional-embedding factory receives at least `d_model` and `max_len` and returns an `nn.Module` mapping `(batch, seq, d_model)` to `(batch, seq, d_model)` (or `None` for "no positional embedding"). An unknown type raises `ValueError` listing the supported names.
+
+These hooks apply to the `generic`, `decoder_only` and `encoder_classifier` models (not `bart`, which is HuggingFace's own model). The `monomial` model honors `use_positional_embedding` but not `input_embedding_type`: its input embedding *is* the monomial embedding. Setting `input_embedding_kwargs` for `bart` or the monomial models raises an error. The public helpers are exported from `calt.models`: `register_input_embedding`, `register_positional_embedding`, `get_input_embedding`, `get_positional_embedding`.
+
+## Custom losses and auxiliary tasks
+
+The `generic`, `decoder_only` and `encoder_classifier` models compute their training loss through a registry, the same way they get their input embedding. The default `model.loss_type: cross_entropy` is the only loss built into calt and gives the same loss as before. To use your own, register it **before building or loading the model**, then select it by name:
+
+```python
+import torch.nn.functional as F
+from calt.models import register_loss
+
+def sequence_loss(logits, labels, strength=1.0, power=2.0):
+    tokens = F.cross_entropy(logits.transpose(1, 2), labels, ignore_index=-100, reduction="none")
+    ce = tokens.sum() / (labels != -100).sum()
+    q = (-tokens.sum(dim=1)).exp()        # probability of the whole answer
+    return ce + strength * (1 - q**power).mean()
+
+register_loss("sequence", sequence_loss)
+```
+
+```yaml
+model:
+  loss_type: sequence
+  loss_kwargs: {strength: 0.5}
+```
+
+- A **function** is called on every batch with the data arguments below plus `model.loss_kwargs`, and returns a scalar tensor.
+- A **class** (an `nn.Module`, or a `functools.partial` of one with arguments bound by keyword) is built once with `d_model`, `vocab_size` (each only if its `__init__` takes it) and `model.loss_kwargs`. It becomes `model.loss_module`, so the auxiliary heads inside it are trained and saved with the model; its `forward` receives the data arguments. It is built after the model's own layers, so it does not change their initial weights, and its Linear, Embedding and LayerNorm layers get the model's initialization. Other parameters (e.g. a raw `nn.Parameter`) keep the values your `__init__` gives them, except when a checkpoint without them is loaded, where they are left uninitialized. `from_pretrained` may run `__init__` on the meta device, so it should only create layers. Register the class, not an instance.
+
+**Data arguments** (keyword arguments):
+
+| Argument | generic / decoder_only | encoder_classifier |
+|---|---|---|
+| `logits` | `(B, T, V)` | `(B, V)` |
+| `labels` | `(B, T)`: the answer tokens, ending with EOS; padding is -100 | `(B,)`: the answer token; -100 for rows without one |
+| `hidden` | `(B, T, d_model)`: the hidden state from which the logits for `labels[:, i]` are computed | `(B, d_model)`: the pooled vector the logits are computed from |
+| extra labels | one argument per name (see below) | same |
+
+`labels` always has the shape of `logits` without its last dimension, so `F.cross_entropy(logits.reshape(-1, V), labels.reshape(-1))` works for all three models. A loss receives only the data arguments its signature names, unless it takes `**kwargs`. `model.loss_kwargs` is always passed, so a misspelled key raises a `TypeError`. calt warns once when the batch has an extra label the loss does not take, and when the loss takes an argument named `*_label` or `*_labels` that the batch does not have.
+
+**Extra labels.** The function given to `UserCallableLoadPreprocessor` may return a third element, a dict of labels, and each name reaches the loss as an argument:
+
+```python
+import torch.nn as nn
+
+def format_problem(problem, answer):
+    ...
+    return input_text, target_text, {"carry_labels": carry, "length_label": n_digits}
+
+class MultiTaskLoss(nn.Module):
+    def __init__(self, d_model, weight=0.1):
+        super().__init__()
+        self.carry_head = nn.Linear(d_model, 1)   # one value per answer token
+        self.length_head = nn.Linear(d_model, 7)  # one value per sample
+        self.weight = weight
+
+    def forward(self, logits, labels, hidden, carry_labels, length_label):
+        main = F.cross_entropy(logits.reshape(-1, logits.size(-1)), labels.reshape(-1))
+        mask = labels != -100                     # answer tokens and EOS
+        carry = F.binary_cross_entropy_with_logits(
+            self.carry_head(hidden).squeeze(-1)[mask], carry_labels[mask].float())
+        length = F.cross_entropy(self.length_head(hidden[:, 0]), length_label)
+        return main + self.weight * (carry + length)
+
+register_loss("multitask", MultiTaskLoss)
+```
+
+- A label is either one number per sample (batched as `(B,)`) or a list with one number per answer token (batched as `(B, T)`, aligned with `labels`). The answer tokens are the lexer's tokens of the target plus EOS, i.e. the positions of `labels`. A list must have that many values or one fewer; a list one shorter gets one value appended at the EOS position. Any other length is an error, raised by `IOPipeline.build` before training.
+- Positions past a row's answer, and the appended value, are filled with 0 (0.0 for float labels), never -100, since -100 can be a real label value. Use `labels != -100` to find the answer positions; which of them the loss ignores is up to the loss.
+- In a batch, the labels are one dict under the key `extra_targets`, which the model's `forward(..., extra_targets=...)` passes on to the loss. (The key avoids the word "label": transformers treats every `forward()` argument named so as a label column.) Call `model(**batch)` with such a batch to try a loss by hand.
+- Integers and bools become `torch.long`; a label with any float becomes `torch.float`. Every sample must return the same names. Some names (`labels`, `logits`, `hidden`, `input_ids`, and names starting with `decoder_` or `target_`, among others) are reserved.
+- Extra labels work with the normal `IOPipeline.build`, not with the preprocessing caches (`calt preprocess`). `load_from_checkpoint` rebuilds the IO pipeline from `train.yaml`, which cannot hold a Python load preprocessor, so set it again before resuming training.
+
+**Saving and loading.** `loss_type` and `loss_kwargs` are saved in the model config, and the weights of `model.loss_module` in the checkpoint. Call `register_loss` before `from_pretrained` or `load_from_checkpoint`. A model loaded without its loss registered warns and can still generate, but computing a loss raises an error. The evaluation loss (`eval_loss`) includes the auxiliary terms; generation is unaffected.
+
+`bart` and the monomial models do not support this: `loss_type` other than `cross_entropy`, or a non-empty `loss_kwargs`, raises an error, and so do extra labels when the trainer is built.
 
 ## ModelRegistry
 

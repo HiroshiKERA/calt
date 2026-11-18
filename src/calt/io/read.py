@@ -199,8 +199,34 @@ def load_dataset_texts(
             or PickleDefaultLoadPreprocessor according to source.
 
     Returns:
-        (input_texts, target_texts) for StandardDataset.
+        (input_texts, target_texts) for StandardDataset. Extra labels returned
+        by the preprocessor are dropped; ``StandardDataset.load_file`` keeps them.
     """
+    input_texts, target_texts, _ = load_dataset_samples(
+        data_path,
+        max_samples=max_samples,
+        use_jsonl=use_jsonl,
+        use_pickle=use_pickle,
+        dataset_load_preprocessor=dataset_load_preprocessor,
+    )
+    return input_texts, target_texts
+
+
+def load_dataset_samples(
+    data_path: str,
+    max_samples: int | None = None,
+    use_jsonl: bool = False,
+    use_pickle: bool = False,
+    dataset_load_preprocessor: "DatasetLoadPreprocessor | None" = None,
+) -> tuple[list[str], list[str], list[dict] | None]:
+    """Like :func:`load_dataset_texts`, also returning the extra labels.
+
+    Returns:
+        (input_texts, target_texts, extra_labels), where extra_labels holds one
+        dict of plain numbers and lists per sample, or is None when the
+        preprocessor returns no extra labels.
+    """
+    from .extra_labels import normalize_samples, split_sample
     from .preprocessor.load_preprocessor import (
         JsonlDefaultLoadPreprocessor,
         PickleDefaultLoadPreprocessor,
@@ -215,29 +241,38 @@ def load_dataset_texts(
         else:
             dataset_load_preprocessor = TextDefaultLoadPreprocessor()
 
-    if use_pickle:
-        raw_samples = read_data_from_pickle(data_path, max_samples)
-        input_texts = []
-        target_texts = []
-        for problem, answer in raw_samples:
-            inp, tgt = dataset_load_preprocessor.process_sample(
-                {"problem": problem, "answer": answer}
-            )
-            input_texts.append(inp)
-            target_texts.append(tgt)
-        return input_texts, target_texts
+    input_texts = []
+    target_texts = []
+    extras = []
 
-    if use_jsonl:
-        raw_samples = read_data_from_jsonl(data_path, max_samples)
-        input_texts = []
-        target_texts = []
-        for problem, answer in raw_samples:
-            inp, tgt = dataset_load_preprocessor.process_sample(
-                {"problem": problem, "answer": answer}
+    def add(source):
+        where = f"{data_path}, sample {len(input_texts)}"
+        inp, tgt, extra = split_sample(
+            dataset_load_preprocessor.process_sample(source), where
+        )
+        input_texts.append(inp)
+        target_texts.append(tgt)
+        extras.append(extra)
+
+    def result():
+        given = [bool(extra) for extra in extras]  # {} means no extra labels
+        if not any(given):
+            return input_texts, target_texts, None
+        if not all(given):
+            index = given.index(not given[0])
+            raise ValueError(
+                f"{data_path}: sample {index} "
+                + ("returns no" if given[0] else "returns")
+                + " extra labels, unlike sample 0. Every sample must return the "
+                "same extra labels."
             )
-            input_texts.append(inp)
-            target_texts.append(tgt)
-        return input_texts, target_texts
+        return input_texts, target_texts, normalize_samples(extras, data_path)
+
+    if use_pickle or use_jsonl:
+        read = read_data_from_pickle if use_pickle else read_data_from_jsonl
+        for problem, answer in read(data_path, max_samples):
+            add({"problem": problem, "answer": answer})
+        return result()
 
     # Text: read lines and apply preprocessor to each line
     if max_samples == -1:
@@ -249,16 +284,12 @@ def load_dataset_texts(
     if not os.path.exists(data_path):
         raise FileNotFoundError(f"Data file not found: {data_path}")
 
-    input_texts = []
-    target_texts = []
     with open(data_path, "r", encoding="utf-8") as f:
         for raw_line in f:
             line = raw_line.strip()
             if not line:
                 continue
-            inp, tgt = dataset_load_preprocessor.process_sample(line)
-            input_texts.append(inp)
-            target_texts.append(tgt)
+            add(line)
             if max_samples is not None and len(input_texts) >= max_samples:
                 break
 
@@ -273,4 +304,4 @@ def load_dataset_texts(
     else:
         logger.info(f"Loaded {len(input_texts)} samples from {data_path}")
 
-    return input_texts, target_texts
+    return result()

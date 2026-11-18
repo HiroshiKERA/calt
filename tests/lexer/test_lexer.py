@@ -768,3 +768,53 @@ class TestUnifiedLexer:
         assert "-10" in tokens, f"Expected '-10' in tokens, got {tokens}"
         assert "-11" in tokens, f"Expected '-11' in tokens, got {tokens}"
         assert "-13" in tokens, f"Expected '-13' in tokens, got {tokens}"
+
+
+class TestDigitGroupIgnoresAttachSign:
+    """digit_group >= 1 splits numbers the same way for either attach_sign.
+
+    With multi-digit numbers in the vocabulary, attach_sign=False used to try
+    the vocabulary first, so "123" became "12", "3" when "12" was a token.
+    """
+
+    @staticmethod
+    def _lexer(sign, digit_group, upper=16, allow_float=False):
+        vocab = VocabConfig([], {}).from_config(
+            {"range": {"n": ["", 0, upper]}, "misc": ["+", "-", "."]}
+        )
+        policy = NumberPolicy(
+            sign=sign, digit_group=digit_group, allow_float=allow_float
+        )
+        return UnifiedLexer(vocab, number_policy=policy, include_base_vocab=False)
+
+    @pytest.mark.parametrize("sign", [True, False])
+    def test_digits_split_one_by_one(self, sign):
+        assert self._lexer(sign, 1).tokenize("123") == ["1", "2", "3"]
+
+    @pytest.mark.parametrize("sign", [True, False])
+    def test_every_number_in_an_expression_is_split(self, sign):
+        assert self._lexer(sign, 1).tokenize("12+16") == ["1", "2", "+", "1", "6"]
+
+    def test_negative_number_with_attached_sign(self):
+        assert self._lexer(True, 1).tokenize("-123") == ["-1", "2", "3"]
+
+    def test_negative_number_with_separate_sign(self):
+        assert self._lexer(False, 1).tokenize("-123") == ["-", "1", "2", "3"]
+
+    def test_subtraction_with_separate_sign(self):
+        assert self._lexer(False, 1).tokenize("12-16") == ["1", "2", "-", "1", "6"]
+
+    @pytest.mark.parametrize("sign", [True, False])
+    def test_digit_group_three_splits_vocab_numbers(self, sign):
+        lexer = self._lexer(sign, 3, upper=1000)
+        assert lexer.tokenize("1000") == ["100", "0"]
+        assert lexer.tokenize("123456") == ["123", "456"]
+
+    @pytest.mark.parametrize("sign", [True, False])
+    def test_digit_group_zero_keeps_numbers_whole(self, sign):
+        assert self._lexer(sign, 0).tokenize("123") == ["123"]
+
+    def test_float_digits_split_with_separate_sign(self):
+        lexer = self._lexer(False, 1, allow_float=True)
+        assert lexer.tokenize("3.14") == ["3", ".", "1", "4"]
+        assert lexer.tokenize(".5") == ["0", ".", "5"]

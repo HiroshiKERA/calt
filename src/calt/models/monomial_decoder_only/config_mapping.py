@@ -14,6 +14,7 @@ Expected extra keys on cfg.model: the same as for ``model_type: monomial``
 
 from omegaconf import DictConfig
 
+from ..config_utils import EXTENSION_KEYS, reject_unsupported_keys
 from ..monomial.config_mapping import _coeff_fields, _exp_slots
 from .model import MonomialDecoderOnlyConfig
 
@@ -23,6 +24,7 @@ def create_monomial_decoder_only_config(
     tokenizer=None,
 ) -> MonomialDecoderOnlyConfig:
     """Create a MonomialDecoderOnlyConfig from cfg.model and the tokenizer."""
+    reject_unsupported_keys(model_config, EXTENSION_KEYS, "monomial_decoder_only")
     if tokenizer is None:
         raise ValueError(
             "The monomial decoder-only model requires the tokenizer to derive "

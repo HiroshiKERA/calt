@@ -149,6 +149,9 @@ train:
     | `encoder_ffn_dim`, `decoder_ffn_dim` | Feed-forward dimension in encoder/decoder. |
     | `max_sequence_length` | Maximum sequence length. |
     | `input_embedding_type` | Input (token) embedding to use (default `token`). Built-in: `token`. Register custom ones with `register_input_embedding`; see [Custom embeddings](model_pipeline.md#custom-embeddings-input-and-positional). |
+    | `input_embedding_kwargs` | Mapping of extra keyword arguments for the input-embedding factory (default `{}`). Saved in the model config; values must be JSON-serializable. Not supported by `bart` and the monomial models. |
+    | `loss_type` | Training loss (default `cross_entropy`, the only built-in). Register custom ones with `register_loss`; see [Custom losses](model_pipeline.md#custom-losses-and-auxiliary-tasks). Other values are not supported by `bart` and the monomial models. |
+    | `loss_kwargs` | Mapping of extra keyword arguments for the loss (default `{}`). Saved in the model config; values must be JSON-serializable. Not accepted with `cross_entropy`. |
     | `use_positional_embedding` | Positional embedding to use (default `generic`). Built-in: `generic`/`learned`, `sinusoidal`, `rope`, `none`. Register custom ones with `register_positional_embedding`. |
 
 ??? "`train` — Converted to TrainingArguments by TrainerPipeline"
@@ -237,7 +240,7 @@ include_base_vocab: true
     | Name | Description |
     |--------|-------------|
     | `attach_sign` | bool (default true). true = sign is part of the number token; false = sign is a separate token. |
-    | `digit_group` | int (default 0). 0 = no digit grouping; d ≥ 1 = split number into tokens of d digits. |
+    | `digit_group` | int (default 0). 0 = no digit grouping; d ≥ 1 = split number into tokens of d digits from the left, regardless of `attach_sign` and even when the vocabulary has multi-digit numbers. Whitespace is not a token, so with d ≥ 1 numbers separated only by spaces can run together: always with d = 1 (`48 36` and `4836` both become `4 8 3 6`), and with d ≥ 2 when the left number ends in a full group of d digits (d = 2: `48 36` and `4836` both become `48 36`, while `483 6` gives `48 3 6`). Put a separator token from the vocabulary between them (e.g. `,` added to `misc`), or use 0 (every number is then one token and must be in the vocabulary). |
     | `allow_float` | bool (default true). Whether to allow decimal numbers (adds `"."` to vocab if needed). |
 
 ??? "`strict`, `include_base_vocab` — Passed to UnifiedLexer"

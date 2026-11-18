@@ -28,7 +28,15 @@ class NumberPolicy:
     Attributes:
         sign: How to handle sign. True (attach) means sign is part of the number,
             False (separate) means sign is a separate token.
-        digit_group: Group digits. 0 = no split, d>=1 = split every d digits.
+        digit_group: Group digits. 0 = no split, d>=1 = split every d digits
+            from the left, whatever the sign setting and even when the
+            vocabulary also has multi-digit number tokens. Whitespace is not a
+            token, so with d>=1 numbers separated only by spaces can run
+            together: always with d=1 ("48 36" and "4836" both become 4 8 3 6),
+            and with d>=2 when the left number ends in a full group of d digits.
+            Put a separator token from the vocabulary (e.g. ",") between them,
+            or use 0 (every number is then one token and must be in the
+            vocabulary).
         allow_float: Whether to allow floating point numbers.
     """
 
@@ -301,27 +309,17 @@ class UnifiedLexer(AbstractPreProcessor):
         # Identifier pattern
         identifier_pattern = r"[A-Za-z_][A-Za-z_0-9]*"
 
-        # Combined pattern: number first if attach mode, then reserved tokens, then identifier
-        # This ensures signed numbers are matched before operators in attach mode
-        # If digit_group=0, prioritize number pattern over reserved tokens to avoid splitting
-        # numbers that are longer than vocab tokens (e.g., 1111111 should not be split into 111, 111, 1)
-        if self.number_policy.sign:
-            self.pattern = re.compile(
-                f"({number_pattern})|({reserved_pattern})|({identifier_pattern})"
-            )
-        else:
-            # sign == False (separate)
-            if self.number_policy.digit_group == 0:
-                # digit_group=0: numbers should not be split, so prioritize number pattern
-                # This prevents numbers like 1111111 from being split when vocab contains 111
-                self.pattern = re.compile(
-                    f"({number_pattern})|({reserved_pattern})|({identifier_pattern})"
-                )
-            else:
-                # digit_group > 0: numbers will be split, so reserved tokens can take priority
-                self.pattern = re.compile(
-                    f"({reserved_pattern})|({number_pattern})|({identifier_pattern})"
-                )
+        # Combined pattern: number first, then reserved tokens, then identifier.
+        # Matching numbers before reserved tokens lets NumberPolicy decide how
+        # a number is split: with vocab tokens such as "12" or "111", a
+        # reserved-first order would take "123" as "12", "3" or 1111111 as
+        # "111", "111", "1". In attach mode it also keeps "-5" from being split
+        # into the operator "-" and "5". (In separate mode the number pattern
+        # has no sign, so a negative vocab token such as "-10" still matches
+        # as a reserved token.)
+        self.pattern = re.compile(
+            f"({number_pattern})|({reserved_pattern})|({identifier_pattern})"
+        )
 
     def tokenize(self, text: str) -> list[str]:
         """Tokenize input text into a list of tokens.
@@ -349,59 +347,20 @@ class UnifiedLexer(AbstractPreProcessor):
             match = self.pattern.match(text, pos)
 
             if match:
-                # Check which group matched
-                # Group order depends on sign mode and digit_group
-                if self.number_policy.sign:
-                    # Pattern order: number, reserved, identifier
-                    if match.group(1):  # Number
-                        number_str = match.group(1)
-                        number_tokens = self.number_policy.process_number(number_str)
-                        tokens.extend(number_tokens)
-                        pos = match.end()
-                    elif match.group(2):  # Reserved token
-                        tokens.append(match.group(2))
-                        pos = match.end()
-                    elif match.group(3):  # Identifier
-                        tokens.append(match.group(3))
-                        pos = match.end()
-                    else:
-                        raise RuntimeError("Pattern matched but no group matched")
+                # Check which group matched (pattern order: number, reserved, identifier)
+                if match.group(1):  # Number
+                    number_str = match.group(1)
+                    number_tokens = self.number_policy.process_number(number_str)
+                    tokens.extend(number_tokens)
+                    pos = match.end()
+                elif match.group(2):  # Reserved token
+                    tokens.append(match.group(2))
+                    pos = match.end()
+                elif match.group(3):  # Identifier
+                    tokens.append(match.group(3))
+                    pos = match.end()
                 else:
-                    # sign == False (separate)
-                    if self.number_policy.digit_group == 0:
-                        # Pattern order: number, reserved, identifier (number prioritized)
-                        if match.group(1):  # Number
-                            number_str = match.group(1)
-                            number_tokens = self.number_policy.process_number(
-                                number_str
-                            )
-                            tokens.extend(number_tokens)
-                            pos = match.end()
-                        elif match.group(2):  # Reserved token
-                            tokens.append(match.group(2))
-                            pos = match.end()
-                        elif match.group(3):  # Identifier
-                            tokens.append(match.group(3))
-                            pos = match.end()
-                        else:
-                            raise RuntimeError("Pattern matched but no group matched")
-                    else:
-                        # Pattern order: reserved, number, identifier
-                        if match.group(1):  # Reserved token
-                            tokens.append(match.group(1))
-                            pos = match.end()
-                        elif match.group(2):  # Number
-                            number_str = match.group(2)
-                            number_tokens = self.number_policy.process_number(
-                                number_str
-                            )
-                            tokens.extend(number_tokens)
-                            pos = match.end()
-                        elif match.group(3):  # Identifier
-                            tokens.append(match.group(3))
-                            pos = match.end()
-                        else:
-                            raise RuntimeError("Pattern matched but no group matched")
+                    raise RuntimeError("Pattern matched but no group matched")
             else:
                 # No match - unknown character
                 if self.strict:

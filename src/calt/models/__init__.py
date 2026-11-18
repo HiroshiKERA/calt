@@ -3,6 +3,7 @@ from .decoder_only.model import DecoderOnlyConfig, DecoderOnlyTransformer
 from .generic.model import Transformer, TransformerConfig
 from .input_embeddings import get_input_embedding, register_input_embedding
 from .loader import ModelLoader
+from .losses import register_loss
 from .monomial.model import MonomialTransformer, MonomialTransformerConfig
 from .monomial_decoder_only.model import (
     MonomialDecoderOnlyConfig,
@@ -42,4 +43,6 @@ __all__ = [
     "register_input_embedding",
     "get_positional_embedding",
     "register_positional_embedding",
+    # Pluggable training loss
+    "register_loss",
 ]

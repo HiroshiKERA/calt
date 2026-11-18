@@ -36,6 +36,7 @@ from transformers import PretrainedConfig, PreTrainedModel
 from transformers.modeling_outputs import Seq2SeqLMOutput
 
 from ..input_embeddings import get_input_embedding
+from ..losses import attach_loss, compute_loss
 from ..positional_embeddings import get_positional_embedding
 
 
@@ -63,8 +64,11 @@ class EncoderClassifierConfig(PretrainedConfig):
         bos_token_id: int = 2,
         use_positional_embedding: str = "generic",
         input_embedding_type: str = "token",
+        input_embedding_kwargs: Optional[dict] = None,
         init_std: float = 0.02,
         seed: int = 42,
+        loss_type: str = "cross_entropy",
+        loss_kwargs: Optional[dict] = None,
         **kwargs,
     ):
         super().__init__(
@@ -87,8 +91,13 @@ class EncoderClassifierConfig(PretrainedConfig):
         self.max_input_len = max_input_len
         self.use_positional_embedding = use_positional_embedding
         self.input_embedding_type = input_embedding_type
+        self.input_embedding_kwargs = dict(input_embedding_kwargs or {})
         self.init_std = init_std
         self.seed = seed
+        # See calt.models.losses: the loss gets the pooled vector as `hidden`
+        # and the answer token, shaped (batch,), as `labels`.
+        self.loss_type = loss_type
+        self.loss_kwargs = dict(loss_kwargs or {})
         # Read by the trainer to switch to classification-style metrics.
         self.is_classification = True
 
@@ -103,7 +112,10 @@ class EncoderClassifier(PreTrainedModel):
         self.config = config
 
         self.embedding = get_input_embedding(
-            config.input_embedding_type, config.vocab_size, config.d_model
+            config.input_embedding_type,
+            config.vocab_size,
+            config.d_model,
+            **config.input_embedding_kwargs,
         )
         self.positional_embedding = get_positional_embedding(
             pe_type=config.use_positional_embedding,
@@ -135,6 +147,8 @@ class EncoderClassifier(PreTrainedModel):
         torch.manual_seed(self.seed)
         if torch.cuda.is_available():
             torch.cuda.manual_seed_all(self.seed)
+        # Last, so that a loss module never changes the initial weights above.
+        attach_loss(self, config)
 
     def _init_weights(self, module):
         if isinstance(module, nn.Linear):
@@ -195,6 +209,7 @@ class EncoderClassifier(PreTrainedModel):
         attention_mask: Optional[torch.Tensor] = None,
         labels: Optional[torch.LongTensor] = None,
         return_dict: Optional[bool] = None,
+        extra_targets: Optional[dict] = None,  # extra labels; see calt.models.losses
         **kwargs,  # decoder_input_ids etc. are accepted and ignored
     ):
         if input_ids is None:
@@ -208,9 +223,10 @@ class EncoderClassifier(PreTrainedModel):
 
         loss = None
         if labels is not None:
+            # The loss sees labels shaped like the logits without the vocabulary
+            # dimension, as for the sequence models: one answer token per row.
             target = self._target_classes(labels)
-            loss_fct = nn.CrossEntropyLoss(ignore_index=-100)
-            loss = loss_fct(logits, target)
+            loss = compute_loss(self, logits, target, pooled, extra_targets)
 
         # Return the predicted token id (shape (batch, 1)) so the metric step is
         # light and unambiguous; the trainer scores it as classification.

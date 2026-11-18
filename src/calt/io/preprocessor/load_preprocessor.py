@@ -85,6 +85,12 @@ class UserCallableLoadPreprocessor:
     as (input_part, target_part). For JSONL sources, (problem, answer)
     from the parsed object are passed. The user can use SageMath etc.
     inside their callable.
+
+    The callable may also return a third element, a dict of extra labels
+    ``{name: value}`` that reach the model's loss by name (see
+    ``calt.models.register_loss``). A value is either one number per sample or a
+    list with one number per answer token (the answer's tokens plus EOS, or one
+    fewer, in which case calt appends one value at the EOS position).
     """
 
     def __init__(
@@ -95,7 +101,8 @@ class UserCallableLoadPreprocessor:
         """Initialize with user callable.
 
         Args:
-            callable_: (problem, answer) -> (input_text, target_text).
+            callable_: (problem, answer) -> (input_text, target_text), or
+                (input_text, target_text, extra_labels).
                 problem/answer are str for text, or JSON types for JSONL.
             source_type: "text", "jsonl", or "auto". If "auto", infers from
                 type of source in process_sample (str -> text, dict -> jsonl).

@@ -66,8 +66,10 @@ from omegaconf import DictConfig, OmegaConf
 # invalidated (mismatched hash → regen).
 PREPROCESS_VERSION = "v1"
 
-# Bump independently for the pre-tokenized (input_ids) on-disk format.
-PRETOK_VERSION = "v1"
+# Bump independently for the pre-tokenized (input_ids) on-disk format, or
+# when the lexer changes how the same text is tokenized.
+# v2: digit_group splits numbers regardless of attach_sign.
+PRETOK_VERSION = "v2"
 
 
 # --------------------------------------------------------------------------- #
@@ -155,6 +157,17 @@ def _iter_raw_lines(raw_path: Path):
             yield inp.strip(), tgt.strip()
 
 
+def _texts_only(result: Any) -> tuple[str, str]:
+    """(problem, answer) from a load preprocessor; caches hold no extra labels."""
+    if isinstance(result, (tuple, list)) and len(result) == 3:
+        raise ValueError(
+            "This load preprocessor returns extra labels, which the preprocessing "
+            "caches cannot store. Train without the cache (plain IOPipeline.build)."
+        )
+    problem, answer = result
+    return problem, answer
+
+
 def _write_jsonl(records, out_path: Path) -> int:
     out_path.parent.mkdir(parents=True, exist_ok=True)
     n = 0
@@ -185,7 +198,9 @@ def _preprocess_file(
             # but some (e.g. ExpandedFormLoadPreprocessor) accept (problem, answer)
             # via .process_sample. We use process_sample for compatibility with
             # both the chain wrapper and individual preprocessors.
-            problem, answer = load_preprocessor.process_sample(f"{inp}#{tgt}")
+            problem, answer = _texts_only(
+                load_preprocessor.process_sample(f"{inp}#{tgt}")
+            )
         else:
             problem, answer = inp, tgt
         pairs.append((problem, answer))
@@ -431,7 +446,9 @@ def _pretokenize_file(
     with open(out_path, "w", encoding="utf-8") as f:
         for inp, tgt in _iter_raw_lines(raw_path):
             if load_preprocessor is not None:
-                problem, answer = load_preprocessor.process_sample(f"{inp}#{tgt}")
+                problem, answer = _texts_only(
+                    load_preprocessor.process_sample(f"{inp}#{tgt}")
+                )
             else:
                 problem, answer = inp, tgt
             input_ids = _tokenize_to_ids(problem, lexer, tokenizer)

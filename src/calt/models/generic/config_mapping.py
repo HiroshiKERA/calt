@@ -6,6 +6,7 @@ Converts from unified config format (cfg.model) to TransformerConfig.
 
 from omegaconf import DictConfig
 
+from ..config_utils import input_embedding_kwargs, loss_settings
 from .model import TransformerConfig
 
 
@@ -65,6 +66,8 @@ def create_transformer_config(
             model_config, "use_positional_embedding", "generic"
         ),
         input_embedding_type=getattr(model_config, "input_embedding_type", "token"),
+        input_embedding_kwargs=input_embedding_kwargs(model_config),
+        **loss_settings(model_config),
         # Default must match TransformerConfig's own default (True). Defaulting to
         # False here would silently disable the embedding LayerNorm for every
         # config that does not mention the key — i.e. for essentially every user.
