@@ -101,7 +101,10 @@ def load_from_checkpoint(
     A model trained with a custom ``model.loss_type`` or input embedding needs
     ``register_loss`` / ``register_input_embedding`` to be called before this.
     A load preprocessor set in Python (and so its extra labels) is not part of
-    train.yaml and is not restored.
+    train.yaml and is not restored. Neither is a ``data_collator_factory``: the
+    rebuilt pipeline uses ``StandardDataCollator``; set
+    ``trainer_pipeline.data_collator`` before ``trainer_pipeline.build()`` to
+    resume with another collator.
 
     Args:
         save_dir: Directory containing train.yaml, model/, and tokenizer/.

@@ -7,6 +7,7 @@ This module defines :class:`IOPipeline`, which builds the training and evaluatio
 import json
 import logging
 from pathlib import Path
+from typing import Any, Callable
 
 import yaml
 from omegaconf import DictConfig
@@ -49,6 +50,7 @@ class IOPipeline:
         test_dataset_pickle: str | None = None,
         dataset_load_preprocessor: DatasetLoadPreprocessor | None = None,
         display_samples: int | None = None,
+        data_collator_factory: Callable[..., Any] | None = None,
     ):
         """Initialize IOPipeline.
 
@@ -69,6 +71,13 @@ class IOPipeline:
             display_samples: If set and > 0, print this many train samples: raw (before load
                 preprocessor), which preprocessor is applied (if any), and after preprocessor.
                 0 or None to disable.
+            data_collator_factory: Optional collator class, or function returning a
+                collator, called by ``build()`` as ``data_collator_factory(tokenizer=...)``
+                with the tokenizer it builds. None uses ``StandardDataCollator``. When
+                the data has extra labels, the collator must be a
+                ``StandardDataCollator`` (or subclass); ``build()`` gives it the
+                extra-label spec if it has none, and keeps a spec already set, so
+                return a new collator on each call.
         """
         self.train_dataset_path = train_dataset_path
         self.test_dataset_path = test_dataset_path
@@ -86,18 +95,25 @@ class IOPipeline:
         self.test_dataset_pickle = test_dataset_pickle
         self.dataset_load_preprocessor = dataset_load_preprocessor
         self.display_samples = display_samples
+        self.data_collator_factory = data_collator_factory
         # Store config dicts for checkpoint saving
         self.lexer_config_dict: dict | None = None
         self.vocab_config_dict: dict | None = None
 
     @classmethod
-    def from_config(cls, config: DictConfig) -> "IOPipeline":
+    def from_config(
+        cls,
+        config: DictConfig,
+        data_collator_factory: Callable[..., Any] | None = None,
+    ) -> "IOPipeline":
         """Create IOPipeline from configuration.
 
         Args:
             config (DictConfig): Data configuration from cfg.data (OmegaConf).
                 Must include:
                 - lexer_config: str path to lexer.yaml file (required)
+            data_collator_factory: Optional collator class or factory, passed from
+                Python (it is not read from the config); see ``IOPipeline``.
 
         Returns:
             IOPipeline: IOPipeline instance configured from the config.
@@ -179,6 +195,7 @@ class IOPipeline:
             test_dataset_pickle=test_pickle,
             dataset_load_preprocessor=dataset_load_preprocessor,
             display_samples=display_samples,
+            data_collator_factory=data_collator_factory,
         )
 
         # Store config dicts for checkpoint saving
@@ -450,9 +467,25 @@ class IOPipeline:
         if self.vocab_config is None:
             raise ValueError("vocab_config must be provided to build the tokenizer")
         tokenizer = get_tokenizer(vocab_config=self.vocab_config)
-        data_collator = StandardDataCollator(
-            tokenizer=tokenizer, extra_label_spec=extra_label_spec
-        )
+        if self.data_collator_factory is None:
+            data_collator = StandardDataCollator(
+                tokenizer=tokenizer, extra_label_spec=extra_label_spec
+            )
+        else:
+            data_collator = self.data_collator_factory(tokenizer=tokenizer)
+            if extra_label_spec is not None:
+                # The spec can only be given to a StandardDataCollator; without it
+                # each batch would infer its own label dtype.
+                if not isinstance(data_collator, StandardDataCollator):
+                    raise TypeError(
+                        "The data has extra labels, but data_collator_factory "
+                        f"returned a {type(data_collator).__name__}, which is not a "
+                        "StandardDataCollator; subclass StandardDataCollator so "
+                        "that build() can give it the extra-label spec."
+                    )
+                # getattr: a subclass may skip StandardDataCollator.__init__.
+                if getattr(data_collator, "extra_label_spec", None) is None:
+                    data_collator.extra_label_spec = extra_label_spec
 
         self.train_dataset = train_dataset
         self.test_dataset = test_dataset
