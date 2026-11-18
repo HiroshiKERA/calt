@@ -818,3 +818,92 @@ class TestDigitGroupIgnoresAttachSign:
         lexer = self._lexer(False, 1, allow_float=True)
         assert lexer.tokenize("3.14") == ["3", ".", "1", "4"]
         assert lexer.tokenize(".5") == ["0", ".", "5"]
+
+
+class TestNegativeVocabTokens:
+    """Negative numbers in the vocabulary are not matched as reserved tokens.
+
+    A range such as -100..100 (or the "-0" added for allow_float with
+    attach_sign) puts tokens like "-15" in the vocabulary. They used to be
+    matched as reserved tokens, so "-150" became "-15", "0" without any
+    out-of-vocabulary error, and "x-12" became "x", "-1", "2".
+    """
+
+    @staticmethod
+    def _lexer(
+        sign,
+        lo,
+        hi,
+        allow_float=False,
+        misc=("+", "-", "*", "^", "x"),
+        digit_group=0,
+        include_base_vocab=False,
+    ):
+        vocab = VocabConfig([], {}).from_config(
+            {"range": {"numbers": ["", lo, hi]}, "misc": list(misc)}
+        )
+        policy = NumberPolicy(
+            sign=sign, digit_group=digit_group, allow_float=allow_float
+        )
+        return UnifiedLexer(
+            vocab, number_policy=policy, include_base_vocab=include_base_vocab
+        )
+
+    def test_negative_tokens_stay_in_the_vocabulary(self):
+        lexer = self._lexer(False, -100, 100)
+        assert "-15" in lexer.vocab_config.get_vocab()
+
+    def test_separate_sign_splits_a_negative_number(self):
+        lexer = self._lexer(False, -100, 100)
+        assert lexer.tokenize("-5") == ["-", "5"]
+        assert lexer.tokenize("x^2-15") == ["x", "^", "2", "-", "15"]
+
+    def test_separate_sign_keeps_an_out_of_range_number_whole(self):
+        # 150 is not in the vocabulary, so validation can report it.
+        lexer = self._lexer(False, -100, 100)
+        assert lexer.tokenize("-150") == ["-", "150"]
+        assert lexer.tokenize("x^2-150") == ["x", "^", "2", "-", "150"]
+
+    def test_attach_sign_keeps_a_leading_negative_number(self):
+        lexer = self._lexer(True, -10, 10)
+        assert lexer.tokenize("-5") == ["-5"]
+        assert lexer.tokenize("x * -5") == ["x", "*", "-5"]
+        assert lexer.tokenize("-12") == ["-12"]
+
+    def test_attach_sign_reads_minus_after_an_operand_as_subtraction(self):
+        lexer = self._lexer(True, -10, 10)
+        assert lexer.tokenize("3-5") == ["3", "-", "5"]
+        assert lexer.tokenize("x-12") == ["x", "-", "12"]
+
+    def test_attach_sign_subtraction_when_the_negative_token_exists(self):
+        # "-15" is in the vocabulary, so the old result had no OOV token.
+        lexer = self._lexer(True, -100, 100)
+        assert lexer.tokenize("x^2-15") == ["x", "^", "2", "-", "15"]
+
+    def test_separate_sign_with_digit_grouping(self):
+        lexer = self._lexer(False, -100, 100, digit_group=1)
+        assert lexer.tokenize("-150") == ["-", "1", "5", "0"]
+        assert lexer.tokenize("x-12") == ["x", "-", "1", "2"]
+
+    def test_minus_from_the_base_vocabulary(self):
+        lexer = self._lexer(False, -100, 100, misc=("x",), include_base_vocab=True)
+        assert lexer.tokenize("x-15") == ["x", "-", "15"]
+
+    def test_prefixed_negative_range_tokens_still_match(self):
+        vocab = VocabConfig([], {}).from_config(
+            {"range": {"coefficients": ["C", -99, 99]}, "misc": ["+"]}
+        )
+        for sign in (True, False):
+            lexer = UnifiedLexer(vocab, number_policy=NumberPolicy(sign=sign))
+            assert lexer.tokenize("C-50+C3") == ["C-50", "+", "C3"]
+
+    def test_attach_sign_float_does_not_match_the_added_minus_zero(self):
+        lexer = self._lexer(True, 0, 10, allow_float=True)
+        assert "-0" in lexer.vocab_config.get_vocab()
+        assert lexer.tokenize("x-0.5") == ["x", "-", "0", ".", "5"]
+        assert lexer.tokenize("-0.5") == ["-0", ".", "5"]
+
+    def test_other_tokens_starting_with_minus_still_match(self):
+        lexer = self._lexer(False, -10, 10, misc=("x", "y", "-", "->", "-x"))
+        assert lexer.tokenize("x->y") == ["x", "->", "y"]
+        assert lexer.tokenize("-x") == ["-x"]

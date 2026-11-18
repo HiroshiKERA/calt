@@ -20,6 +20,10 @@ BASE_VOCAB_TOKENS = {
     "brackets": ("(", ")", "[", "]"),
 }
 
+# A vocabulary token that is a negative number written with digits after the
+# minus, such as "-15", "-0" or "-1.5" (what a range or allow_float adds)
+_NEGATIVE_NUMBER = re.compile(r"-\d+(\.\d*)?")
+
 
 @dataclass
 class NumberPolicy:
@@ -281,8 +285,17 @@ class UnifiedLexer(AbstractPreProcessor):
 
     def _build_patterns(self):
         """Build regex patterns for tokenization."""
-        # Escape reserved tokens for regex
-        escaped_tokens = [re.escape(token) for token in self.reserved_tokens]
+        # Negative numbers in the vocabulary (from a range such as -100..100,
+        # or the "-0" added for allow_float) stay in the vocabulary but are not
+        # matched as reserved tokens: the number pattern and NumberPolicy decide
+        # how a signed number is tokenized. Matched as reserved tokens, "-150"
+        # became "-15", "0" (both in the vocabulary, so no error) and "x-12"
+        # became "x", "-1", "2".
+        escaped_tokens = [
+            re.escape(token)
+            for token in self.reserved_tokens
+            if not _NEGATIVE_NUMBER.fullmatch(token)
+        ]
 
         # Build reserved token pattern (longest-match)
         if escaped_tokens:
@@ -314,9 +327,8 @@ class UnifiedLexer(AbstractPreProcessor):
         # a number is split: with vocab tokens such as "12" or "111", a
         # reserved-first order would take "123" as "12", "3" or 1111111 as
         # "111", "111", "1". In attach mode it also keeps "-5" from being split
-        # into the operator "-" and "5". (In separate mode the number pattern
-        # has no sign, so a negative vocab token such as "-10" still matches
-        # as a reserved token.)
+        # into the operator "-" and "5"; after a letter, digit or "_" the
+        # lookbehind leaves "-" to the operator, so "x-5" is "x", "-", "5".
         self.pattern = re.compile(
             f"({number_pattern})|({reserved_pattern})|({identifier_pattern})"
         )
