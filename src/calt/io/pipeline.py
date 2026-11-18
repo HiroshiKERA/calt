@@ -23,6 +23,7 @@ from .preprocessor import (
     NumberPolicy,
     UnifiedLexer,
 )
+from .preprocessor.load_preprocessor import normalize_list_separators
 from .read import read_data_from_file
 from .tokenizer import get_tokenizer
 from .validation.vocab_validator import validate_dataset_tokens
@@ -51,6 +52,7 @@ class IOPipeline:
         dataset_load_preprocessor: DatasetLoadPreprocessor | None = None,
         display_samples: int | None = None,
         data_collator_factory: Callable[..., Any] | None = None,
+        list_separators: list[str] | str | None = None,
     ):
         """Initialize IOPipeline.
 
@@ -78,6 +80,11 @@ class IOPipeline:
                 ``StandardDataCollator`` (or subclass); ``build()`` gives it the
                 extra-label spec if it has none, and keeps a spec already set, so
                 return a new collator on each call.
+            list_separators: Separators the default JSONL and pickle loaders put
+                between list elements of the problem and the answer, one per
+                nesting depth (index 0 = outermost), each between spaces; see
+                ``JsonlDefaultLoadPreprocessor``. None joins with spaces. Not used
+                for text files or with ``dataset_load_preprocessor``.
         """
         self.train_dataset_path = train_dataset_path
         self.test_dataset_path = test_dataset_path
@@ -96,6 +103,7 @@ class IOPipeline:
         self.dataset_load_preprocessor = dataset_load_preprocessor
         self.display_samples = display_samples
         self.data_collator_factory = data_collator_factory
+        self.list_separators = normalize_list_separators(list_separators)
         # Store config dicts for checkpoint saving
         self.lexer_config_dict: dict | None = None
         self.vocab_config_dict: dict | None = None
@@ -196,6 +204,7 @@ class IOPipeline:
             dataset_load_preprocessor=dataset_load_preprocessor,
             display_samples=display_samples,
             data_collator_factory=data_collator_factory,
+            list_separators=config.get("list_separators"),
         )
 
         # Store config dicts for checkpoint saving
@@ -297,6 +306,17 @@ class IOPipeline:
             self.test_dataset_jsonl is not None
             or (test_path and str(test_path).endswith(".jsonl"))
         )
+        list_separators = normalize_list_separators(self.list_separators)
+        if list_separators and (
+            self.dataset_load_preprocessor is not None
+            or not (train_use_jsonl or train_use_pickle)
+            or not (test_use_jsonl or test_use_pickle)
+        ):
+            logger.warning(
+                "list_separators is used only by the default JSONL and pickle "
+                "loaders; it has no effect on text files or with "
+                "dataset_load_preprocessor."
+            )
         train_preprocessor = self.dataset_load_preprocessor
         if train_preprocessor is None and (train_use_jsonl or train_use_pickle):
             from .preprocessor.load_preprocessor import (
@@ -305,9 +325,9 @@ class IOPipeline:
             )
 
             train_preprocessor = (
-                PickleDefaultLoadPreprocessor()
+                PickleDefaultLoadPreprocessor(list_separators)
                 if train_use_pickle
-                else JsonlDefaultLoadPreprocessor()
+                else JsonlDefaultLoadPreprocessor(list_separators)
             )
         test_preprocessor = self.dataset_load_preprocessor
         if test_preprocessor is None and (test_use_jsonl or test_use_pickle):
@@ -317,9 +337,9 @@ class IOPipeline:
             )
 
             test_preprocessor = (
-                PickleDefaultLoadPreprocessor()
+                PickleDefaultLoadPreprocessor(list_separators)
                 if test_use_pickle
-                else JsonlDefaultLoadPreprocessor()
+                else JsonlDefaultLoadPreprocessor(list_separators)
             )
         n_show = self.display_samples if self.display_samples is not None else 0
         # When display_samples > 0 and plain txt: load and show raw (before any load preprocessor)
