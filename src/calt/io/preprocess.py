@@ -69,7 +69,8 @@ PREPROCESS_VERSION = "v1"
 # Bump independently for the pre-tokenized (input_ids) on-disk format, or
 # when the lexer changes how the same text is tokenized.
 # v2: digit_group splits numbers regardless of attach_sign.
-PRETOK_VERSION = "v2"
+# v3: negative numbers in the vocabulary are no longer matched as reserved tokens.
+PRETOK_VERSION = "v3"
 
 
 # --------------------------------------------------------------------------- #
