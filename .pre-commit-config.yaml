@@ -5,4 +5,10 @@ repos:
     - id: ruff-check
     - id: ruff-format
       args: ["--diff"]
-
+# Strip notebook outputs, which can hold local paths and account names, and the
+# cell metadata Google Colab adds (executionInfo holds the user's name and id).
+- repo: https://github.com/kynan/nbstripout
+  rev: 0.9.1
+  hooks:
+    - id: nbstripout
+      args: ["--extra-keys", "cell.metadata.executionInfo cell.metadata.outputId cell.metadata.colab"]
