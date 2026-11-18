@@ -84,7 +84,7 @@ Policy for tokenizing numbers.
 
 Attributes:
 
-| Name | Type | Description | | --- | --- | --- | | `sign` | `bool` | How to handle sign. True (attach) means sign is part of the number, False (separate) means sign is a separate token. | | `digit_group` | `int` | Group digits. 0 = no split, d>=1 = split every d digits. | | `allow_float` | `bool` | Whether to allow floating point numbers. |
+| Name | Type | Description | | --- | --- | --- | | `sign` | `bool` | How to handle sign. True (attach) means sign is part of the number, False (separate) means sign is a separate token. | | `digit_group` | `int` | Group digits. 0 = no split, d>=1 = split every d digits from the left, whatever the sign setting and even when the vocabulary also has multi-digit number tokens. Whitespace is not a token, so with d>=1 numbers separated only by spaces can run together: always with d=1 ("48 36" and "4836" both become 4 8 3 6), and with d>=2 when the left number ends in a full group of d digits. Put a separator token from the vocabulary (e.g. ",") between them, or use 0 (every number is then one token and must be in the vocabulary). | | `allow_float` | `bool` | Whether to allow floating point numbers. |
 
 ## VocabConfig
 

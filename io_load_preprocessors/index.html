@@ -680,6 +680,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#calt.io.preprocessor.load_preprocessor.UserCallableLoadPreprocessor" class="md-nav__link">
+    <span class="md-ellipsis">
+      UserCallableLoadPreprocessor
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#calt.io.preprocessor.load_preprocessors.chain.ChainLoadPreprocessor" class="md-nav__link">
     <span class="md-ellipsis">
       ChainLoadPreprocessor
@@ -1002,6 +1011,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#calt.io.preprocessor.load_preprocessor.UserCallableLoadPreprocessor" class="md-nav__link">
+    <span class="md-ellipsis">
+      UserCallableLoadPreprocessor
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#calt.io.preprocessor.load_preprocessors.chain.ChainLoadPreprocessor" class="md-nav__link">
     <span class="md-ellipsis">
       ChainLoadPreprocessor
@@ -1067,7 +1085,149 @@
 
 <h1 id="load-preprocessors">Load preprocessors<a class="headerlink" href="#load-preprocessors" title="Permanent link">&para;</a></h1>
 <p>Load preprocessors run once at load time (before the lexer) to convert raw file content—a text line, JSONL object, or pickle sample—into <code>(input_text, target_text)</code> pairs. You can use the library-provided implementations or supply your own and pass them to <a href="../io_pipeline/">IOPipeline</a> via configuration.</p>
+<p>A function wrapped in <code>UserCallableLoadPreprocessor</code> may also return a third element, a dict of extra labels (<code>return input_text, target_text, {"carry_labels": [...]}</code>). They are batched and passed to a custom loss by name; see <a href="../model_pipeline/#custom-losses-and-auxiliary-tasks">Custom losses and auxiliary tasks</a> for their shapes, the length rule, and the fill value.</p>
 
+
+<div class="doc doc-object doc-class">
+
+
+
+<h2 id="calt.io.preprocessor.load_preprocessor.UserCallableLoadPreprocessor" class="doc doc-heading">
+            UserCallableLoadPreprocessor
+
+
+<a href="#calt.io.preprocessor.load_preprocessor.UserCallableLoadPreprocessor" class="headerlink" title="Permanent link">&para;</a></h2>
+<div class="doc-signature highlight"><pre><span></span><code><span class="nf">UserCallableLoadPreprocessor</span><span class="p">(</span>
+    <span class="n">callable_</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span> <span class="n">source_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span>
+<span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents first">
+
+
+        <p>Wraps a user callable (problem, answer) -&gt; (input_text, target_text).</p>
+<p>For text sources, the line is split by '#' and the two parts are passed
+as (input_part, target_part). For JSONL sources, (problem, answer)
+from the parsed object are passed. The user can use SageMath etc.
+inside their callable.</p>
+<p>The callable may also return a third element, a dict of extra labels
+<code>{name: value}</code> that reach the model's loss by name (see
+<code>calt.models.register_loss</code>). A value is either one number per sample or a
+list with one number per answer token (the answer's tokens plus EOS, or one
+fewer, in which case calt appends one value at the EOS position).</p>
+
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <table>
+      <thead>
+        <tr>
+          <th>Name</th>
+          <th>Type</th>
+          <th>Description</th>
+          <th>Default</th>
+        </tr>
+      </thead>
+      <tbody>
+          <tr class="doc-section-item">
+            <td>
+                <code>callable_</code>
+            </td>
+            <td>
+                  <code><span title="typing.Callable">Callable</span>[[<span title="typing.Any">Any</span>, <span title="typing.Any">Any</span>], <span title="tuple">tuple</span>[<span title="str">str</span>, <span title="str">str</span>]]</code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>(problem, answer) -&gt; (input_text, target_text), or
+(input_text, target_text, extra_labels).
+problem/answer are str for text, or JSON types for JSONL.</p>
+              </div>
+            </td>
+            <td>
+                <em>required</em>
+            </td>
+          </tr>
+          <tr class="doc-section-item">
+            <td>
+                <code>source_type</code>
+            </td>
+            <td>
+                  <code><span title="str">str</span></code>
+            </td>
+            <td>
+              <div class="doc-md-description">
+                <p>"text", "jsonl", or "auto". If "auto", infers from
+type of source in process_sample (str -&gt; text, dict -&gt; jsonl).</p>
+              </div>
+            </td>
+            <td>
+                  <code>&#39;auto&#39;</code>
+            </td>
+          </tr>
+      </tbody>
+    </table>
+
+
+
+
+
+
+
+                  <details class="quote">
+                    <summary>Source code in <code>src/calt/io/preprocessor/load_preprocessor.py</code></summary>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 96</span>
+<span class="normal"> 97</span>
+<span class="normal"> 98</span>
+<span class="normal"> 99</span>
+<span class="normal">100</span>
+<span class="normal">101</span>
+<span class="normal">102</span>
+<span class="normal">103</span>
+<span class="normal">104</span>
+<span class="normal">105</span>
+<span class="normal">106</span>
+<span class="normal">107</span>
+<span class="normal">108</span>
+<span class="normal">109</span>
+<span class="normal">110</span>
+<span class="normal">111</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+    <span class="bp">self</span><span class="p">,</span>
+    <span class="n">callable_</span><span class="p">:</span> <span class="n">Callable</span><span class="p">[[</span><span class="n">Any</span><span class="p">,</span> <span class="n">Any</span><span class="p">],</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span>
+    <span class="n">source_type</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;auto&quot;</span><span class="p">,</span>
+<span class="p">):</span>
+<span class="w">    </span><span class="sd">&quot;&quot;&quot;Initialize with user callable.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        callable_: (problem, answer) -&gt; (input_text, target_text), or</span>
+<span class="sd">            (input_text, target_text, extra_labels).</span>
+<span class="sd">            problem/answer are str for text, or JSON types for JSONL.</span>
+<span class="sd">        source_type: &quot;text&quot;, &quot;jsonl&quot;, or &quot;auto&quot;. If &quot;auto&quot;, infers from</span>
+<span class="sd">            type of source in process_sample (str -&gt; text, dict -&gt; jsonl).</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">callable_</span> <span class="o">=</span> <span class="n">callable_</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">source_type</span> <span class="o">=</span> <span class="n">source_type</span>
+</code></pre></div></td></tr></table></div>
+                  </details>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
 
 <div class="doc doc-object doc-class">
 
@@ -1086,7 +1246,8 @@
 
         <p>Run multiple load preprocessors in sequence.</p>
 <p>The first receives the raw source (str or dict); each next receives the
-previous output. The last preprocessor must return (input_text, target_text).
+previous output. The last preprocessor must return (input_text, target_text),
+optionally followed by a dict of extra labels.
 Use this to combine e.g. TextToSageLoadPreprocessor and ExpandedFormLoadPreprocessor.</p>
 
 
@@ -1097,10 +1258,10 @@ Use this to combine e.g. TextToSageLoadPreprocessor and ExpandedFormLoadPreproce
 
                   <details class="quote">
                     <summary>Source code in <code>src/calt/io/preprocessor/load_preprocessors/chain.py</code></summary>
-                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">14</span>
-<span class="normal">15</span>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">15</span>
 <span class="normal">16</span>
-<span class="normal">17</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">preprocessors</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
+<span class="normal">17</span>
+<span class="normal">18</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">preprocessors</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">preprocessors</span><span class="p">:</span>
         <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;ChainLoadPreprocessor requires at least one preprocessor&quot;</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">preprocessors</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">preprocessors</span><span class="p">)</span>

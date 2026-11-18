@@ -2,6 +2,47 @@
 
 Load preprocessors run once at load time (before the lexer) to convert raw file content—a text line, JSONL object, or pickle sample—into `(input_text, target_text)` pairs. You can use the library-provided implementations or supply your own and pass them to [IOPipeline](../io_pipeline/) via configuration.
 
+A function wrapped in `UserCallableLoadPreprocessor` may also return a third element, a dict of extra labels (`return input_text, target_text, {"carry_labels": [...]}`). They are batched and passed to a custom loss by name; see [Custom losses and auxiliary tasks](../model_pipeline/#custom-losses-and-auxiliary-tasks) for their shapes, the length rule, and the fill value.
+
+## UserCallableLoadPreprocessor
+
+```
+UserCallableLoadPreprocessor(
+    callable_: Callable[[Any, Any], tuple[str, str]], source_type: str = "auto"
+)
+```
+
+Wraps a user callable (problem, answer) -> (input_text, target_text).
+
+For text sources, the line is split by '#' and the two parts are passed as (input_part, target_part). For JSONL sources, (problem, answer) from the parsed object are passed. The user can use SageMath etc. inside their callable.
+
+The callable may also return a third element, a dict of extra labels `{name: value}` that reach the model's loss by name (see `calt.models.register_loss`). A value is either one number per sample or a list with one number per answer token (the answer's tokens plus EOS, or one fewer, in which case calt appends one value at the EOS position).
+
+Parameters:
+
+| Name | Type | Description | Default | | --- | --- | --- | --- | | `callable_` | `Callable[[Any, Any], tuple[str, str]]` | (problem, answer) -> (input_text, target_text), or (input_text, target_text, extra_labels). problem/answer are str for text, or JSON types for JSONL. | *required* | | `source_type` | `str` | "text", "jsonl", or "auto". If "auto", infers from type of source in process_sample (str -> text, dict -> jsonl). | `'auto'` |
+
+Source code in `src/calt/io/preprocessor/load_preprocessor.py`
+
+```
+def __init__(
+    self,
+    callable_: Callable[[Any, Any], tuple[str, str]],
+    source_type: str = "auto",
+):
+    """Initialize with user callable.
+
+    Args:
+        callable_: (problem, answer) -> (input_text, target_text), or
+            (input_text, target_text, extra_labels).
+            problem/answer are str for text, or JSON types for JSONL.
+        source_type: "text", "jsonl", or "auto". If "auto", infers from
+            type of source in process_sample (str -> text, dict -> jsonl).
+    """
+    self.callable_ = callable_
+    self.source_type = source_type
+```
+
 ## ChainLoadPreprocessor
 
 ```
@@ -10,7 +51,7 @@ ChainLoadPreprocessor(*preprocessors: Any)
 
 Run multiple load preprocessors in sequence.
 
-The first receives the raw source (str or dict); each next receives the previous output. The last preprocessor must return (input_text, target_text). Use this to combine e.g. TextToSageLoadPreprocessor and ExpandedFormLoadPreprocessor.
+The first receives the raw source (str or dict); each next receives the previous output. The last preprocessor must return (input_text, target_text), optionally followed by a dict of extra labels. Use this to combine e.g. TextToSageLoadPreprocessor and ExpandedFormLoadPreprocessor.
 
 Source code in `src/calt/io/preprocessor/load_preprocessors/chain.py`
 

@@ -1168,15 +1168,7 @@ reserved tokens and supports configurable number tokenization.</p>
 
                   <details class="quote">
                     <summary>Source code in <code>src/calt/io/preprocessor/lexer.py</code></summary>
-                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">161</span>
-<span class="normal">162</span>
-<span class="normal">163</span>
-<span class="normal">164</span>
-<span class="normal">165</span>
-<span class="normal">166</span>
-<span class="normal">167</span>
-<span class="normal">168</span>
-<span class="normal">169</span>
+                    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">169</span>
 <span class="normal">170</span>
 <span class="normal">171</span>
 <span class="normal">172</span>
@@ -1197,7 +1189,15 @@ reserved tokens and supports configurable number tokenization.</p>
 <span class="normal">187</span>
 <span class="normal">188</span>
 <span class="normal">189</span>
-<span class="normal">190</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
+<span class="normal">190</span>
+<span class="normal">191</span>
+<span class="normal">192</span>
+<span class="normal">193</span>
+<span class="normal">194</span>
+<span class="normal">195</span>
+<span class="normal">196</span>
+<span class="normal">197</span>
+<span class="normal">198</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="k">def</span><span class="w"> </span><span class="fm">__init__</span><span class="p">(</span>
     <span class="bp">self</span><span class="p">,</span>
     <span class="n">vocab_config</span><span class="p">:</span> <span class="n">VocabConfig</span><span class="p">,</span>
     <span class="n">number_policy</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="n">NumberPolicy</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
@@ -1303,7 +1303,15 @@ False (separate) means sign is a separate token.</p>
             </td>
             <td>
               <div class="doc-md-description">
-                <p>Group digits. 0 = no split, d&gt;=1 = split every d digits.</p>
+                <p>Group digits. 0 = no split, d&gt;=1 = split every d digits
+from the left, whatever the sign setting and even when the
+vocabulary also has multi-digit number tokens. Whitespace is not a
+token, so with d&gt;=1 numbers separated only by spaces can run
+together: always with d=1 ("48 36" and "4836" both become 4 8 3 6),
+and with d&gt;=2 when the left number ends in a full group of d digits.
+Put a separator token from the vocabulary (e.g. ",") between them,
+or use 0 (every number is then one token and must be in the
+vocabulary).</p>
               </div>
             </td>
           </tr>

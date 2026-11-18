@@ -42,7 +42,7 @@ If you use this code in your research, please cite our paper:
 ```
 @misc{kera2025calt,
   title={CALT: A Library for Computer Algebra with Transformer},
-  author={Hiroshi Kera and Shun Arawaka and Yuta Sato},
+  author={Hiroshi Kera and Shun Arakawa and Yuta Sato},
   year={2025},
   archivePrefix={arXiv},
   eprint={2506.08600}

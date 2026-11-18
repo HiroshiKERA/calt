@@ -449,10 +449,14 @@ def build(self):
     # e.g.,
     # processed data: "C2 E1 E2 + C5 E1 E0 + C-3 E0 E0"
     # tokens: ["C2", "E1", "E2", "C5", "E1", "E0", "C-3", "E0", "E0"]
+    extra_label_spec = self._check_extra_labels(train_dataset, test_dataset)
+
     if self.vocab_config is None:
         raise ValueError("vocab_config must be provided to build the tokenizer")
     tokenizer = get_tokenizer(vocab_config=self.vocab_config)
-    data_collator = StandardDataCollator(tokenizer=tokenizer)
+    data_collator = StandardDataCollator(
+        tokenizer=tokenizer, extra_label_spec=extra_label_spec
+    )
 
     self.train_dataset = train_dataset
     self.test_dataset = test_dataset

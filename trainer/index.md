@@ -340,6 +340,7 @@ def build(self) -> "TrainerPipeline":
     """
     # Configure wandb before building TrainingArguments / Trainer
     self._configure_wandb()
+    _check_extra_labels_reach_a_loss(self.model, self.train_dataset)
 
     # Import here to avoid circular import
     from .loader import StandardTrainerLoader

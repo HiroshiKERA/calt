@@ -1275,6 +1275,18 @@ through <a href="../dataset_generator/#calt.dataset.pipeline.DatasetPipeline">Da
 <td>Input (token) embedding to use (default <code>token</code>). Built-in: <code>token</code>. Register custom ones with <code>register_input_embedding</code>; see <a href="../model_pipeline/#custom-embeddings-input-and-positional">Custom embeddings</a>.</td>
 </tr>
 <tr>
+<td><code>input_embedding_kwargs</code></td>
+<td>Mapping of extra keyword arguments for the input-embedding factory (default <code>{}</code>). Saved in the model config; values must be JSON-serializable. Not supported by <code>bart</code> and the monomial models.</td>
+</tr>
+<tr>
+<td><code>loss_type</code></td>
+<td>Training loss (default <code>cross_entropy</code>, the only built-in). Register custom ones with <code>register_loss</code>; see <a href="../model_pipeline/#custom-losses-and-auxiliary-tasks">Custom losses</a>. Other values are not supported by <code>bart</code> and the monomial models.</td>
+</tr>
+<tr>
+<td><code>loss_kwargs</code></td>
+<td>Mapping of extra keyword arguments for the loss (default <code>{}</code>). Saved in the model config; values must be JSON-serializable. Not accepted with <code>cross_entropy</code>.</td>
+</tr>
+<tr>
 <td><code>use_positional_embedding</code></td>
 <td>Positional embedding to use (default <code>generic</code>). Built-in: <code>generic</code>/<code>learned</code>, <code>sinusoidal</code>, <code>rope</code>, <code>none</code>. Register custom ones with <code>register_positional_embedding</code>.</td>
 </tr>
@@ -1503,7 +1515,7 @@ through <a href="../dataset_generator/#calt.dataset.pipeline.DatasetPipeline">Da
 </tr>
 <tr>
 <td><code>digit_group</code></td>
-<td>int (default 0). 0 = no digit grouping; d ≥ 1 = split number into tokens of d digits.</td>
+<td>int (default 0). 0 = no digit grouping; d ≥ 1 = split number into tokens of d digits from the left, regardless of <code>attach_sign</code> and even when the vocabulary has multi-digit numbers. Whitespace is not a token, so with d ≥ 1 numbers separated only by spaces can run together: always with d = 1 (<code>48 36</code> and <code>4836</code> both become <code>4 8 3 6</code>), and with d ≥ 2 when the left number ends in a full group of d digits (d = 2: <code>48 36</code> and <code>4836</code> both become <code>48 36</code>, while <code>483 6</code> gives <code>48 3 6</code>). Put a separator token from the vocabulary between them (e.g. <code>,</code> added to <code>misc</code>), or use 0 (every number is then one token and must be in the vocabulary).</td>
 </tr>
 <tr>
 <td><code>allow_float</code></td>
