@@ -24,68 +24,103 @@ deep learning can focus on constructing datasets to train and evaluate the model
 
 ### Installation
 
-We recommend installing CALT in a dedicated conda environment, with PyTorch
-from conda-forge in the same command:
+CALT is the Python package `calt-x`, which you can install with conda or with
+pip. We recommend conda: it installs CALT in a dedicated environment, with
+PyTorch from conda-forge in the same command. CALT supports Python `>=3.11`
+(tested in CI on 3.11–3.15).
 
-```bash
-# The quotes around the package specs are required
-# With an NVIDIA GPU
-conda create -n calt-env -c conda-forge "calt-x>=1.5" "pytorch>=2.6=cuda*"
-# Without an NVIDIA GPU (including macOS)
-conda create -n calt-env -c conda-forge "calt-x>=1.5" "pytorch>=2.6"
-conda activate calt-env
-# Prints e.g. "12.9 True" with a GPU, "None False" without one
-python -c "import torch; print(torch.version.cuda, torch.cuda.is_available())"
-```
+#### With conda (recommended)
 
-conda-forge ships CUDA 12 and CUDA 13 builds of PyTorch, and conda picks one
-that your driver supports. The GPU command needs NVIDIA driver 525 or newer
-(`nvidia-smi` shows "CUDA Version" 12.0 or higher). With an older driver it
-fails to solve, because conda-forge has no CUDA 11 build of PyTorch `>=2.6`;
-upgrade the driver rather than dropping `>=2.6`, which would bring back the
-problem described below. If conda cannot see the
-GPU (e.g. on an HPC login node), prefix the command with
-`CONDA_OVERRIDE_CUDA=12.9`. Do the same on a Maxwell, Pascal or Volta GPU with
-driver 580 or newer, since the CUDA 13 builds conda would pick do not support
-those GPUs.
+1. Create the environment with CALT and PyTorch. Keep the quotes around the
+   package specs. For features that depend on SageMath, add `sage` to the
+   `conda create` command.
 
-**Optional:** If you use features that depend on SageMath, add `sage` to the
-same `conda create` command. In an existing environment, run
-`conda install -c conda-forge sage "pytorch>=2.6=cuda*"` (or
-`sage "pytorch>=2.6"` without a GPU).
+   With an NVIDIA GPU:
 
-Do not install torch with pip into a conda environment, and do not run
-`pip install calt-x` there before PyTorch is installed from conda-forge.
-PyPI's CUDA build of torch loads the system `libstdc++`, and conda-forge
-packages such as SciPy and SageMath then fail to import with
-``version `CXXABI_1.3.15' not found`` on systems whose `libstdc++` is older
-than conda-forge's (e.g. Ubuntu 22.04). Once PyTorch comes from conda-forge,
-`pip install calt-x` keeps it.
+   ```bash
+   conda create -n calt-env -c conda-forge "calt-x>=1.5" "pytorch>=2.6=cuda*"
+   ```
 
-Alternatively, install it from PyPI with pip in a virtual environment:
+   Without an NVIDIA GPU (including macOS):
 
-```bash
-pip install calt-x
-```
+   ```bash
+   conda create -n calt-env -c conda-forge "calt-x>=1.5" "pytorch>=2.6"
+   ```
 
-CALT supports Python `>=3.11` (tested in CI on 3.11–3.15).
+2. Activate the environment:
 
-**GPU (pip installs only):** On Linux, PyPI's torch 2.11 and later is built
-for CUDA 13 and needs NVIDIA driver 580 or newer. With an older driver,
-training falls back to the CPU and CALT logs a warning. Upgrade the driver, or
-install a CUDA 12 build of torch: `pip install "torch<2.11"` (Python
-3.11–3.14) or
-`pip install torch==2.14.1 --index-url https://download.pytorch.org/whl/cu126`
-(any Python, including 3.15).
+   ```bash
+   conda activate calt-env
+   ```
 
-You can check the available versions with:
+3. Check PyTorch. It prints e.g. `12.9 True` with a GPU and `None False`
+   without one.
 
-```bash
-conda search calt-x --channel conda-forge
-```
+   ```bash
+   python -c "import torch; print(torch.version.cuda, torch.cuda.is_available())"
+   ```
 
-The conda-forge feedstock is available here:
+The available versions on conda-forge are listed by
+`conda search calt-x --channel conda-forge`, and the feedstock is
 [conda-forge/calt-x-feedstock](https://github.com/conda-forge/calt-x-feedstock).
+
+#### With pip
+
+1. Create a virtual environment with Python 3.11 or newer, and activate it.
+   Check the version with `python3 --version`; if it is older, use e.g.
+   `python3.12` instead of `python3`. On Windows, run `py -3 -m venv calt-env`
+   and `calt-env\Scripts\activate` instead. On Debian or Ubuntu,
+   `python3 -m venv` needs the `python3-venv` package.
+
+   ```bash
+   python3 -m venv calt-env
+   source calt-env/bin/activate
+   ```
+
+2. Install CALT from PyPI. pip installs PyTorch from PyPI along with it.
+
+   ```bash
+   pip install calt-x
+   ```
+
+3. Check PyTorch. If the second value is `False` on a Linux machine with an
+   NVIDIA GPU, see "GPU with pip" below.
+
+   ```bash
+   python -c "import torch; print(torch.version.cuda, torch.cuda.is_available())"
+   ```
+
+#### Notes on GPUs and conda
+
+- **NVIDIA driver:** the conda GPU command needs driver 525 or newer
+  (`nvidia-smi` shows "CUDA Version" 12.0 or higher). conda-forge ships CUDA 12
+  and CUDA 13 builds of PyTorch, and conda picks one that your driver supports.
+  With an older driver the command fails to solve, because conda-forge has no
+  CUDA 11 build of PyTorch `>=2.6`; upgrade the driver rather than dropping
+  `>=2.6`, which would bring back the problem described under "No pip torch in
+  a conda environment" below.
+- **GPU not visible to conda** (e.g. on an HPC login node): prefix the command
+  with `CONDA_OVERRIDE_CUDA=12.9`. Do the same on a Maxwell, Pascal or Volta GPU
+  with driver 580 or newer, since the CUDA 13 builds conda would pick do not
+  support those GPUs.
+- **SageMath in an existing environment:**
+  `conda install -c conda-forge sage "pytorch>=2.6=cuda*"` (or
+  `sage "pytorch>=2.6"` without a GPU).
+- **No pip torch in a conda environment:** do not install torch with pip there,
+  and do not run `pip install calt-x` there before PyTorch is installed from
+  conda-forge. PyPI's CUDA build of torch loads the system `libstdc++`, and
+  conda-forge packages such as SciPy and SageMath then fail to import with
+  ``version `CXXABI_1.3.15' not found`` on systems whose `libstdc++` is older
+  than conda-forge's (e.g. Ubuntu 22.04). Once PyTorch comes from conda-forge,
+  `pip install calt-x` keeps it.
+- **GPU with pip:** on Linux, PyPI's torch 2.11 and later
+  is built for CUDA 13 and needs NVIDIA driver 580 or newer. With an older
+  driver, training falls back to the CPU and CALT logs a warning. Upgrade the
+  driver, or install a CUDA 12 build of torch: `pip install "torch<2.11"`
+  (Python 3.11–3.14) or
+  `pip install torch==2.14.1 --index-url https://download.pytorch.org/whl/cu126`
+  (any Python, including 3.15). This does not apply to conda environments;
+  see the notes above.
 
 ### Instance Generation
 
