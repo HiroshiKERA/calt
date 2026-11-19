@@ -138,6 +138,7 @@ train:
     | `train_dataset_jsonl`, `test_dataset_jsonl` | Paths when using JSONL. |
     | `train_dataset_pickle`, `test_dataset_pickle` | Paths when using pickle. |
     | `dataset_load_preprocessor` | Optional preprocessor for custom loading. |
+    | `list_separators` | Separators the default JSONL/pickle loaders put between list elements, one per nesting level (outermost first), e.g. `["||", "|"]`; see [Lists in text and JSONL data](io_load_preprocessors.md#lists-in-text-and-jsonl-data). Default: spaces. |
 
 ??? "`model` — Passed to ModelPipeline.from_io_dict"
     | Name | Description |

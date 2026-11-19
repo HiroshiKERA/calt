@@ -44,13 +44,40 @@ class TextDefaultLoadPreprocessor:
         return input_part.strip(), target_part.strip()
 
 
-def _to_str(x: Any) -> str:
+def normalize_list_separators(list_separators: Any) -> list[str] | None:
+    """Check ``list_separators`` and return it as a list of strings (or None).
+
+    A single string is taken as ``[string]``. Every separator must be a
+    non-empty string; surrounding spaces are removed, since the separator is
+    put between spaces anyway.
+    """
+    if list_separators is None:
+        return None
+    if isinstance(list_separators, str):
+        list_separators = [list_separators]
+    separators = list(list_separators)
+    for sep in separators:
+        if not isinstance(sep, str) or not sep.strip():
+            raise ValueError(
+                f"list_separators must be non-empty strings, got {list_separators!r}"
+            )
+    return [sep.strip() for sep in separators]
+
+
+def _to_str(x: Any, list_separators: list[str] | None = None, _depth: int = 0) -> str:
     """Convert problem/answer to string; handle nested lists via join.
-    Exported for use by load_preprocessors (e.g. last_element)."""
+    Exported for use by load_preprocessors (e.g. last_element).
+
+    A list at nesting depth d (0 = outermost) is joined with
+    ``f" {list_separators[d]} "``, or with a space when there is no separator
+    for that depth (the default). Extra separators are ignored.
+    """
     if isinstance(x, str):
         return x
     if isinstance(x, list):
-        return " ".join(_to_str(item) for item in x)
+        separators = list_separators or []
+        joiner = f" {separators[_depth]} " if _depth < len(separators) else " "
+        return joiner.join(_to_str(item, list_separators, _depth + 1) for item in x)
     if isinstance(x, dict):
         return str(x)
     return str(x)
@@ -62,7 +89,18 @@ def _get_answer_from_source(source: dict[str, Any]) -> Any:
 
 
 class JsonlDefaultLoadPreprocessor:
-    """Default preprocessor for JSONL: stringify problem and answer."""
+    """Default preprocessor for JSONL: stringify problem and answer.
+
+    Args:
+        list_separators: Separators for joining lists in the problem and the
+            answer, one per nesting depth (index 0 = outermost list), each put
+            between spaces: ``["||", "|"]`` turns ``[["1", "2"], ["3", "4"]]``
+            into ``"1 | 2 || 3 | 4"``. A depth without a separator is joined
+            with a space; None (default) joins every depth with a space.
+    """
+
+    def __init__(self, list_separators: list[str] | str | None = None):
+        self.list_separators = normalize_list_separators(list_separators)
 
     def process_sample(self, source: str | dict[str, Any]) -> tuple[str, str]:
         if not isinstance(source, dict):
@@ -75,7 +113,10 @@ class JsonlDefaultLoadPreprocessor:
             raise ValueError(
                 "JSONL object must have 'problem' and 'answer' (or 'solution') keys"
             )
-        return _to_str(problem), _to_str(answer)
+        return (
+            _to_str(problem, self.list_separators),
+            _to_str(answer, self.list_separators),
+        )
 
 
 class UserCallableLoadPreprocessor:
@@ -142,7 +183,13 @@ class UserCallableLoadPreprocessor:
 class PickleDefaultLoadPreprocessor:
     """Default preprocessor for pickle: problem/answer are Python objects (e.g. SageMath).
     Stringify them for training; user preprocessors can do math before stringifying.
+
+    Args:
+        list_separators: As for ``JsonlDefaultLoadPreprocessor``.
     """
+
+    def __init__(self, list_separators: list[str] | str | None = None):
+        self.list_separators = normalize_list_separators(list_separators)
 
     def process_sample(self, source: str | dict[str, Any]) -> tuple[str, str]:
         if not isinstance(source, dict):
@@ -155,4 +202,7 @@ class PickleDefaultLoadPreprocessor:
             raise ValueError(
                 "Source must have 'problem' and 'answer' (or 'solution') keys"
             )
-        return _to_str(problem), _to_str(answer)
+        return (
+            _to_str(problem, self.list_separators),
+            _to_str(answer, self.list_separators),
+        )
