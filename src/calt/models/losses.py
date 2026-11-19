@@ -24,8 +24,10 @@ in train.yaml.
 * A **function** is called on every batch with the data arguments below plus
   ``model.loss_kwargs``.
 * A **class** (or a ``functools.partial`` of one, with arguments bound by
-  keyword) is built once with ``d_model``, ``vocab_size`` and
-  ``model.loss_kwargs``, and becomes the submodule ``model.loss_module``.
+  keyword) is built once with ``model.loss_kwargs`` plus ``d_model`` and
+  ``vocab_size`` if its ``__init__`` takes them (a class that neither defines
+  nor inherits an ``__init__``, and so uses ``nn.Module``'s, gets neither),
+  and becomes the submodule ``model.loss_module``.
   Auxiliary heads inside it are trained and saved with the model. Its
   ``forward`` receives the data arguments. It is built after the model's own
   layers, so the model's initial weights do not depend on it, and its Linear,
@@ -148,6 +150,19 @@ def _accepted_names(fn: Callable[..., Any]) -> Optional[frozenset[str]]:
     )
 
 
+def _init_names(factory: Callable[..., Any]) -> Optional[frozenset[str]]:
+    """Keyword names a class loss's ``__init__`` accepts (see ``_accepted_names``).
+
+    A class that does not define ``__init__`` (nor inherits one from a class
+    other than ``nn.Module``) takes no arguments: ``nn.Module.__init__`` has
+    the signature ``(*args, **kwargs)`` but raises on any keyword argument.
+    """
+    cls = factory.func if isinstance(factory, functools.partial) else factory
+    if cls.__init__ is nn.Module.__init__:
+        return frozenset()
+    return _accepted_names(factory)
+
+
 def _wanted_labels(fn: Callable[..., Any]) -> frozenset[str]:
     """Parameters of ``fn`` that look like extra labels (``*_label(s)``)."""
     try:
@@ -232,7 +247,7 @@ def attach_loss(model: nn.Module, config: Any) -> None:
         return
 
     init_kwargs = dict(loss_kwargs)
-    init_names = _accepted_names(factory)
+    init_names = _init_names(factory)
     for key, value in (("d_model", config.d_model), ("vocab_size", config.vocab_size)):
         if init_names is None or key in init_names:
             init_kwargs[key] = value

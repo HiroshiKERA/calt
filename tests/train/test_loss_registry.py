@@ -304,6 +304,39 @@ def test_partial_with_keyword_arguments_is_a_class_loss():
     assert model.loss_module.weight == 0.5
 
 
+class NoInitLoss(nn.Module):
+    """A class loss without __init__ (nn.Module.__init__ takes no arguments)."""
+
+    def forward(self, logits, labels):
+        return F.cross_entropy(
+            logits.reshape(-1, logits.size(-1)), labels.reshape(-1), ignore_index=-100
+        )
+
+
+@pytest.mark.parametrize("kind", KINDS)
+def test_class_loss_without_init(kind):
+    register_loss("no_init", NoInitLoss)
+    model = _seeded_model(kind, loss_type="no_init").eval()
+    default = _seeded_model(kind).eval()
+    assert isinstance(model.loss_module, NoInitLoss)
+    assert torch.allclose(model(**_batch()).loss, default(**_batch()).loss)
+
+
+def test_class_loss_without_init_rejects_loss_kwargs():
+    register_loss("no_init", NoInitLoss)
+    with pytest.raises(TypeError, match="unexpected keyword argument 'weight'"):
+        _model("generic", loss_type="no_init", loss_kwargs={"weight": 0.5})
+
+
+def test_class_loss_inheriting_an_init_gets_its_arguments():
+    class Child(CarryLoss):
+        pass
+
+    register_loss("child", Child)
+    model = _model("generic", loss_type="child")
+    assert model.loss_module.head.in_features == D
+
+
 def test_both_heads_are_trained_and_saved(tmp_path):
     register_loss("two_heads", TwoHeadLoss)
     model = _model("decoder_only", loss_type="two_heads")
