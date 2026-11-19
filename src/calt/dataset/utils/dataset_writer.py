@@ -550,7 +550,9 @@ class DatasetWriter:
 
         Returns:
             List of (problem, answer) pairs in string format. Accepts JSON lines
-            with either "answer" or "solution" key (for backward compatibility).
+            with either "answer" or "solution" key (for backward compatibility;
+            "solution" is used only when "answer" is missing or null, and a falsy
+            answer such as 0 or "" is kept).
 
         Raises:
             ValueError: If tag is invalid
@@ -577,7 +579,10 @@ class DatasetWriter:
                 try:
                     data = json.loads(line)
                     problem = data.get("problem")
-                    answer = data.get("answer") or data.get("solution")
+                    # Not `or`: a falsy answer such as 0 or "" is a real answer.
+                    answer = data.get("answer")
+                    if answer is None:
+                        answer = data.get("solution")
                     if problem is None or answer is None:
                         self.logger.warning(
                             f"Line {line_num}: missing 'problem' or 'answer'/'solution' key"

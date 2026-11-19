@@ -83,7 +83,8 @@ def read_data_from_jsonl(
     """Read problem-answer pairs from a JSON Lines file.
 
     Each line must be a JSON object with "problem" and "answer" keys (or "solution"
-    for backward compatibility). Returns raw parsed data (problem/answer may be str,
+    for backward compatibility, used only when "answer" is missing or null; a
+    falsy answer such as 0 or "" is kept). Returns raw parsed data (problem/answer may be str,
     list, or dict) for use with a DatasetLoadPreprocessor.
 
     Args:
@@ -111,7 +112,10 @@ def read_data_from_jsonl(
             try:
                 data = json.loads(line)
                 problem = data.get("problem")
-                answer = data.get("answer") or data.get("solution")
+                # Not `or`: a falsy answer such as 0 or "" is a real answer.
+                answer = data.get("answer")
+                if answer is None:
+                    answer = data.get("solution")
                 if problem is None or answer is None:
                     logger.warning(
                         f"Skip line {line_num} in {data_path}: missing 'problem' or 'answer'/'solution' key"

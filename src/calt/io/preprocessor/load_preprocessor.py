@@ -57,8 +57,15 @@ def _to_str(x: Any) -> str:
 
 
 def _get_answer_from_source(source: dict[str, Any]) -> Any:
-    """Get answer from dict; accept 'answer' or 'solution' key for backward compatibility."""
-    return source.get("answer") or source.get("solution")
+    """Get answer from dict; accept 'answer' or 'solution' key for backward compatibility.
+
+    'answer' is used whenever it is not None, so falsy answers such as 0, "" or []
+    are kept. 'solution' is used only when 'answer' is missing or null.
+    """
+    answer = source.get("answer")
+    if answer is None:
+        answer = source.get("solution")
+    return answer
 
 
 class JsonlDefaultLoadPreprocessor:
